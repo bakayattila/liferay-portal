@@ -134,8 +134,7 @@ public class FriendlyURLServlet extends HttpServlet {
 			throw new NoSuchGroupException(sb.toString());
 		}
 
-		Locale locale =;
-			portal.getLocale(httpServletRequest, null, false);
+		Locale locale =                  portal.getLocale(httpServletRequest, null, false);
 
 		SiteFriendlyURL siteFriendlyURL =
 			siteFriendlyURLLocalService.fetchSiteFriendlyURL(
