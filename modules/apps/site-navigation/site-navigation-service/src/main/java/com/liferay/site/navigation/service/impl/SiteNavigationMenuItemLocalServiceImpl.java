@@ -126,26 +126,28 @@ public class SiteNavigationMenuItemLocalServiceImpl
 				siteNavigationMenuItem.getSiteNavigationMenuId(),
 				siteNavigationMenuItemId);
 
-		List<SiteNavigationMenuItem> siblingsSiteNavigationMenuItems =
-			getSiteNavigationMenuItems(
-				siteNavigationMenuItem.getSiteNavigationMenuId(),
-				siteNavigationMenuItem.getParentSiteNavigationMenuItemId());
+		if (!siteNavigationMenuItems.isEmpty()) {
+			List<SiteNavigationMenuItem> siblingsSiteNavigationMenuItems =
+				getSiteNavigationMenuItems(
+					siteNavigationMenuItem.getSiteNavigationMenuId(),
+					siteNavigationMenuItem.getParentSiteNavigationMenuItemId());
 
-		for (SiteNavigationMenuItem siblingSiteNavigationMenuItem :
-				siblingsSiteNavigationMenuItems) {
+			for (SiteNavigationMenuItem siblingSiteNavigationMenuItem :
+					siblingsSiteNavigationMenuItems) {
 
-			if (siblingSiteNavigationMenuItem.getOrder() <=
-					siteNavigationMenuItem.getOrder()) {
+				if (siblingSiteNavigationMenuItem.getOrder() <=
+						siteNavigationMenuItem.getOrder()) {
 
-				continue;
+					continue;
+				}
+
+				siblingSiteNavigationMenuItem.setOrder(
+					siteNavigationMenuItems.size() +
+						siteNavigationMenuItem.getOrder());
+
+				siteNavigationMenuItemPersistence.update(
+					siblingSiteNavigationMenuItem);
 			}
-
-			siblingSiteNavigationMenuItem.setOrder(
-				siteNavigationMenuItems.size() +
-					siblingSiteNavigationMenuItem.getOrder() - 1);
-
-			siteNavigationMenuItemPersistence.update(
-				siblingSiteNavigationMenuItem);
 		}
 
 		for (int i = 0; i < siteNavigationMenuItems.size(); i++) {
@@ -231,8 +233,6 @@ public class SiteNavigationMenuItemLocalServiceImpl
 			siteNavigationMenuItem.getSiteNavigationMenuId(),
 			siteNavigationMenuItemId, parentSiteNavigationMenuItemId);
 
-		int oldOrder = siteNavigationMenuItem.getOrder();
-
 		long oldParentSiteNavigationMenuItemId =
 			siteNavigationMenuItem.getParentSiteNavigationMenuItemId();
 
@@ -276,7 +276,7 @@ public class SiteNavigationMenuItemLocalServiceImpl
 					oldParentSiteNavigationMenuItemId);
 
 			for (SiteNavigationMenuItem oldChild : oldChildren) {
-				if (oldChild.getOrder() <= oldOrder) {
+				if (oldChild.getOrder() <= order) {
 					continue;
 				}
 
