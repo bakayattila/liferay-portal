@@ -58,6 +58,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.CriteriaSerializer;
 import com.liferay.segments.criteria.contributor.SegmentsCriteriaContributor;
+import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
 import java.util.Locale;
@@ -344,16 +345,6 @@ public class GetCollectionFieldMVCResourceCommandTest {
 			User.class.getName());
 	}
 
-	//	private Layout _addLayout() throws Exception {
-	//
-	//		return _layoutLocalService.addLayout(
-	//			_user.getUserId(), _group.getGroupId(), false,
-	//			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-	//			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-	//			StringPool.BLANK, LayoutConstants.TYPE_CONTENT, false,
-	//			StringPool.BLANK, _serviceContext);
-	//	}
-
 	private String _getTypeSettings() {
 		return UnicodePropertiesBuilder.create(
 			true
@@ -387,9 +378,6 @@ public class GetCollectionFieldMVCResourceCommandTest {
 	private ServiceRegistration<InfoCollectionProvider<?>>
 		_infoCollectionProviderServiceRegistration;
 	private Layout _layout;
-
-	//	@Inject
-	//	private LayoutLocalService _layoutLocalService;
 
 	@Inject(
 		filter = "mvc.command.name=/layout_content_page_editor/get_collection_field"
