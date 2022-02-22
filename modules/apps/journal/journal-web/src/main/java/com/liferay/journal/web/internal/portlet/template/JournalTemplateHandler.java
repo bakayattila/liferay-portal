@@ -30,6 +30,7 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.journal.util.JournalContent;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -40,6 +41,7 @@ import com.liferay.portal.kernel.template.TemplateVariableGroup;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.HashMap;
@@ -183,6 +185,8 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 
 			String fieldName = fieldNameVariableName.getKey();
 
+			String variableName = fieldNameVariableName.getValue();
+
 			String dataType = ddmStructure.getFieldDataType(fieldName);
 
 			if (Validator.isNull(dataType)) {
@@ -209,7 +213,16 @@ public class JournalTemplateHandler extends BaseDDMTemplateHandler {
 
 			String label = ddmStructure.getFieldLabel(fieldName, locale);
 			String tip = ddmStructure.getFieldTip(fieldName, locale);
-			boolean repeatable = ddmStructure.getFieldRepeatable(fieldName);
+			boolean repeatable = false;
+
+			String[] fieldHierarchy = StringUtil.split(variableName,StringPool.PERIOD);
+			for (String field : fieldHierarchy) {
+				if(ddmStructure.getFieldRepeatable(field)){
+					repeatable = true;
+					break;
+				}
+			}
+
 
 			templateVariableGroup.addFieldVariable(
 				label, getFieldVariableClass(),
