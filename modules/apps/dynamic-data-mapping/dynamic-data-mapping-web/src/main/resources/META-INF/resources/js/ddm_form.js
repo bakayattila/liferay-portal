@@ -1834,7 +1834,11 @@ AUI.add(
 							layoutValue && layoutValue.privateLayout
 						);
 
-						var groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
+						var groupId = themeDisplay.getScopeGroupId();
+
+						if (themeDisplay.isStagedPortlet() === 'false') {
+							groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
+						}
 
 						var layoutsRoot = {
 							groupId,
@@ -2220,7 +2224,11 @@ AUI.add(
 
 					var delta = instance.get('delta');
 
-					var groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
+					var groupId = themeDisplay.getScopeGroupId();
+
+					if (themeDisplay.isStagedPortlet() === 'false') {
+						groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
+					}
 
 					var parentLayoutId = instance._currentParentLayoutId;
 
@@ -2545,7 +2553,11 @@ AUI.add(
 
 					var selectedLayout = instance.get('selectedLayout');
 
-					var groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
+					var groupId = themeDisplay.getScopeGroupId();
+
+					if (themeDisplay.isStagedPortlet() === 'false') {
+						groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
+					}
 
 					if (selectedLayout && selectedLayout.layoutId) {
 						instance._requestSiblingLayouts(
