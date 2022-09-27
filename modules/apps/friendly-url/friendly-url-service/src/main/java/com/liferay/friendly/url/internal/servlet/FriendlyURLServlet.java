@@ -922,7 +922,9 @@ public class FriendlyURLServlet extends HttpServlet {
 		if (Validator.isNotNull(friendlyURL) &&
 			friendlyURL.startsWith(StringPool.SLASH)) {
 
-			return friendlyURL.substring(1);
+			String normalizedFriendlyURL = friendlyURL.substring(1);
+
+			return StringUtil.toLowerCase(normalizedFriendlyURL);
 		}
 
 		return friendlyURL;
