@@ -86,6 +86,9 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 		ServiceContext serviceContext = _getServiceContent(
 			actionRequest, layout);
 
+
+		
+
 		layout = _layoutService.updateLayout(
 			groupId, privateLayout, layoutId, layout.getParentLayoutId(),
 			layout.getNameMap(), titleMap, descriptionMap, keywordsMap,
