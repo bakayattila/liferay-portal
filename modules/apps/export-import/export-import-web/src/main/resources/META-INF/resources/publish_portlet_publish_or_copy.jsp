@@ -74,6 +74,10 @@ else {
 					<%
 					PortletDataHandler portletDataHandler = selPortlet.getPortletDataHandlerInstance();
 
+					Class<?> clazz = portletDataHandler.getClass();
+
+					String portletDataHandlerSimpleName = clazz.getSimpleName();
+
 					PortletDataHandlerControl[] configurationControls = portletDataHandler.getExportConfigurationControls(company.getCompanyId(), themeDisplay.getScopeGroupId(), selPortlet, plid, false);
 					%>
 
@@ -143,7 +147,7 @@ else {
 						</aui:fieldset>
 					</c:if>
 
-					<c:if test="<%= !portletDataHandler.isDisplayPortlet() %>">
+					<c:if test="<%= !portletDataHandler.isDisplayPortlet() || portletDataHandlerSimpleName.equals(_DISPLAY_PORTLET_EXCEPTION) %>">
 
 						<%
 						DateRange dateRange = ExportImportDateUtil.getDateRange(renderRequest, themeDisplay.getScopeGroupId(), false, plid, selPortlet.getPortletId(), defaultRange);
@@ -434,3 +438,7 @@ else {
 		</c:choose>
 	</aui:button-row>
 </aui:form>
+
+<%!
+private static final String _DISPLAY_PORTLET_EXCEPTION = "DDLDisplayPortletDataHandler";
+%>
