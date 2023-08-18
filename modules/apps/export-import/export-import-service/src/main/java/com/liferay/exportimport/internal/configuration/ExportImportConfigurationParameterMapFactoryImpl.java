@@ -610,14 +610,14 @@ public class ExportImportConfigurationParameterMapFactoryImpl
 	 */
 	private void _replaceParameterMap(Map<String, String[]> parameterMap) {
 		try {
-			List<Portlet> dataSiteLevelPortlets =
-				_exportImportHelper.getDataSiteLevelPortlets(
+			List<Portlet> dataSiteAndInstanceLevelPortlets =
+				_exportImportHelper.getDataSiteAndInstanceLevelPortlets(
 					CompanyThreadLocal.getCompanyId());
 
 			boolean portletDataAll = MapUtil.getBoolean(
 				parameterMap, PortletDataHandlerKeys.PORTLET_DATA_ALL);
 
-			for (Portlet dataSiteLevelPortlet : dataSiteLevelPortlets) {
+			for (Portlet dataSiteLevelPortlet : dataSiteAndInstanceLevelPortlets) {
 				String portletDataKey =
 					PortletDataHandlerKeys.PORTLET_DATA + StringPool.UNDERLINE +
 						dataSiteLevelPortlet.getRootPortletId();
