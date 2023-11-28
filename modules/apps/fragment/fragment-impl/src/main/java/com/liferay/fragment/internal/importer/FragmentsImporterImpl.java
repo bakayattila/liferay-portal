@@ -5,6 +5,7 @@
 
 package com.liferay.fragment.internal.importer;
 
+import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.fragment.configuration.FragmentServiceConfiguration;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentExportImportConstants;
@@ -424,6 +425,16 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 					if (fragmentServiceConfiguration.propagateChanges()) {
 						PortletFileRepositoryUtil.deletePortletFileEntry(
 							fileEntry.getFileEntryId());
+
+						PortletFileRepositoryUtil.addPortletFileEntry(
+							null, groupId, userId, FragmentCollection.class.getName(),
+							fragmentCollection.getFragmentCollectionId(),
+							FragmentPortletKeys.FRAGMENT,
+							fragmentCollection.getResourcesFolderId(),
+							_getInputStream(zipFile, zipEntryNames.get(fileEntry.getFileName())), fileEntry.getFileName(),
+							MimeTypesUtil.getContentType(fileEntry.getFileName()), false);
+
+						zipEntryNames.remove(fileEntry.getFileName());
 					}
 					else {
 						String newFileName =
