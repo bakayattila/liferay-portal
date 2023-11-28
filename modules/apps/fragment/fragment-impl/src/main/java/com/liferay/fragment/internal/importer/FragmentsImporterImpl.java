@@ -424,6 +424,22 @@ public class FragmentsImporterImpl implements FragmentsImporter {
 					if (fragmentServiceConfiguration.propagateChanges()) {
 						PortletFileRepositoryUtil.deletePortletFileEntry(
 							fileEntry.getFileEntryId());
+
+						PortletFileRepositoryUtil.addPortletFileEntry(
+							null, groupId, userId,
+							FragmentCollection.class.getName(),
+							fragmentCollection.getFragmentCollectionId(),
+							FragmentPortletKeys.FRAGMENT,
+							fragmentCollection.getResourcesFolderId(),
+							_getInputStream(
+								zipFile,
+								zipEntryNames.get(fileEntry.getFileName())),
+							fileEntry.getFileName(),
+							MimeTypesUtil.getContentType(
+								fileEntry.getFileName()),
+							false);
+
+						zipEntryNames.remove(fileEntry.getFileName());
 					}
 					else {
 						String newFileName =
