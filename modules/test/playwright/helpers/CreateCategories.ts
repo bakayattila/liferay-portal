@@ -13,10 +13,12 @@ export type TCategory = Omit<
 
 export async function createCategories({
 	apiHelpers,
+	assetTypes,
 	categoryNames,
 	siteId,
 	vocabularyName,
 }: {
+	assetTypes?;
 	apiHelpers: ApiHelpers;
 	categoryNames: TCategory[];
 	siteId: string;
@@ -24,6 +26,7 @@ export async function createCategories({
 }): Promise<({id: number} & TCategory)[]> {
 	const {id: vocabularyId} =
 		await apiHelpers.headlessAdminTaxonomy.postSiteTaxonomyVocabulary({
+			assetTypes,
 			name: vocabularyName,
 			siteId,
 		});
