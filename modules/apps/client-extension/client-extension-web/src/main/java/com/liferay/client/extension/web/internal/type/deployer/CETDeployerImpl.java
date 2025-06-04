@@ -38,13 +38,13 @@ import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.portlet.Portlet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import javax.portlet.Portlet;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -221,7 +221,8 @@ public class CETDeployerImpl implements CETDeployer {
 			_register(
 				JSImportMapsContributor.class,
 				new ClientExtensionJSImportMapsContributor(
-					jsImportMapsEntryCET.getBareSpecifier(), _jsonFactory,
+					jsImportMapsEntryCET.getBareSpecifier(),
+					jsImportMapsEntryCET.getCompanyId(), _jsonFactory,
 					jsImportMapsEntryCET.getURL())));
 	}
 

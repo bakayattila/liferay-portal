@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Marcos Martins
@@ -50,7 +48,7 @@ public class AppearsOnHistogram implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(AppearsOnHistogram.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCanonicalUrl() {
 		if (_canonicalUrlSupplier != null) {
 			canonicalUrl = _canonicalUrlSupplier.get();
@@ -91,7 +89,7 @@ public class AppearsOnHistogram implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _canonicalUrlSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Metric[] getMetrics() {
 		if (_metricsSupplier != null) {
@@ -133,7 +131,7 @@ public class AppearsOnHistogram implements Serializable {
 	@JsonIgnore
 	private Supplier<Metric[]> _metricsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPageTitle() {
 		if (_pageTitleSupplier != null) {
 			pageTitle = _pageTitleSupplier.get();
@@ -174,7 +172,7 @@ public class AppearsOnHistogram implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _pageTitleSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Double getTotal() {
 		if (_totalSupplier != null) {
 			total = _totalSupplier.get();
@@ -215,7 +213,7 @@ public class AppearsOnHistogram implements Serializable {
 	@JsonIgnore
 	private Supplier<Double> _totalSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Double getTotalValue() {
 		if (_totalValueSupplier != null) {
 			totalValue = _totalValueSupplier.get();
@@ -366,8 +364,8 @@ public class AppearsOnHistogram implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.analytics.reports.rest.dto.v1_0.AppearsOnHistogram",
 		name = "x-class-name"
 	)

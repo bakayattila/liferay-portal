@@ -38,15 +38,15 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Samuel Trong Tran
@@ -439,6 +439,19 @@ public class PublicationsDisplayContext {
 				"password-policies", "permissions",
 				_language.get(_httpServletRequest, "permissions"), "get",
 				"permissions", "modal-permissions"),
+			new FDSActionDropdownItem(
+				PortletURLBuilder.createActionURL(
+					_renderResponse
+				).setActionName(
+					"/change_tracking/reactivate_ct_collection"
+				).setRedirect(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", "{id}"
+				).buildString(),
+				"reset", "reactivate",
+				_language.get(_httpServletRequest, "reactivate"), "post",
+				"reactivate", null),
 			new FDSActionDropdownItem(
 				null, "times-circle", "delete",
 				_language.get(_httpServletRequest, "delete"), null, "delete",

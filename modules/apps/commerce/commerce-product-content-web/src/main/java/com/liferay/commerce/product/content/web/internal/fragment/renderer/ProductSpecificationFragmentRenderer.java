@@ -34,16 +34,16 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -198,6 +198,22 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 						fragmentRendererContext.getFragmentEntryLink(),
 						"valueElementType")));
 
+			if (cpDefinitionSpecificationOptionValue != null) {
+				CPSpecificationOption cpSpecificationOption =
+					cpDefinitionSpecificationOptionValue.
+						getCPSpecificationOption();
+
+				httpServletRequest.setAttribute(
+					"liferay-commerce:product-specification:visible",
+					cpDefinitionSpecificationOptionValue.isVisible() &&
+					cpSpecificationOption.isVisible());
+			}
+			else {
+				httpServletRequest.setAttribute(
+					"liferay-commerce:product-specification:visible",
+					Boolean.FALSE);
+			}
+
 			requestDispatcher.include(httpServletRequest, httpServletResponse);
 		}
 		catch (Exception exception) {
@@ -221,11 +237,7 @@ public class ProductSpecificationFragmentRenderer implements FragmentRenderer {
 		String layoutMode = ParamUtil.getString(
 			originalHttpServletRequest, "p_l_mode", Constants.VIEW);
 
-		if (layoutMode.equals(Constants.EDIT)) {
-			return true;
-		}
-
-		return false;
+		return layoutMode.equals(Constants.EDIT);
 	}
 
 	private void _printPortletMessageInfo(

@@ -15,6 +15,7 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.ConfigurationFactoryImpl;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.application.type.ApplicationType;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.cache.PortalCache;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.cluster.Clusterable;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.ConfigurationFactoryUtil;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.PortletIdException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -110,6 +112,12 @@ import com.liferay.portlet.extra.config.ExtraPortletAppConfig;
 import com.liferay.portlet.extra.config.ExtraPortletAppConfigRegistry;
 import com.liferay.util.JS;
 
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PreferencesValidator;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.ServletContext;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -126,13 +134,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-
-import javax.portlet.PortletMode;
-import javax.portlet.PreferencesValidator;
-import javax.portlet.WindowState;
-
-import javax.servlet.ServletContext;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -252,13 +255,6 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 
 		PortletCategory portletCategory = (PortletCategory)WebAppPool.get(
 			companyId, WebKeys.PORTLET_CATEGORY);
-
-		if (portletCategory == null) {
-			portletCategory = new PortletCategory();
-
-			WebAppPool.put(
-				companyId, WebKeys.PORTLET_CATEGORY, portletCategory);
-		}
 
 		List<Portlet> portlets = getPortlets(companyId);
 
@@ -884,6 +880,18 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 		_portletApps.clear();
 		_portletsMap.clear();
 
+		if (_textReplacerBiFunction != null) {
+			for (int i = 0; i < xmls.length; i++) {
+				if (xmls[i] == null) {
+					continue;
+				}
+
+				xmls[i] = _textReplacerBiFunction.apply(
+					PortletLocalServiceImpl.class.getName() + "#initEAR#" + i,
+					xmls[i]);
+			}
+		}
+
 		try {
 			PortletApp portletApp = getPortletApp(StringPool.BLANK);
 
@@ -991,6 +999,18 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 		Set<String> liferayPortletIds = null;
 
 		PortletApp portletApp = getPortletApp(servletContextName);
+
+		if (_textReplacerBiFunction != null) {
+			for (int i = 0; i < xmls.length; i++) {
+				if (xmls[i] == null) {
+					continue;
+				}
+
+				xmls[i] = _textReplacerBiFunction.apply(
+					PortletLocalServiceImpl.class.getName() + "#initWAR#" + i,
+					xmls[i]);
+			}
+		}
 
 		try {
 			Set<String> servletURLPatterns = readWebXML(xmls[3]);
@@ -1398,7 +1418,7 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 
 			PortletCategory curPortletCategory = new PortletCategory(name);
 
-			portletCategory.addCategory(curPortletCategory);
+			portletCategory.addCategory(curPortletCategory.getRootCategory());
 
 			Set<String> curPortletIds = curPortletCategory.getPortletIds();
 
@@ -2934,9 +2954,35 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 		new ConcurrentHashMap<>();
 	private static volatile Map<String, String> _portletIdsByStrutsPath;
 	private static final Map<String, Portlet> _portletsMap =
-		new ConcurrentHashMap<>();
+		new ShardedPortletsMap();
 	private static final Map<Long, Map<String, Portlet>> _portletsMaps =
 		new ConcurrentHashMap<>();
+	private static final BiFunction<String, String, String>
+		_textReplacerBiFunction;
+
+	static {
+		ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+
+		Object instance = null;
+
+		try {
+			Class<?> clazz = classLoader.loadClass(
+				"com.liferay.portal.tools.jakarta.ee.transformer.function." +
+					"TextReplacerBiFunction");
+
+			instance = clazz.newInstance();
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			if (!(reflectiveOperationException instanceof
+					ClassNotFoundException)) {
+
+				throw new ExceptionInInitializerError(
+					reflectiveOperationException);
+			}
+		}
+
+		_textReplacerBiFunction = (BiFunction<String, String, String>)instance;
+	}
 
 	private final Map<Long, Set<String>> _companyDefaultModelResources =
 		new ConcurrentHashMap<>();
@@ -2968,6 +3014,50 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 	private ServiceTracker<FriendlyURLMapper, String[]> _serviceTracker;
 	private ServiceTrackerList<Consumer<Long>> _serviceTrackerList;
 
+	private static class ShardedPortletsMap
+		extends ConcurrentHashMap<String, Portlet> {
+
+		@Override
+		public Portlet get(Object key) {
+			Portlet portlet = super.get(key);
+
+			if (!DBPartition.isPartitionEnabled() ||
+				((portlet != null) &&
+				 (portlet.getCompanyId() == CompanyConstants.SYSTEM))) {
+
+				return portlet;
+			}
+
+			return super.get(DBPartitionUtil.getPartitionKey(key));
+		}
+
+		@Override
+		public Portlet put(String key, Portlet value) {
+			if (!DBPartition.isPartitionEnabled() || (value == null) ||
+				(value.getCompanyId() == CompanyConstants.SYSTEM)) {
+
+				return super.put(key, value);
+			}
+
+			return super.put(DBPartitionUtil.getPartitionKey(key), value);
+		}
+
+		@Override
+		public Portlet remove(Object key) {
+			if (DBPartition.isPartitionEnabled()) {
+				Portlet portlet = super.remove(
+					DBPartitionUtil.getPartitionKey(key));
+
+				if (portlet != null) {
+					return portlet;
+				}
+			}
+
+			return super.remove(key);
+		}
+
+	}
+
 	private class FriendlyURLMapperServiceTrackerCustomizer
 		implements ServiceTrackerCustomizer<FriendlyURLMapper, String[]> {
 
@@ -2976,7 +3066,7 @@ public class PortletLocalServiceImpl extends PortletLocalServiceBaseImpl {
 			ServiceReference<FriendlyURLMapper> serviceReference) {
 
 			Object propertyValue = serviceReference.getProperty(
-				"javax.portlet.name");
+				"jakarta.portlet.name");
 
 			if (propertyValue == null) {
 				return null;

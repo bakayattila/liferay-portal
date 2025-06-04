@@ -220,13 +220,15 @@ export class SearchPage {
 			autoClick: true,
 			target: this.searchResultsPaginationItemsPerPageDropdown
 				.nth(index)
-				.locator(`xpath=//*[@id='${delta}']`),
+				.getByRole('option', {
+					name: new RegExp(`${delta}`),
+				}),
 			trigger: this.searchResultsPaginationItemsPerPageToggle.nth(index),
 		});
 
 		await expect(
 			this.searchResultsPaginationItemsPerPageToggle.nth(index)
-		).toHaveText(new RegExp(`${delta.toString()} Entries`));
+		).toHaveText(new RegExp(`${delta} Entries`));
 	}
 
 	async selectPaginationPageNumber(pageNumber: number) {

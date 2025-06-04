@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {FrameLocator, Locator, Page} from '@playwright/test';
+import {FrameLocator, Locator, Page, expect} from '@playwright/test';
 
 import {waitForAlert} from '../../../utils/waitForAlert';
 import {ApplicationsMenuPage} from '../../product-navigation-applications-menu/ApplicationsMenuPage';
 import {searchTableRowByValue} from '../commerceDNDTablePage';
 
 export class CommerceAdminChannelDetailsPage {
+	readonly activeToggle: (tableName: string) => Promise<Locator>;
+	readonly addTaxRateButton: (tableName: string) => Promise<Locator>;
+	readonly addTaxRateFrame: FrameLocator;
 	readonly allowMultishippingToggle: Locator;
 	readonly applicationsMenuPage: ApplicationsMenuPage;
 	readonly channelNameLink: (channelName: string) => Locator;
@@ -28,6 +31,7 @@ export class CommerceAdminChannelDetailsPage {
 		pageName: string
 	) => Promise<Locator>;
 	readonly countryTab: Locator;
+	readonly currencyTab: Locator;
 	readonly detailsButton: (tableName: string) => Promise<Locator>;
 	readonly eligibilityTab: (
 		isNestedFrame: boolean,
@@ -45,7 +49,13 @@ export class CommerceAdminChannelDetailsPage {
 	readonly generalCommerceAdminChannelTableLink: (
 		name: string
 	) => Promise<Locator>;
+	readonly getRowByTextFromSidePanelTable: (
+		tableName: string,
+		text: string
+	) => Promise<Locator>;
+	readonly guestCheckoutToggle: Locator;
 	readonly isActive: (tableName: string) => Promise<Locator>;
+	readonly maxOpenOrderAccountInput: Locator;
 	readonly page: Page;
 	readonly placeHolderTerm: (
 		isNestedFrame: boolean,
@@ -57,12 +67,6 @@ export class CommerceAdminChannelDetailsPage {
 		isNestedFrame: boolean,
 		tableName: string
 	) => Promise<Locator>;
-	readonly sidePanelFrame: (tableName: string) => Promise<FrameLocator>;
-	readonly sidePanelFrameButton: (
-		buttonName: string,
-		tableName: string
-	) => Promise<Locator>;
-	readonly sidePanelNestedFrame: (tableName: string) => Promise<FrameLocator>;
 	readonly shippingOptionsTab: (tableName: string) => Promise<Locator>;
 	readonly shippingOptionSettingsTab: (tableName: string) => Promise<Locator>;
 	readonly shippingOptionsTableLink: (
@@ -70,8 +74,47 @@ export class CommerceAdminChannelDetailsPage {
 		tableName: string
 	) => Promise<Locator>;
 	readonly showSeparateOrderItemsToggle: Locator;
+	readonly sidePanelFrame: (tableName: string) => Promise<FrameLocator>;
+	readonly sidePanelFrameActionsButton: (
+		tableName: string,
+		name: string
+	) => Promise<Locator>;
+	readonly sidePanelFrameButton: (
+		buttonName: string,
+		tableName: string
+	) => Promise<Locator>;
+	readonly sidePanelFrameInput: (
+		input: string,
+		tableName: string
+	) => Promise<Locator>;
+	readonly sidePanelFrameEditMenuItem: (
+		tableName: string
+	) => Promise<Locator>;
+	readonly sidePanelNestedFrame: (tableName: string) => Promise<FrameLocator>;
+	readonly sidePanelNestedFrameAmountInput: (
+		tableName: string
+	) => Promise<Locator>;
+	readonly taxCategoryChoiceBox: Locator;
+	readonly taxRateFrameSubmitButton: Locator;
+	readonly taxRatesTab: (tableName: string) => Promise<Locator>;
 
 	constructor(page: Page) {
+		this.activeToggle = async (tableName: string) => {
+			return (await this.sidePanelFrame(tableName)).getByRole(
+				'checkbox',
+				{
+					name: 'Active',
+				}
+			);
+		};
+		this.addTaxRateButton = async (tableName: string) => {
+			return (await this.sidePanelFrame(tableName)).getByTitle(
+				'Add Tax Rate'
+			);
+		};
+		this.addTaxRateFrame = page
+			.locator('div.fds-modal-body.modal-body-iframe')
+			.frameLocator('iframe');
 		this.allowMultishippingToggle = page.getByLabel('Allow Multishipping');
 		this.applicationsMenuPage = new ApplicationsMenuPage(page);
 		this.channelNameLink = (channelName: string) =>
@@ -81,7 +124,7 @@ export class CommerceAdminChannelDetailsPage {
 			});
 		this.commerceChannelHealthChecksTable = page
 			.locator(
-				'#_com_liferay_commerce_channel_web_internal_portlet_CommerceChannelsPortlet_editChannelContainer .dnd-table'
+				'#_com_liferay_commerce_channel_web_internal_portlet_CommerceChannelsPortlet_editChannelContainer .fds table'
 			)
 			.filter({hasText: 'Fix Issue'});
 		this.commerceChannelHealthChecksTableRow = async (
@@ -116,26 +159,11 @@ export class CommerceAdminChannelDetailsPage {
 			throw new Error(`Cannot locate table row with name ${pageName}`);
 		};
 		this.countryTab = page.getByRole('link', {name: 'Countries'});
+		this.currencyTab = page.getByRole('link', {name: 'Currencies'});
 		this.generalCommerceAdminChannelTableLink = async (name: string) => {
 			return page.getByRole('link', {exact: true, name});
 		};
-		this.sidePanelFrame = async (tableName: string) => {
-			switch (tableName) {
-				case 'Payment Methods':
-					return this.page.frameLocator('iframe >> nth=1');
-				case 'Shipping Methods':
-					return this.page.frameLocator('iframe >> nth=2');
-				case 'Tax Calculations':
-					return this.page.frameLocator('iframe >> nth=3');
-				default:
-					break;
-			}
-		};
-		this.sidePanelNestedFrame = async (tableName: string) => {
-			return (await this.sidePanelFrame(tableName)).frameLocator(
-				'iframe'
-			);
-		};
+		this.guestCheckoutToggle = page.getByLabel('Guest Checkout');
 		this.closeSidePanelFrame = async (
 			isNestedFrame: boolean,
 			tableName: string
@@ -201,18 +229,25 @@ export class CommerceAdminChannelDetailsPage {
 				name: 'Save',
 			});
 		};
+		this.getRowByTextFromSidePanelTable = async (
+			tableName: string,
+			text: string
+		) => {
+			return (await this.sidePanelFrame(tableName))
+				.locator('tbody')
+				.locator('tr')
+				.filter({
+					has: (await this.sidePanelFrame(tableName))
+						.getByText(text, {exact: true})
+						.first(),
+				});
+		};
 		this.isActive = async (tableName: string) => {
 			return (await this.sidePanelFrame(tableName)).getByLabel('Active');
 		};
-		this.sidePanelFrameButton = async (
-			buttonName: string,
-			tableName: string
-		) => {
-			return (await this.sidePanelNestedFrame(tableName)).getByRole(
-				'button',
-				{exact: true, name: buttonName}
-			);
-		};
+		this.maxOpenOrderAccountInput = page.getByLabel(
+			'Maximum Number of Open Orders per Account'
+		);
 		this.saveButton = page.getByRole('link', {name: 'Save'});
 		this.selectButton = async (
 			isNestedFrame: boolean,
@@ -250,6 +285,59 @@ export class CommerceAdminChannelDetailsPage {
 		this.showSeparateOrderItemsToggle = page.getByLabel(
 			'Show Separate Order Items'
 		);
+		this.sidePanelFrame = async (tableName: string) => {
+			switch (tableName) {
+				case 'Payment Methods':
+					return this.page.frameLocator('iframe >> nth=1');
+				case 'Shipping Methods':
+					return this.page.frameLocator('iframe >> nth=2');
+				case 'Tax Calculations':
+					return this.page
+						.locator('div.fds-side-panel.is-visible')
+						.frameLocator('iframe');
+				default:
+					break;
+			}
+		};
+		this.sidePanelFrameActionsButton = async (
+			tableName: string,
+			name: string
+		) => {
+			return (
+				await this.getRowByTextFromSidePanelTable(tableName, name)
+			).getByRole('button', {name: 'Actions'});
+		};
+		this.sidePanelFrameButton = async (
+			buttonName: string,
+			tableName: string
+		) => {
+			return (await this.sidePanelNestedFrame(tableName)).getByRole(
+				'button',
+				{exact: true, name: buttonName}
+			);
+		};
+		this.sidePanelFrameInput = async (
+			inputName: string,
+			tableName: string
+		) => {
+			return (await this.sidePanelFrame(tableName)).getByLabel(inputName);
+		};
+		this.sidePanelFrameEditMenuItem = async (tableName: string) => {
+			return (await this.sidePanelFrame(tableName)).getByRole(
+				'menuitem',
+				{name: 'Edit'}
+			);
+		};
+		this.sidePanelNestedFrame = async (tableName: string) => {
+			return (await this.sidePanelFrame(tableName)).frameLocator(
+				'iframe'
+			);
+		};
+		this.sidePanelNestedFrameAmountInput = async (tableName: string) => {
+			return (await this.sidePanelNestedFrame(tableName)).getByLabel(
+				'Amount'
+			);
+		};
 		this.page = page;
 		this.placeHolderTerm = async (
 			isNestedFrame: boolean,
@@ -266,13 +354,44 @@ export class CommerceAdminChannelDetailsPage {
 				text
 			);
 		};
+		this.taxCategoryChoiceBox =
+			this.addTaxRateFrame.getByText('Tax Category');
+		this.taxRateFrameSubmitButton = this.addTaxRateFrame.getByRole(
+			'button',
+			{name: 'Submit'}
+		);
+		this.taxRatesTab = async (tableName: string) => {
+			return (await this.sidePanelFrame(tableName)).getByRole('link', {
+				name: 'Tax Rates',
+			});
+		};
 	}
 
 	async activateChannelConfiguration(name: string, tableName: string) {
+		const isActiveCheckbox = await this.isActive(tableName);
+
 		await (await this.generalCommerceAdminChannelTableLink(name)).click();
 
+		if (!(await isActiveCheckbox.isChecked())) {
+			await isActiveCheckbox.check();
+		}
 		await (await this.isActive(tableName)).check();
 		await (await this.frameSaveButton(false, tableName)).click();
+		await waitForAlert(await this.sidePanelFrame(tableName));
+		await (await this.closeSidePanelFrame(false, tableName)).click();
+	}
+
+	async deactivateChannelConfiguration(name: string, tableName: string) {
+		const isActiveCheckbox = await this.isActive(tableName);
+
+		await (await this.generalCommerceAdminChannelTableLink(name)).click();
+
+		if (await isActiveCheckbox.isChecked()) {
+			await isActiveCheckbox.uncheck();
+		}
+		await (await this.isActive(tableName)).uncheck();
+		await (await this.frameSaveButton(false, tableName)).click();
+		await waitForAlert(await this.sidePanelFrame(tableName));
 		await (await this.closeSidePanelFrame(false, tableName)).click();
 	}
 
@@ -353,6 +472,57 @@ export class CommerceAdminChannelDetailsPage {
 		await waitForAlert(await this.sidePanelNestedFrame('Shipping Methods'));
 	}
 
+	async addFixedTaxRate(amount: string, name: string) {
+		const tableName = 'Tax Calculations';
+
+		await (
+			await this.generalCommerceAdminChannelTableLink('Fixed Tax Rate')
+		).click();
+
+		await expect(await this.activeToggle(tableName)).toBeVisible();
+
+		await (await this.activeToggle(tableName)).check();
+		await (await this.frameSaveButton(false, tableName)).click();
+
+		await (await this.taxRatesTab(tableName)).click();
+		await (await this.addTaxRateButton(tableName)).click();
+
+		await expect(this.taxCategoryChoiceBox).toBeVisible();
+
+		await this.taxCategoryChoiceBox.selectOption(name);
+		await this.addTaxRateFrame.getByLabel('Amount').fill(amount);
+		await this.taxRateFrameSubmitButton.click();
+
+		await this.page.reload();
+
+		await expect(
+			await this.generalCommerceAdminChannelTableLink('Fixed Tax Rate')
+		).toBeVisible();
+	}
+
+	async editFixedTaxRate(newAmount: string, name: string) {
+		const tableName = 'Tax Calculations';
+
+		await (
+			await this.generalCommerceAdminChannelTableLink('Fixed Tax Rate')
+		).click();
+		await (await this.taxRatesTab(tableName)).click();
+
+		await (await this.sidePanelFrameActionsButton(tableName, name)).click();
+		await (await this.sidePanelFrameEditMenuItem(tableName)).click();
+
+		await (
+			await this.sidePanelNestedFrameAmountInput(tableName)
+		).fill(newAmount);
+		await (await this.frameSaveButton(true, tableName)).click();
+
+		await this.page.reload();
+
+		await expect(
+			await this.generalCommerceAdminChannelTableLink('Fixed Tax Rate')
+		).toBeVisible();
+	}
+
 	async setEntryEligibility(
 		eligibilityOption: string,
 		entryName: string,
@@ -428,5 +598,9 @@ export class CommerceAdminChannelDetailsPage {
 
 	async goToCountries() {
 		await this.countryTab.click();
+	}
+
+	async goToCurrencies() {
+		await this.currencyTab.click();
 	}
 }

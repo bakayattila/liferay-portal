@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -70,6 +70,7 @@ page import="com.liferay.portal.kernel.exception.UserPasswordException" %><%@
 page import="com.liferay.portal.kernel.exception.UserScreenNameException" %><%@
 page import="com.liferay.portal.kernel.exception.UserSmsException" %><%@
 page import="com.liferay.portal.kernel.exception.WebsiteURLException" %><%@
+page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.language.UnicodeLanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Address" %><%@
@@ -103,7 +104,6 @@ page import="com.liferay.portal.kernel.portlet.PortletProviderUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.portal.kernel.security.auth.AuthTokenUtil" %><%@
 page import="com.liferay.portal.kernel.security.auth.ScreenNameValidator" %><%@
-page import="com.liferay.portal.kernel.security.ldap.LDAPSettingsUtil" %><%@
 page import="com.liferay.portal.kernel.security.membershippolicy.OrganizationMembershipPolicyUtil" %><%@
 page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
 page import="com.liferay.portal.kernel.service.AddressServiceUtil" %><%@
@@ -183,6 +183,8 @@ page import="com.liferay.users.admin.web.internal.servlet.taglib.util.UserAction
 page import="com.liferay.users.admin.web.internal.util.CSSClasses" %><%@
 page import="com.liferay.users.admin.web.internal.util.UsersAdminPortletURLUtil" %>
 
+<%@ page import="jakarta.portlet.PortletURL" %>
+
 <%@ page import="java.text.Format" %>
 
 <%@ page import="java.util.ArrayList" %><%@
@@ -194,8 +196,6 @@ page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
 page import="java.util.Set" %><%@
 page import="java.util.TimeZone" %>
-
-<%@ page import="javax.portlet.PortletURL" %>
 
 <liferay-frontend:defineObjects />
 

@@ -31,7 +31,9 @@ export class DocumentLibraryEditFilePage {
 			'#_com_liferay_document_library_web_portlet_DLAdminPortlet_description'
 		);
 		this.documentLibraryPage = new DocumentLibraryPage(page);
-		this.permissionViewSelector = page.getByLabel('Viewable by');
+		this.permissionViewSelector = page.getByLabel(
+			'Viewable and Downloadable By'
+		);
 		this.publishButton = page.getByRole('button', {
 			exact: true,
 			name: 'Publish',
@@ -151,6 +153,7 @@ export class DocumentLibraryEditFilePage {
 		await this.goto(siteUrl);
 
 		await this.titleSelector.fill(title);
+
 		if (await this.permissionViewSelector.isVisible()) {
 			await this.permissionViewSelector.selectOption('Site Member');
 		}
@@ -162,13 +165,39 @@ export class DocumentLibraryEditFilePage {
 		await this.publishButton.click();
 	}
 
-	async publishNewFileWithScheduleDate(
-		scheduleDate: string,
+	async publishNewFileWithOwnerViewPermission(
 		title: string,
 		siteUrl?: Site['friendlyUrlPath']
 	) {
 		await this.goto(siteUrl);
 
+		await this.titleSelector.fill(title);
+
+		const permissionsRoleSelector = this.page.getByLabel(
+			'Viewable and Downloadable By'
+		);
+
+		if (await permissionsRoleSelector.isVisible()) {
+			await permissionsRoleSelector.selectOption('Owner');
+		}
+		else {
+			await this.page.getByRole('button', {name: 'Permissions'}).click();
+			await permissionsRoleSelector.selectOption('Owner');
+		}
+
+		await this.publishButton.click();
+	}
+
+	async goToPublishNewFileWithScheduleDate(
+		scheduleDate: string,
+		title: string,
+		siteUrl?: Site['friendlyUrlPath']
+	) {
+		await this.goto(siteUrl);
+		await this.publishNewFileWithScheduleDate(scheduleDate, title);
+	}
+
+	async publishNewFileWithScheduleDate(scheduleDate: string, title: string) {
 		await this.titleSelector.fill(title);
 
 		const isClosed =
@@ -207,25 +236,22 @@ export class DocumentLibraryEditFilePage {
 
 		await fieldset.getByRole('button', {name: 'Select'}).click();
 
-		const selectDisplayPageModal = await this.page.frameLocator(
+		const selectDisplayPageModal = this.page.frameLocator(
 			'iframe[title*="Select Page"]'
 		);
 
-		await this.page
-			.locator('.modal-title', {
-				hasText: 'Select Page',
-			})
-			.waitFor({
-				state: 'visible',
-			});
+		await selectDisplayPageModal
+			.locator('.card-type-asset')
+			.filter({hasText: displayPageName})
+			.click({trial: true});
 
 		await clickAndExpectToBeHidden({
 			target: this.page.locator('.modal-title', {
 				hasText: 'Select Page',
 			}),
-			trigger: selectDisplayPageModal.getByLabel(
-				'Select ' + displayPageName
-			),
+			trigger: selectDisplayPageModal
+				.locator('.card-type-asset')
+				.filter({hasText: displayPageName}),
 		});
 	}
 }

@@ -5,6 +5,7 @@
 
 package com.liferay.evp;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.util.HashMap;
@@ -43,11 +44,10 @@ public class ObjectActionRequestStatusRestController
 		long evpOrganizationId = propertiesJSONObject.getLong(
 			"r_organization_c_evpOrganizationId");
 
-		JSONObject evpOrganizationJSONObject = get(
-			jwt,
-			uriBuilder -> uriBuilder.path(
-				"/o/c/evporganizations/" + evpOrganizationId
-			).build());
+		JSONObject evpOrganizationJSONObject = new JSONObject(
+			get(
+				jwt.toString(),
+				createURI("/o/c/evporganizations/" + evpOrganizationId)));
 
 		String organizationStatus = evpOrganizationJSONObject.getJSONObject(
 			"organizationStatus"
@@ -57,6 +57,7 @@ public class ObjectActionRequestStatusRestController
 
 		if (organizationStatus.equals("awaitingApprovalOnEVP")) {
 			put(
+				jwt.toString(),
 				new JSONObject(
 					HashMapBuilder.<String, HashMap<String, String>>put(
 						"requestStatus",
@@ -65,12 +66,11 @@ public class ObjectActionRequestStatusRestController
 						).put(
 							"name", "Awaiting Organization Review"
 						).build()
-					).build()),
-				jwt,
-				uriBuilder -> uriBuilder.path(
+					).build()
+				).toString(),
+				createURI(
 					"/o/c/evprequests/" +
-						objectEntryDTOEVPRequestJSONObject.getLong("id")
-				).build());
+						objectEntryDTOEVPRequestJSONObject.getLong("id")));
 		}
 
 		return new ResponseEntity<>(json, HttpStatus.OK);

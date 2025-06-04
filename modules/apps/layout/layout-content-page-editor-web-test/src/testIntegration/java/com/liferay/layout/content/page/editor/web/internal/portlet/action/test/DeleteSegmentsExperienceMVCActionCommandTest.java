@@ -6,6 +6,8 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
@@ -22,8 +24,10 @@ import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.portlet.MockActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -35,9 +39,10 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionRequest;
 
-import javax.portlet.PortletPreferences;
+import jakarta.portlet.PortletPreferences;
+
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -76,8 +81,8 @@ public class DeleteSegmentsExperienceMVCActionCommandTest {
 	}
 
 	@Test
-	@TestInfo("LPS-187444")
-	public void testGetPortletSetup() throws Exception {
+	@TestInfo({"LPD-50133", "LPS-187444"})
+	public void testProcessAction() throws Exception {
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		Layout draftLayout = layout.fetchDraftLayout();
@@ -92,11 +97,54 @@ public class DeleteSegmentsExperienceMVCActionCommandTest {
 			_group.getGroupId(),
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
-		portletPreferences.setValue("articleId", journalArticle.getArticleId());
 		portletPreferences.setValue(
-			"groupId", String.valueOf(journalArticle.getGroupId()));
+			"articleExternalReferenceCode",
+			journalArticle.getExternalReferenceCode());
+
+		portletPreferences.setValue(
+			"groupExternalReferenceCode", _group.getExternalReferenceCode());
 
 		portletPreferences.store();
+
+		long segmentsExperienceId = _addSegmentsExperience(draftLayout);
+
+		List<FragmentEntryLink> fragmentEntryLinks =
+			_fragmentEntryLinkLocalService.
+				getFragmentEntryLinksBySegmentsExperienceId(
+					draftLayout.getGroupId(), segmentsExperienceId,
+					draftLayout.getPlid());
+
+		Assert.assertEquals(
+			fragmentEntryLinks.toString(), 1, fragmentEntryLinks.size());
+
+		FragmentEntryLink fragmentEntryLink = fragmentEntryLinks.get(0);
+
+		JSONObject editableValuesJSONObject = _jsonFactory.createJSONObject(
+			fragmentEntryLink.getEditableValues());
+
+		String segmentsExperiencePortletId = PortletIdCodec.encode(
+			editableValuesJSONObject.getString("portletId"),
+			editableValuesJSONObject.getString("instanceId"));
+
+		Assert.assertNotEquals(portletId, segmentsExperiencePortletId);
+
+		portletPreferences = _portletPreferencesFactory.getPortletSetup(
+			draftLayout, segmentsExperiencePortletId, null);
+
+		Assert.assertEquals(
+			journalArticle.getExternalReferenceCode(),
+			portletPreferences.getValue(
+				"articleExternalReferenceCode", StringPool.BLANK));
+
+		List<com.liferay.portal.kernel.model.PortletPreferences>
+			segmentsExperiencePortletPreferences =
+				_portletPreferencesLocalService.
+					getPortletPreferencesByPortletId(
+						segmentsExperiencePortletId);
+
+		Assert.assertEquals(
+			segmentsExperiencePortletPreferences.toString(), 1,
+			segmentsExperiencePortletPreferences.size());
 
 		MockActionRequest mockActionRequest =
 			ContentLayoutTestUtil.getMockLiferayPortletActionRequest(
@@ -104,8 +152,7 @@ public class DeleteSegmentsExperienceMVCActionCommandTest {
 				_group, draftLayout);
 
 		mockActionRequest.setParameter(
-			"segmentsExperienceId",
-			String.valueOf(_addSegmentsExperience(draftLayout)));
+			"segmentsExperienceId", String.valueOf(segmentsExperienceId));
 
 		_deleteSegmentsExperieceMVCActionCommand.processAction(
 			mockActionRequest, new MockLiferayPortletActionResponse());
@@ -114,8 +161,26 @@ public class DeleteSegmentsExperienceMVCActionCommandTest {
 			draftLayout, portletId, null);
 
 		Assert.assertEquals(
-			journalArticle.getArticleId(),
-			portletPreferences.getValue("articleId", StringPool.BLANK));
+			journalArticle.getExternalReferenceCode(),
+			portletPreferences.getValue(
+				"articleExternalReferenceCode", StringPool.BLANK));
+
+		fragmentEntryLinks =
+			_fragmentEntryLinkLocalService.
+				getFragmentEntryLinksBySegmentsExperienceId(
+					draftLayout.getGroupId(), segmentsExperienceId,
+					draftLayout.getPlid());
+
+		Assert.assertEquals(
+			fragmentEntryLinks.toString(), 0, fragmentEntryLinks.size());
+
+		segmentsExperiencePortletPreferences =
+			_portletPreferencesLocalService.getPortletPreferencesByPortletId(
+				segmentsExperiencePortletId);
+
+		Assert.assertEquals(
+			segmentsExperiencePortletPreferences.toString(), 0,
+			segmentsExperiencePortletPreferences.size());
 	}
 
 	private String _addJournalContentPortletToLayout(Layout layout)
@@ -183,6 +248,9 @@ public class DeleteSegmentsExperienceMVCActionCommandTest {
 	)
 	private MVCActionCommand _deleteSegmentsExperieceMVCActionCommand;
 
+	@Inject
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
 	@DeleteAfterTestRun
 	private Group _group;
 
@@ -191,5 +259,8 @@ public class DeleteSegmentsExperienceMVCActionCommandTest {
 
 	@Inject
 	private PortletPreferencesFactory _portletPreferencesFactory;
+
+	@Inject
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 }

@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -44,9 +44,13 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Pagination;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.InstanceResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.InstanceSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -85,7 +85,7 @@ public abstract class BaseInstanceResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,13 +99,12 @@ public abstract class BaseInstanceResourceTestCase {
 
 		_instanceResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		InstanceResource.Builder builder = InstanceResource.builder();
-
-		instanceResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		instanceResource = InstanceResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -188,6 +187,175 @@ public abstract class BaseInstanceResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteProcessInstance() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		Instance instance = testDeleteProcessInstance_addInstance();
+
+		assertHttpResponseStatusCode(
+			204,
+			instanceResource.deleteProcessInstanceHttpResponse(
+				testDeleteProcessInstance_getProcessId(instance),
+				instance.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			instanceResource.getProcessInstanceHttpResponse(
+				testDeleteProcessInstance_getProcessId(instance),
+				instance.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			instanceResource.getProcessInstanceHttpResponse(
+				testDeleteProcessInstance_getProcessId(instance), 0L));
+	}
+
+	protected Long testDeleteProcessInstance_getProcessId(Instance instance)
+		throws Exception {
+
+		return instance.getProcessId();
+	}
+
+	protected Instance testDeleteProcessInstance_addInstance()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetProcessInstance() throws Exception {
+		Instance postInstance = testGetProcessInstance_addInstance();
+
+		Instance getInstance = instanceResource.getProcessInstance(
+			testGetProcessInstance_getProcessId(postInstance),
+			postInstance.getId());
+
+		assertEquals(postInstance, getInstance);
+		assertValid(getInstance);
+	}
+
+	protected Long testGetProcessInstance_getProcessId(Instance instance)
+		throws Exception {
+
+		return instance.getProcessId();
+	}
+
+	protected Instance testGetProcessInstance_addInstance() throws Exception {
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProcessInstance() throws Exception {
+		Instance instance = testGraphQLGetProcessInstance_addInstance();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				instance,
+				InstanceSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"processInstance",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"processId",
+											testGraphQLGetProcessInstance_getProcessId(
+												instance));
+
+										put("instanceId", instance.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/processInstance"))));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertTrue(
+			equals(
+				instance,
+				InstanceSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"portalWorkflowMetrics_v1_0",
+								new GraphQLField(
+									"processInstance",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"processId",
+												testGraphQLGetProcessInstance_getProcessId(
+													instance));
+
+											put("instanceId", instance.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/portalWorkflowMetrics_v1_0",
+						"Object/processInstance"))));
+	}
+
+	protected Long testGraphQLGetProcessInstance_getProcessId(Instance instance)
+		throws Exception {
+
+		return instance.getProcessId();
+	}
+
+	@Test
+	public void testGraphQLGetProcessInstanceNotFound() throws Exception {
+		Long irrelevantProcessId = RandomTestUtil.randomLong();
+		Long irrelevantInstanceId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"processInstance",
+						new HashMap<String, Object>() {
+							{
+								put("processId", irrelevantProcessId);
+								put("instanceId", irrelevantInstanceId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace portalWorkflowMetrics_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"portalWorkflowMetrics_v1_0",
+						new GraphQLField(
+							"processInstance",
+							new HashMap<String, Object>() {
+								{
+									put("processId", irrelevantProcessId);
+									put("instanceId", irrelevantInstanceId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected Instance testGraphQLGetProcessInstance_addInstance()
+		throws Exception {
+
+		return testGraphQLInstance_addInstance();
+	}
+
+	@Test
 	public void testGetProcessInstancesPage() throws Exception {
 		Long processId = testGetProcessInstancesPage_getProcessId();
 		Long irrelevantProcessId =
@@ -258,10 +426,10 @@ public abstract class BaseInstanceResourceTestCase {
 	public void testGetProcessInstancesPageWithPagination() throws Exception {
 		Long processId = testGetProcessInstancesPage_getProcessId();
 
-		Page<Instance> instancePage = instanceResource.getProcessInstancesPage(
+		Page<Instance> instancesPage = instanceResource.getProcessInstancesPage(
 			processId, null, null, null, null, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(instancePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(instancesPage.getTotalCount());
 
 		Instance instance1 = testGetProcessInstancesPage_addInstance(
 			processId, randomInstance());
@@ -486,194 +654,6 @@ public abstract class BaseInstanceResourceTestCase {
 	}
 
 	@Test
-	public void testPostProcessInstance() throws Exception {
-		Instance randomInstance = randomInstance();
-
-		Instance postInstance = testPostProcessInstance_addInstance(
-			randomInstance);
-
-		assertEquals(randomInstance, postInstance);
-		assertValid(postInstance);
-	}
-
-	protected Instance testPostProcessInstance_addInstance(Instance instance)
-		throws Exception {
-
-		return instanceResource.postProcessInstance(
-			testGetProcessInstancesPage_getProcessId(), instance);
-	}
-
-	@Test
-	public void testDeleteProcessInstance() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		Instance instance = testDeleteProcessInstance_addInstance();
-
-		assertHttpResponseStatusCode(
-			204,
-			instanceResource.deleteProcessInstanceHttpResponse(
-				testDeleteProcessInstance_getProcessId(instance),
-				instance.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			instanceResource.getProcessInstanceHttpResponse(
-				testDeleteProcessInstance_getProcessId(instance),
-				instance.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			instanceResource.getProcessInstanceHttpResponse(
-				testDeleteProcessInstance_getProcessId(instance), 0L));
-	}
-
-	protected Long testDeleteProcessInstance_getProcessId(Instance instance)
-		throws Exception {
-
-		return instance.getProcessId();
-	}
-
-	protected Instance testDeleteProcessInstance_addInstance()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetProcessInstance() throws Exception {
-		Instance postInstance = testGetProcessInstance_addInstance();
-
-		Instance getInstance = instanceResource.getProcessInstance(
-			testGetProcessInstance_getProcessId(postInstance),
-			postInstance.getId());
-
-		assertEquals(postInstance, getInstance);
-		assertValid(getInstance);
-	}
-
-	protected Long testGetProcessInstance_getProcessId(Instance instance)
-		throws Exception {
-
-		return instance.getProcessId();
-	}
-
-	protected Instance testGetProcessInstance_addInstance() throws Exception {
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetProcessInstance() throws Exception {
-		Instance instance = testGraphQLGetProcessInstance_addInstance();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				instance,
-				InstanceSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"processInstance",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"processId",
-											testGraphQLGetProcessInstance_getProcessId(
-												instance));
-
-										put("instanceId", instance.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/processInstance"))));
-
-		// Using the namespace portalWorkflowMetrics_v1_0
-
-		Assert.assertTrue(
-			equals(
-				instance,
-				InstanceSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"portalWorkflowMetrics_v1_0",
-								new GraphQLField(
-									"processInstance",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"processId",
-												testGraphQLGetProcessInstance_getProcessId(
-													instance));
-
-											put("instanceId", instance.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/portalWorkflowMetrics_v1_0",
-						"Object/processInstance"))));
-	}
-
-	protected Long testGraphQLGetProcessInstance_getProcessId(Instance instance)
-		throws Exception {
-
-		return instance.getProcessId();
-	}
-
-	@Test
-	public void testGraphQLGetProcessInstanceNotFound() throws Exception {
-		Long irrelevantProcessId = RandomTestUtil.randomLong();
-		Long irrelevantInstanceId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"processInstance",
-						new HashMap<String, Object>() {
-							{
-								put("processId", irrelevantProcessId);
-								put("instanceId", irrelevantInstanceId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace portalWorkflowMetrics_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"portalWorkflowMetrics_v1_0",
-						new GraphQLField(
-							"processInstance",
-							new HashMap<String, Object>() {
-								{
-									put("processId", irrelevantProcessId);
-									put("instanceId", irrelevantInstanceId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected Instance testGraphQLGetProcessInstance_addInstance()
-		throws Exception {
-
-		return testGraphQLInstance_addInstance();
-	}
-
-	@Test
 	public void testPatchProcessInstance() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		Instance instance = testPatchProcessInstance_addInstance();
@@ -715,6 +695,24 @@ public abstract class BaseInstanceResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPostProcessInstance() throws Exception {
+		Instance randomInstance = randomInstance();
+
+		Instance postInstance = testPostProcessInstance_addInstance(
+			randomInstance);
+
+		assertEquals(randomInstance, postInstance);
+		assertValid(postInstance);
+	}
+
+	protected Instance testPostProcessInstance_addInstance(Instance instance)
+		throws Exception {
+
+		return instanceResource.postProcessInstance(
+			testGetProcessInstancesPage_getProcessId(), instance);
 	}
 
 	protected Instance testGraphQLInstance_addInstance() throws Exception {
@@ -1567,13 +1565,11 @@ public abstract class BaseInstanceResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1583,7 +1579,7 @@ public abstract class BaseInstanceResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(instance.getDateCompletion()));
+				sb.append(_format.format(instance.getDateCompletion()));
 			}
 
 			return sb.toString();
@@ -1598,13 +1594,11 @@ public abstract class BaseInstanceResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1614,7 +1608,7 @@ public abstract class BaseInstanceResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(instance.getDateCreated()));
+				sb.append(_format.format(instance.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -1629,13 +1623,11 @@ public abstract class BaseInstanceResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1645,7 +1637,7 @@ public abstract class BaseInstanceResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(instance.getDateModified()));
+				sb.append(_format.format(instance.getDateModified()));
 			}
 
 			return sb.toString();
@@ -2009,7 +2001,9 @@ public abstract class BaseInstanceResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseInstanceResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private

@@ -5,9 +5,10 @@
 
 package com.liferay.headless.delivery.client.serdes.v1_0;
 
-import com.liferay.headless.delivery.client.dto.v1_0.CustomField;
 import com.liferay.headless.delivery.client.dto.v1_0.NavigationMenuItem;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -17,8 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -114,8 +113,7 @@ public class NavigationMenuItemSerDes {
 			for (int i = 0; i < navigationMenuItem.getCustomFields().length;
 				 i++) {
 
-				sb.append(
-					String.valueOf(navigationMenuItem.getCustomFields()[i]));
+				sb.append(navigationMenuItem.getCustomFields()[i]);
 
 				if ((i + 1) < navigationMenuItem.getCustomFields().length) {
 					sb.append(", ");
@@ -153,6 +151,20 @@ public class NavigationMenuItemSerDes {
 			sb.append(
 				liferayToJSONDateFormat.format(
 					navigationMenuItem.getDateModified()));
+
+			sb.append("\"");
+		}
+
+		if (navigationMenuItem.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(navigationMenuItem.getExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -279,6 +291,16 @@ public class NavigationMenuItemSerDes {
 			sb.append("\"");
 		}
 
+		if (navigationMenuItem.getTypeSettings() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"typeSettings\": ");
+
+			sb.append(_toJSON(navigationMenuItem.getTypeSettings()));
+		}
+
 		if (navigationMenuItem.getUrl() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -381,6 +403,15 @@ public class NavigationMenuItemSerDes {
 					navigationMenuItem.getDateModified()));
 		}
 
+		if (navigationMenuItem.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(navigationMenuItem.getExternalReferenceCode()));
+		}
+
 		if (navigationMenuItem.getId() == null) {
 			map.put("id", null);
 		}
@@ -452,6 +483,15 @@ public class NavigationMenuItemSerDes {
 			map.put("type", String.valueOf(navigationMenuItem.getType()));
 		}
 
+		if (navigationMenuItem.getTypeSettings() == null) {
+			map.put("typeSettings", null);
+		}
+		else {
+			map.put(
+				"typeSettings",
+				String.valueOf(navigationMenuItem.getTypeSettings()));
+		}
+
 		if (navigationMenuItem.getUrl() == null) {
 			map.put("url", null);
 		}
@@ -504,6 +544,11 @@ public class NavigationMenuItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
 			}
@@ -534,6 +579,9 @@ public class NavigationMenuItemSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "type")) {
 				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "typeSettings")) {
+				return true;
 			}
 			else if (Objects.equals(jsonParserFieldName, "url")) {
 				return false;
@@ -573,12 +621,16 @@ public class NavigationMenuItemSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.delivery.client.custom.field.
+						CustomField[] customFieldsArray = new
+						com.liferay.headless.delivery.client.custom.field.
+							CustomField[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.delivery.client.custom.field.
+								CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					navigationMenuItem.setCustomFields(customFieldsArray);
@@ -594,6 +646,14 @@ public class NavigationMenuItemSerDes {
 				if (jsonParserFieldValue != null) {
 					navigationMenuItem.setDateModified(
 						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					navigationMenuItem.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -663,6 +723,12 @@ public class NavigationMenuItemSerDes {
 					navigationMenuItem.setType((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "typeSettings")) {
+				if (jsonParserFieldValue != null) {
+					navigationMenuItem.setTypeSettings(
+						(Map<String, String>)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "url")) {
 				if (jsonParserFieldValue != null) {
 					navigationMenuItem.setUrl((String)jsonParserFieldValue);
@@ -719,6 +785,10 @@ public class NavigationMenuItemSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

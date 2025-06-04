@@ -49,6 +49,11 @@ import com.liferay.portal.lock.model.LockTable;
 import com.liferay.portal.lock.service.LockLocalService;
 import com.liferay.portal.model.impl.LayoutModelImpl;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.sql.Types;
 
 import java.util.ArrayList;
@@ -60,11 +65,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
@@ -163,7 +163,6 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 						LayoutTable.INSTANCE.type.in(
 							new String[] {
 								LayoutConstants.TYPE_ASSET_DISPLAY,
-								LayoutConstants.TYPE_COLLECTION,
 								LayoutConstants.TYPE_CONTENT,
 								LayoutConstants.TYPE_UTILITY
 							})
@@ -471,9 +470,6 @@ public class LayoutLockManagerImpl implements LayoutLockManager {
 	private LockedLayoutType _getLockedLayoutType(long classPK, String type) {
 		if (Objects.equals(type, LayoutConstants.TYPE_ASSET_DISPLAY)) {
 			return LockedLayoutType.DISPLAY_PAGE_TEMPLATE;
-		}
-		else if (Objects.equals(type, LayoutConstants.TYPE_COLLECTION)) {
-			return LockedLayoutType.COLLECTION_PAGE;
 		}
 		else if (Objects.equals(type, LayoutConstants.TYPE_UTILITY)) {
 			return LockedLayoutType.UTILITY_PAGE;

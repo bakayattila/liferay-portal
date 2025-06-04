@@ -100,6 +100,12 @@ public class CTEntryLocalServiceUtil {
 		return getService().deleteCTEntry(ctEntry);
 	}
 
+	public static CTEntry deleteCTEntry(CTEntry ctEntry, boolean force)
+		throws PortalException {
+
+		return getService().deleteCTEntry(ctEntry, force);
+	}
+
 	/**
 	 * Deletes the ct entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
@@ -241,13 +247,6 @@ public class CTEntryLocalServiceUtil {
 		return getService().fetchCTEntryByUuidAndCompanyId(uuid, companyId);
 	}
 
-	public static CTEntry fetchTimelineCTEntry(
-		long ctCollectionId, long modelClassNameId, long modelClassPK) {
-
-		return getService().fetchTimelineCTEntry(
-			ctCollectionId, modelClassNameId, modelClassPK);
-	}
-
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -289,6 +288,10 @@ public class CTEntryLocalServiceUtil {
 		long ctCollectionId, long modelClassNameId) {
 
 		return getService().getCTEntries(ctCollectionId, modelClassNameId);
+	}
+
+	public static List<CTEntry> getCTEntries(long[] ctEntryIds) {
+		return getService().getCTEntries(ctEntryIds);
 	}
 
 	/**

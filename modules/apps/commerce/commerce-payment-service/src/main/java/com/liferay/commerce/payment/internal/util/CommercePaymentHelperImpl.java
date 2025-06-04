@@ -32,12 +32,12 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.security.Key;
 
 import java.util.Collections;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -70,15 +70,15 @@ public class CommercePaymentHelperImpl implements CommercePaymentHelper {
 				fetchCommercePaymentMethodGroupRel(
 					commerceChannel.getGroupId(), paymentIntegrationKey);
 
-		if ((commercePaymentMethodGroupRel != null) &&
-			commercePaymentMethodGroupRel.isActive()) {
+		if ((commercePaymentMethodGroupRel == null) ||
+			!commercePaymentMethodGroupRel.isActive()) {
 
-			return _commercePaymentIntegrationRegistry.
-				getCommercePaymentIntegration(
-					commercePaymentMethodGroupRel.getPaymentIntegrationKey());
+			return null;
 		}
 
-		return null;
+		return _commercePaymentIntegrationRegistry.
+			getCommercePaymentIntegration(
+				commercePaymentMethodGroupRel.getPaymentIntegrationKey());
 	}
 
 	@Override
@@ -100,14 +100,14 @@ public class CommercePaymentHelperImpl implements CommercePaymentHelper {
 				fetchCommercePaymentMethodGroupRel(
 					commerceOrder.getGroupId(), commercePaymentMethodKey);
 
-		if ((commercePaymentMethodGroupRel != null) &&
-			commercePaymentMethodGroupRel.isActive()) {
+		if ((commercePaymentMethodGroupRel == null) ||
+			!commercePaymentMethodGroupRel.isActive()) {
 
-			return _commercePaymentMethodRegistry.getCommercePaymentMethod(
-				commercePaymentMethodGroupRel.getPaymentIntegrationKey());
+			return null;
 		}
 
-		return null;
+		return _commercePaymentMethodRegistry.getCommercePaymentMethod(
+			commercePaymentMethodGroupRel.getPaymentIntegrationKey());
 	}
 
 	@Override

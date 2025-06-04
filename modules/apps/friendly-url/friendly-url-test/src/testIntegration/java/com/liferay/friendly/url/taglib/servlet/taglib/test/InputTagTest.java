@@ -31,13 +31,14 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LanguageIds;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -52,6 +53,9 @@ import org.springframework.mock.web.MockHttpServletResponse;
 /**
  * @author Lourdes Fernández Besada
  */
+@LanguageIds(
+	availableLanguageIds = {"en_US", "es_ES"}, defaultLanguageId = "en_US"
+)
 @RunWith(Arquillian.class)
 public class InputTagTest {
 

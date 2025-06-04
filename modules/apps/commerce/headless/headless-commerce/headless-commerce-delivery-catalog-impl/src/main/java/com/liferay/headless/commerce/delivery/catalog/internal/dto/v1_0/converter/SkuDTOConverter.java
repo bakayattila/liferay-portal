@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.configuration.CommercePriceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.context.CommerceContext;
@@ -55,7 +56,6 @@ import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuUnitOfMeasure;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.TierPrice;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.converter.SkuDTOConverterContext;
-import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.delivery.catalog.internal.util.v1_0.SkuOptionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -69,10 +69,9 @@ import com.liferay.portal.kernel.settings.SystemSettingsLocator;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
-import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
-import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.util.TransformUtil;
 
 import java.math.BigDecimal;
@@ -106,6 +105,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 
 		CommerceContext commerceContext =
 			skuDTOConverterContext.getCommerceContext();
+
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
 		CPInstance cpInstance = _cpInstanceLocalService.getCPInstance(
 			(Long)skuDTOConverterContext.getId());
@@ -142,13 +143,23 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 		return new Sku() {
 			{
 				setAvailability(
-					() -> _getAvailability(
-						cpInstance.getGroupId(),
-						commerceContext.getCommerceChannelGroupId(),
-						skuDTOConverterContext.getCompanyId(), cpInstance,
-						cpInstance.getSku(),
-						skuDTOConverterContext.getUnitOfMeasureKey(),
-						skuDTOConverterContext.getLocale()));
+					() -> {
+						long accountEntryId = 0;
+
+						if (accountEntry != null) {
+							accountEntryId = accountEntry.getAccountEntryId();
+						}
+
+						return _getAvailability(
+							accountEntryId, cpInstance.getGroupId(),
+							commerceContext.getCommerceChannelGroupId(),
+							skuDTOConverterContext.getCompanyId(),
+							commerceContext.getCPConfigurationListId(
+								cpInstance.getGroupId()),
+							cpInstance, cpInstance.getSku(),
+							skuDTOConverterContext.getUnitOfMeasureKey(),
+							skuDTOConverterContext.getLocale());
+					});
 				setBackOrderAllowed(
 					() -> {
 						CPDefinitionInventory cpDefinitionInventory =
@@ -163,6 +174,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 										cpDefinitionInventory);
 
 						return cpDefinitionInventoryEngine.isBackOrderAllowed(
+							commerceContext.getCPConfigurationListId(
+								cpInstance.getGroupId()),
 							cpInstance);
 					});
 				setCustomFields(
@@ -216,10 +229,9 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 						skuDTOConverterContext.getQuantity()));
 				setProductConfiguration(
 					() -> _productConfigurationDTOConverter.toDTO(
-						new DefaultDTOConverterContext(
-							_dtoConverterRegistry,
-							cpInstance.getCPDefinitionId(),
-							skuDTOConverterContext.getLocale(), null, null)));
+						new ProductConfigurationDTOConverterContext(
+							commerceContext, cpInstance.getCPDefinitionId(),
+							skuDTOConverterContext.getLocale())));
 				setProductId(
 					() -> {
 						CPDefinition cpDefinition =
@@ -235,12 +247,11 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 						skuDTOConverterContext));
 				setReplacementSkuExternalReferenceCode(
 					() -> {
-						if (replacementCPInstance != null) {
-							return replacementCPInstance.
-								getExternalReferenceCode();
+						if (replacementCPInstance == null) {
+							return null;
 						}
 
-						return null;
+						return replacementCPInstance.getExternalReferenceCode();
 					});
 				setReplacementSkuId(
 					() -> {
@@ -310,20 +321,23 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 	}
 
 	private Availability _getAvailability(
-			long commerceCatalogGroupId, long commerceChannelGroupId,
-			long companyId, CPInstance cpInstance, String sku,
+			long accountEntryId, long commerceCatalogGroupId,
+			long commerceChannelGroupId, long companyId,
+			long cpConfigurationListId, CPInstance cpInstance, String sku,
 			String unitOfMeasureKey, Locale locale)
 		throws Exception {
 
 		Availability availability = new Availability();
 
-		if (_cpDefinitionInventoryEngine.isDisplayAvailability(cpInstance)) {
+		if (_cpDefinitionInventoryEngine.isDisplayAvailability(
+				cpConfigurationListId, cpInstance)) {
+
 			if (Objects.equals(
 					_commerceInventoryEngine.getAvailabilityStatus(
-						cpInstance.getCompanyId(), commerceCatalogGroupId,
-						commerceChannelGroupId,
+						cpInstance.getCompanyId(), accountEntryId,
+						commerceCatalogGroupId, commerceChannelGroupId,
 						_cpDefinitionInventoryEngine.getMinStockQuantity(
-							cpInstance),
+							cpConfigurationListId, cpInstance),
 						cpInstance.getSku(), unitOfMeasureKey),
 					CommerceInventoryAvailabilityConstants.AVAILABLE)) {
 
@@ -338,11 +352,13 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 			}
 		}
 
-		if (_cpDefinitionInventoryEngine.isDisplayStockQuantity(cpInstance)) {
+		if (_cpDefinitionInventoryEngine.isDisplayStockQuantity(
+				cpConfigurationListId, cpInstance)) {
+
 			availability.setStockQuantity(
 				() -> _commerceInventoryEngine.getStockQuantity(
-					companyId, commerceCatalogGroupId, commerceChannelGroupId,
-					sku, unitOfMeasureKey));
+					companyId, accountEntryId, commerceCatalogGroupId,
+					commerceChannelGroupId, sku, unitOfMeasureKey));
 		}
 
 		return availability;
@@ -572,13 +588,12 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 			Locale locale)
 		throws Exception {
 
-		if (MapUtil.isNotEmpty(cpDefinitionOptionValueRelsMap)) {
-			return SkuOptionUtil.getSkuOptions(
-				cpDefinitionOptionValueRelsMap, _cpInstanceLocalService,
-				locale);
+		if (MapUtil.isEmpty(cpDefinitionOptionValueRelsMap)) {
+			return null;
 		}
 
-		return null;
+		return SkuOptionUtil.getSkuOptions(
+			cpDefinitionOptionValueRelsMap, _cpInstanceLocalService, locale);
 	}
 
 	private boolean _isTaxIncludedInPrice(long commerceChannelId)
@@ -589,13 +604,8 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 
 		String priceDisplayType = commerceChannel.getPriceDisplayType();
 
-		if (priceDisplayType.equals(
-				CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
-
-			return true;
-		}
-
-		return false;
+		return priceDisplayType.equals(
+			CommercePricingConstants.TAX_INCLUDED_IN_PRICE);
 	}
 
 	private ReplacementSku _toReplacementSku(
@@ -664,11 +674,10 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 						}
 
 						return _productConfigurationDTOConverter.toDTO(
-							new DefaultDTOConverterContext(
-								_dtoConverterRegistry,
+							new ProductConfigurationDTOConverterContext(
+								commerceContext,
 								replacementCPDefinition.getCPDefinitionId(),
-								skuDTOConverterContext.getLocale(), null,
-								null));
+								skuDTOConverterContext.getLocale()));
 					});
 				setSku(replacementCPInstance::getSku);
 				setSkuExternalReferenceCode(
@@ -960,9 +969,6 @@ public class SkuDTOConverter implements DTOConverter<CPInstance, Sku> {
 	@Reference
 	private CPInstanceUnitOfMeasureLocalService
 		_cpInstanceUnitOfMeasureLocalService;
-
-	@Reference
-	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
 	private JSONFactory _jsonFactory;

@@ -10,25 +10,28 @@ import React from 'react';
 import {Root, createRoot} from 'react-dom/client';
 import {SWRConfig} from 'swr';
 
-import './common/styles/global.scss';
-import {AppPropertiesContext} from './common/contexts/AppPropertiesContext';
-import useApollo from './common/hooks/useApollo';
-import useGlobalNetworkIndicator from './common/hooks/useGlobalNetworkIndicator';
-import {Liferay} from './common/services/liferay';
-import getIconSpriteMap from './common/utils/getIconSpriteMap';
-import swrCacheProvider from './common/utils/swrCacheProvider';
-import AttachmentFileUploader from './routes/attachment-uploader';
-import CustomerPortal from './routes/customer-portal';
-import Home from './routes/home';
-import Onboarding from './routes/onboarding';
+import {AppPropertiesContext} from './contexts/AppPropertiesContext';
+import AttachmentUploader from './features/attachment-uploader';
+import Onboarding from './features/onboarding';
+import Project from './features/project';
+import Projects from './features/projects';
+import SecurityVulnerabilities from './features/security-vulnerabilities';
+import useApollo from './hooks/useApollo';
+import useGlobalNetworkIndicator from './hooks/useGlobalNetworkIndicator';
+import {Liferay} from './services/liferay';
+import getIconSpriteMap from './utils/getIconSpriteMap';
+import swrCacheProvider from './utils/swrCacheProvider';
+
+import './main.css';
 
 const ELEMENT_ID = 'liferay-customer-custom-element';
 
 const AppRoutes = {
-	attachmentFileUploader: AttachmentFileUploader,
-	home: Home,
+	attachmentUploader: AttachmentUploader,
 	onboarding: Onboarding,
-	portal: CustomerPortal,
+	project: Project,
+	projects: Projects,
+	securityVulnerabilities: SecurityVulnerabilities,
 };
 
 type Properties = {
@@ -40,6 +43,7 @@ type Properties = {
 	articleNotifiedWhenMyActivationKeyIsAboutToExpireURL: string | null;
 	articleWhatIsMyInstanceSizingValueURL: string | null;
 	featureFlags?: string[];
+	helpCenterURL: string | null;
 	importDate?: Date | null;
 	submitSupportTicketURL: string | null;
 	theOverviewPageURL: string | null;
@@ -60,7 +64,9 @@ const CustomerPortalApp: React.FC<CustomerPortalAppProps> = ({
 	route,
 	...properties
 }) => {
-	const {client, networkStatus} = useApollo(apis.provisioningServerAPI);
+	const {client, networkStatus} = useApollo(
+		apis.provisioningServerAPI as string
+	);
 
 	useGlobalNetworkIndicator(networkStatus);
 
@@ -118,6 +124,7 @@ class CustomerPortalWebComponent extends HTMLElement {
 			featureFlags: (super.getAttribute('feature-flags') ?? '')
 				.split(',')
 				.map((featureflag) => featureflag.trim()),
+			helpCenterURL: super.getAttribute('help-center-url'),
 			importDate: super.getAttribute('import-date')
 				? new Date(super.getAttribute('import-date') as string)
 				: undefined,

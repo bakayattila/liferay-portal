@@ -99,6 +99,14 @@ public class CTEntryLocalServiceWrapper
 		return _ctEntryLocalService.deleteCTEntry(ctEntry);
 	}
 
+	@Override
+	public com.liferay.change.tracking.model.CTEntry deleteCTEntry(
+			com.liferay.change.tracking.model.CTEntry ctEntry, boolean force)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ctEntryLocalService.deleteCTEntry(ctEntry, force);
+	}
+
 	/**
 	 * Deletes the ct entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
@@ -270,14 +278,6 @@ public class CTEntryLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.change.tracking.model.CTEntry fetchTimelineCTEntry(
-		long ctCollectionId, long modelClassNameId, long modelClassPK) {
-
-		return _ctEntryLocalService.fetchTimelineCTEntry(
-			ctCollectionId, modelClassNameId, modelClassPK);
-	}
-
-	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -332,6 +332,13 @@ public class CTEntryLocalServiceWrapper
 
 		return _ctEntryLocalService.getCTEntries(
 			ctCollectionId, modelClassNameId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.change.tracking.model.CTEntry>
+		getCTEntries(long[] ctEntryIds) {
+
+		return _ctEntryLocalService.getCTEntries(ctEntryIds);
 	}
 
 	/**

@@ -6,8 +6,8 @@
 import ClayButton from '@clayui/button';
 import {useModal} from '@clayui/modal';
 import {CommerceServiceProvider} from 'commerce-frontend-js';
-import {openConfirmModal, openToast, sub} from 'frontend-js-web';
-import moment from 'moment';
+import {openConfirmModal, openToast} from 'frontend-js-components-web';
+import {dateUtils, sub} from 'frontend-js-web';
 import React, {useCallback, useEffect, useState} from 'react';
 
 import InfoBoxModalNotes from '../InfoBoxModalNotes';
@@ -40,9 +40,7 @@ const OrderNotesView = ({
 
 	const formatDate = (value) => {
 		if (value.length) {
-			return moment(moment(value, 'YYYYMMDDHHmmss'))
-				.locale(Liferay.ThemeDisplay.getBCP47LanguageId())
-				.format('L LT');
+			return dateUtils.format(new Date(value), 'P p');
 		}
 	};
 

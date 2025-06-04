@@ -8,6 +8,7 @@ package com.liferay.jenkins.results.parser.test.clazz.group;
 import com.google.common.collect.Lists;
 
 import com.liferay.jenkins.results.parser.BatchHistory;
+import com.liferay.jenkins.results.parser.GitWorkingDirectory;
 import com.liferay.jenkins.results.parser.JenkinsMaster;
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 import com.liferay.jenkins.results.parser.Job;
@@ -188,12 +189,6 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 
 		String batchJobSuffix = "-batch";
 
-		String slaveLabel = getSlaveLabel();
-
-		if (slaveLabel.contains("win")) {
-			batchJobSuffix = "-windows-batch";
-		}
-
 		if (jobNameMatcher.find()) {
 			return JenkinsResultsParserUtil.combine(
 				jobNameMatcher.group("jobBaseName"), batchJobSuffix,
@@ -356,6 +351,41 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			recordJobProperty(jobProperty);
 
 			return jobPropertyValue;
+		}
+
+		if (!JenkinsResultsParserUtil.isCloudCINode()) {
+			return SLAVE_LABEL_DEFAULT;
+		}
+
+		String slaveLabel = null;
+
+		try {
+			slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+				"jenkins.osb.jenkins.web.slave.label", getBatchJobName(),
+				getTestSuiteName());
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+				slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+					"jenkins.osb.jenkins.web.slave.label.minimum.ram",
+					String.valueOf(getMinimumSlaveRAM()));
+			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+				slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+					"cloud.fleet.primary.label");
+			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+				slaveLabel = JenkinsResultsParserUtil.getBuildProperty(
+					"master.auto.scaling.group.name");
+			}
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(slaveLabel)) {
+			return slaveLabel;
 		}
 
 		return SLAVE_LABEL_DEFAULT;
@@ -738,18 +768,46 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 	}
 
 	protected long getTargetAxisDuration() {
-		JobProperty jobProperty = getJobProperty(
-			"test.batch.target.axis.duration");
-
-		String jobPropertyValue = jobProperty.getValue();
-
-		if ((jobPropertyValue == null) || !jobPropertyValue.matches("\\d+")) {
-			return 0L;
+		if (_isIgnoreTargetAxisDuration()) {
+			return 0;
 		}
 
-		recordJobProperty(jobProperty);
+		GitWorkingDirectory gitWorkingDirectory =
+			getPortalGitWorkingDirectory();
 
-		return Long.parseLong(jobPropertyValue);
+		String upstreamBranchName = gitWorkingDirectory.getUpstreamBranchName();
+
+		if (!upstreamBranchName.equals("master")) {
+			return 0;
+		}
+
+		JobProperty targetAxisDurationJobProperty = getJobProperty(
+			"test.batch.target.axis.duration");
+
+		String targetAxisDurationString =
+			targetAxisDurationJobProperty.getValue();
+
+		if (!JenkinsResultsParserUtil.isInteger(targetAxisDurationString)) {
+			return 0;
+		}
+
+		recordJobProperty(targetAxisDurationJobProperty);
+
+		long targetAxisDuration = Long.parseLong(targetAxisDurationString);
+
+		JobProperty performanceModifierJobProperty = getJobProperty(
+			"test.batch.performance.modifier");
+
+		String performanceModifier = performanceModifierJobProperty.getValue();
+
+		if (JenkinsResultsParserUtil.isDouble(performanceModifier)) {
+			targetAxisDuration = Math.round(
+				targetAxisDuration * Double.parseDouble(performanceModifier));
+
+			recordJobProperty(performanceModifierJobProperty);
+		}
+
+		return targetAxisDuration;
 	}
 
 	protected String getTestSuiteName() {
@@ -787,11 +845,7 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			Collections.addAll(testBatchNames, jobPropertyValue.split(","));
 		}
 
-		if (testBatchNames.contains(batchName)) {
-			return true;
-		}
-
-		return false;
+		return testBatchNames.contains(batchName);
 	}
 
 	protected void recordJobProperties(List<JobProperty> jobProperties) {
@@ -1001,13 +1055,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			"test.batch.default.test.duration");
 
 		if (jobProperty == null) {
-			return 0L;
+			return 0;
 		}
 
 		String jobPropertyValue = jobProperty.getValue();
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue)) {
-			return 0L;
+			return 0;
 		}
 
 		recordJobProperty(jobProperty);
@@ -1020,13 +1074,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			"test.batch.default.test.overhead.duration");
 
 		if (jobProperty == null) {
-			return 0L;
+			return 0;
 		}
 
 		String jobPropertyValue = jobProperty.getValue();
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue)) {
-			return 0L;
+			return 0;
 		}
 
 		recordJobProperty(jobProperty);
@@ -1039,13 +1093,13 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 			"test.batch.default.test.task.duration");
 
 		if (jobProperty == null) {
-			return 0L;
+			return 0;
 		}
 
 		String jobPropertyValue = jobProperty.getValue();
 
 		if (JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue)) {
-			return 0L;
+			return 0;
 		}
 
 		recordJobProperty(jobProperty);
@@ -1190,6 +1244,21 @@ public abstract class BatchTestClassGroup extends BaseTestClassGroup {
 		_testTaskHistories.put(testName, testHistory.getTestTaskHistory());
 
 		return _testTaskHistories.get(testName);
+	}
+
+	private boolean _isIgnoreTargetAxisDuration() {
+		JobProperty jobProperty = getJobProperty(
+			"test.batch.ignore.target.axis.duration");
+
+		String jobPropertyValue = jobProperty.getValue();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(jobPropertyValue)) {
+			return false;
+		}
+
+		recordJobProperty(jobProperty);
+
+		return Boolean.valueOf(jobPropertyValue);
 	}
 
 	private List<List<AxisTestClassGroup>> _partitionByMaxChildren(

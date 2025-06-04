@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,10 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Olivér Kecskeméty
@@ -56,7 +54,7 @@ public class UserSchemaExtension implements Serializable {
 			UserSchemaExtension.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getBirthday() {
 		if (_birthdaySupplier != null) {
 			birthday = _birthdaySupplier.get();
@@ -97,7 +95,7 @@ public class UserSchemaExtension implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _birthdaySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getMale() {
 		if (_maleSupplier != null) {
 			male = _maleSupplier.get();
@@ -199,8 +197,8 @@ public class UserSchemaExtension implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.scim.rest.dto.v1_0.UserSchemaExtension",
 		name = "x-class-name"
 	)

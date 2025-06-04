@@ -12,11 +12,9 @@ import React, {
 	useState,
 } from 'react';
 
-import {fromControlsId} from '../components/layout_data_items/Collection';
 import {ITEM_TYPES} from '../config/constants/itemTypes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
 import {MULTI_SELECT_TYPES} from '../config/constants/multiSelectTypes';
-import {useToControlsId} from './CollectionItemContext';
 import {useSelectorRef} from './StoreContext';
 
 const ACTIVE_INITIAL_STATE = {
@@ -129,8 +127,10 @@ const reducer = (state, action) => {
 		layoutData,
 		multiSelect,
 		origin,
+		parentId,
 		type,
 	} = action;
+
 	let nextState = state;
 
 	if (type === HOVER_ITEM && itemId !== nextState.hoveredItemId) {
@@ -141,41 +141,51 @@ const reducer = (state, action) => {
 			hoveredItemType: itemType,
 		};
 	}
-	else if (
-		type === SELECT_ITEM &&
-		(Liferay.FeatureFlags['LPD-18221'] ||
-			itemId !== nextState.activeItemIds[0])
-	) {
+	else if (type === SELECT_ITEM) {
 		let rangeLimitIds = {};
 		let nextActiveItemIds = [itemId];
+		let nextItemType = itemType;
 
-		if (!Liferay.FeatureFlags['LPD-18221']) {
+		if (state.activeItemType === ITEM_TYPES.editable) {
 			nextActiveItemIds = itemId ? [itemId] : [];
 		}
 		else if (!itemId) {
 			nextActiveItemIds = [];
 		}
 		else if (multiSelect === MULTI_SELECT_TYPES.simple) {
-			nextActiveItemIds = getActiveItemIds(
-				nextState.activeItemIds,
-				itemId
-			);
+			if (itemType === ITEM_TYPES.editable) {
+				if (state.activeItemIds.includes(parentId)) {
+					return state;
+				}
+
+				nextActiveItemIds = getActiveItemIds(
+					nextState.activeItemIds,
+					parentId
+				);
+
+				nextItemType = ITEM_TYPES.layoutDataItem;
+			}
+			else {
+				nextActiveItemIds = getActiveItemIds(
+					nextState.activeItemIds,
+					itemId
+				);
+			}
 		}
 		else if (multiSelect === MULTI_SELECT_TYPES.range) {
-
-			// Avoid selection in range when directly selecting an item that
-			// is not a layout data item, such as editables.
-
-			if (!layoutData.items[itemId]) {
-				return nextState;
-			}
-
 			let initialActiveItemIds = state.activeItemIds;
 
 			// The last active item id is taken when the first item in the
 			// range is selected.
 
 			let startLimitId = [...state.activeItemIds].pop();
+
+			if (
+				itemType === ITEM_TYPES.editable &&
+				state.activeItemIds.length
+			) {
+				nextItemType = ITEM_TYPES.layoutDataItem;
+			}
 
 			if (state.rangeLimitIds.end) {
 
@@ -195,9 +205,12 @@ const reducer = (state, action) => {
 				);
 			}
 
-			rangeLimitIds = {end: itemId, start: startLimitId};
+			rangeLimitIds = {end: parentId || itemId, start: startLimitId};
 
-			if (
+			if (!state.activeItemIds.length) {
+				nextActiveItemIds = [itemId];
+			}
+			else if (
 				!rangeLimitIds.start ||
 				rangeLimitIds.end === rangeLimitIds.start
 			) {
@@ -205,7 +218,7 @@ const reducer = (state, action) => {
 				// If the start and end of the range are the same id, only
 				// this item is selected
 
-				nextActiveItemIds = [itemId];
+				nextActiveItemIds = [parentId || itemId];
 			}
 			else {
 				const root = layoutData.items[layoutData.rootItems.main];
@@ -226,7 +239,7 @@ const reducer = (state, action) => {
 			...nextState,
 			activationOrigin: origin,
 			activeItemIds: nextActiveItemIds,
-			activeItemType: itemType,
+			activeItemType: nextItemType,
 			rangeLimitIds,
 		};
 	}
@@ -300,13 +313,11 @@ const ControlsProvider = ({
 const useActivationOrigin = () =>
 	useContext(ActiveStateContext).activationOrigin;
 
-const useActiveItemIds = () =>
-	fromControlsId(useContext(ActiveStateContext).activeItemIds);
+const useActiveItemIds = () => useContext(ActiveStateContext).activeItemIds;
 
 const useActiveItemType = () => useContext(ActiveStateContext).activeItemType;
 
-const useHoveredItemId = () =>
-	fromControlsId(useContext(HoverStateContext).hoveredItemId);
+const useHoveredItemId = () => useContext(HoverStateContext).hoveredItemId;
 
 const useHoveredItemType = () => useContext(HoverStateContext).hoveredItemType;
 
@@ -314,7 +325,6 @@ const useHoveringOrigin = () => useContext(HoverStateContext).activationOrigin;
 
 const useHoverItem = () => {
 	const dispatch = useContext(HoverDispatchContext);
-	const toControlsId = useToControlsId();
 
 	return useCallback(
 		(
@@ -324,58 +334,57 @@ const useHoverItem = () => {
 			}
 		) =>
 			dispatch({
-				itemId: toControlsId(itemId),
+				itemId,
 				itemType,
 				origin,
 				type: HOVER_ITEM,
 			}),
-		[dispatch, toControlsId]
+		[dispatch]
 	);
 };
 
 const useIsActive = () => {
 	const {activeItemIds} = useContext(ActiveStateContext);
-	const toControlsId = useToControlsId();
 
 	return useCallback(
-		(itemId) => activeItemIds.includes(toControlsId(itemId)),
-		[activeItemIds, toControlsId]
+		(itemId) => activeItemIds.includes(itemId),
+		[activeItemIds]
 	);
 };
 
 const useIsHovered = () => {
 	const {hoveredItemId} = useContext(HoverStateContext);
-	const toControlsId = useToControlsId();
 
-	return useCallback(
-		(itemId) => hoveredItemId === toControlsId(itemId),
-		[hoveredItemId, toControlsId]
-	);
+	return useCallback((itemId) => hoveredItemId === itemId, [hoveredItemId]);
 };
 
 const useSelectItem = () => {
 	const activeDispatch = useContext(ActiveDispatchContext);
 	const layoutDataRef = useSelectorRef((state) => state.layoutData);
 	const multiSelectTypeRef = useContext(MultiSelectStateRefContext);
-	const toControlsId = useToControlsId();
 
 	return useCallback(
 		(
 			itemId,
-			{itemType = ITEM_TYPES.layoutDataItem, origin = null} = {
+			{
+				parentId = null,
+				itemType = ITEM_TYPES.layoutDataItem,
+				origin = null,
+			} = {
 				itemType: ITEM_TYPES.layoutDataItem,
 			}
 		) => {
 			activeDispatch({
-				itemId: toControlsId(itemId),
+				itemId,
 				itemType,
 				layoutData: layoutDataRef.current,
 				multiSelect: multiSelectTypeRef.current,
 				origin,
+				parentId,
 				type: SELECT_ITEM,
 			});
 		},
-		[activeDispatch, layoutDataRef, multiSelectTypeRef, toControlsId]
+		[activeDispatch, layoutDataRef, multiSelectTypeRef]
 	);
 };
 

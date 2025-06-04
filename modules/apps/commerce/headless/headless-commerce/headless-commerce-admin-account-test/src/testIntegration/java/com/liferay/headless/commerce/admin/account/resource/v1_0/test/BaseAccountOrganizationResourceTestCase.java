@@ -32,7 +32,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -43,9 +43,13 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -84,7 +84,7 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -98,14 +98,12 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 
 		_accountOrganizationResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		AccountOrganizationResource.Builder builder =
-			AccountOrganizationResource.builder();
-
-		accountOrganizationResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		accountOrganizationResource = AccountOrganizationResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -185,6 +183,39 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 		Assert.assertEquals(
 			regex, accountOrganization.getOrganizationExternalReferenceCode());
 		Assert.assertEquals(regex, accountOrganization.getTreePath());
+	}
+
+	@Test
+	public void testDeleteAccountByExternalReferenceCodeAccountOrganization()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testDeleteAccountIdAccountOrganization() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGetAccountByExternalReferenceCodeAccountOrganization()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeAccountOrganization()
+		throws Exception {
+
+		Assert.assertTrue(true);
+	}
+
+	@Test
+	public void testGraphQLGetAccountByExternalReferenceCodeAccountOrganizationNotFound()
+		throws Exception {
+
+		Assert.assertTrue(true);
 	}
 
 	@Test
@@ -268,13 +299,13 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountByExternalReferenceCodeAccountOrganizationsPage_getExternalReferenceCode();
 
-		Page<AccountOrganization> accountOrganizationPage =
+		Page<AccountOrganization> accountOrganizationsPage =
 			accountOrganizationResource.
 				getAccountByExternalReferenceCodeAccountOrganizationsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountOrganizationPage.getTotalCount());
+			accountOrganizationsPage.getTotalCount());
 
 		AccountOrganization accountOrganization1 =
 			testGetAccountByExternalReferenceCodeAccountOrganizationsPage_addAccountOrganization(
@@ -404,52 +435,17 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 	}
 
 	@Test
-	public void testPostAccountByExternalReferenceCodeAccountOrganization()
-		throws Exception {
-
-		AccountOrganization randomAccountOrganization =
-			randomAccountOrganization();
-
-		AccountOrganization postAccountOrganization =
-			testPostAccountByExternalReferenceCodeAccountOrganization_addAccountOrganization(
-				randomAccountOrganization);
-
-		assertEquals(randomAccountOrganization, postAccountOrganization);
-		assertValid(postAccountOrganization);
-	}
-
-	protected AccountOrganization
-			testPostAccountByExternalReferenceCodeAccountOrganization_addAccountOrganization(
-				AccountOrganization accountOrganization)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteAccountByExternalReferenceCodeAccountOrganization()
-		throws Exception {
-
+	public void testGetAccountIdAccountOrganization() throws Exception {
 		Assert.assertTrue(false);
 	}
 
 	@Test
-	public void testGetAccountByExternalReferenceCodeAccountOrganization()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetAccountByExternalReferenceCodeAccountOrganization()
-		throws Exception {
-
+	public void testGraphQLGetAccountIdAccountOrganization() throws Exception {
 		Assert.assertTrue(true);
 	}
 
 	@Test
-	public void testGraphQLGetAccountByExternalReferenceCodeAccountOrganizationNotFound()
+	public void testGraphQLGetAccountIdAccountOrganizationNotFound()
 		throws Exception {
 
 		Assert.assertTrue(true);
@@ -525,12 +521,12 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 
 		Long id = testGetAccountIdAccountOrganizationsPage_getId();
 
-		Page<AccountOrganization> accountOrganizationPage =
+		Page<AccountOrganization> accountOrganizationsPage =
 			accountOrganizationResource.getAccountIdAccountOrganizationsPage(
 				id, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountOrganizationPage.getTotalCount());
+			accountOrganizationsPage.getTotalCount());
 
 		AccountOrganization accountOrganization1 =
 			testGetAccountIdAccountOrganizationsPage_addAccountOrganization(
@@ -654,6 +650,30 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 	}
 
 	@Test
+	public void testPostAccountByExternalReferenceCodeAccountOrganization()
+		throws Exception {
+
+		AccountOrganization randomAccountOrganization =
+			randomAccountOrganization();
+
+		AccountOrganization postAccountOrganization =
+			testPostAccountByExternalReferenceCodeAccountOrganization_addAccountOrganization(
+				randomAccountOrganization);
+
+		assertEquals(randomAccountOrganization, postAccountOrganization);
+		assertValid(postAccountOrganization);
+	}
+
+	protected AccountOrganization
+			testPostAccountByExternalReferenceCodeAccountOrganization_addAccountOrganization(
+				AccountOrganization accountOrganization)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostAccountIdAccountOrganization() throws Exception {
 		AccountOrganization randomAccountOrganization =
 			randomAccountOrganization();
@@ -673,28 +693,6 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteAccountIdAccountOrganization() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetAccountIdAccountOrganization() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetAccountIdAccountOrganization() throws Exception {
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetAccountIdAccountOrganizationNotFound()
-		throws Exception {
-
-		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(
@@ -1540,7 +1538,9 @@ public abstract class BaseAccountOrganizationResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseAccountOrganizationResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.account.resource.v1_0.

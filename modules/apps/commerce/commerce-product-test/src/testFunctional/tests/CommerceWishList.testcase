@@ -1,13 +1,17 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.LPD-38869=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Setup: Create an account with a buyer user") {
 			CommerceEntry.addAccountEntryUser(
@@ -136,7 +140,7 @@ definition {
 		}
 
 		task ("And then 1 product is not imported (ABS Sensor)") {
-			AssertElementPresent(
+			AssertElementNotPresent(
 				key_productName = "ABS Sensor",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 		}
@@ -305,11 +309,11 @@ definition {
 		}
 
 		task ("And then 2 products are not imported (U-Joint and Torque Convertes") {
-			AssertElementPresent(
+			AssertElementNotPresent(
 				key_productName = "U-Joint",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 
-			AssertElementPresent(
+			AssertElementNotPresent(
 				key_productName = "Torque Converters",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 		}
@@ -421,15 +425,15 @@ definition {
 				productSku = "MIN00675",
 				productTotalPrice = "$ 120.00");
 
-			AssertNotVisible(
+			AssertElementNotPresent(
 				key_productName = "U-Joint",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 
-			AssertNotVisible(
+			AssertElementNotPresent(
 				key_productName = "Torque Converters",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 
-			AssertNotVisible(
+			AssertElementNotPresent(
 				key_productName = "ABS Sensor",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 
@@ -574,7 +578,7 @@ definition {
 		}
 
 		task ("And then the subscription product is not imported (ABS Sensor)") {
-			AssertElementPresent(
+			AssertElementNotPresent(
 				key_productName = "ABS Sensor",
 				locator1 = "CommerceOrders#ORDER_DETAILS_PRODUCT_NAME");
 		}

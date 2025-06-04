@@ -15,13 +15,13 @@ export class CommerceAdminDiscountsPage extends CommerceDNDTablePage {
 	constructor(page: Page) {
 		super(
 			page,
-			'#_com_liferay_commerce_pricing_web_internal_portlet_CommerceDiscountPortlet_fm .dnd-table'
+			'#_com_liferay_commerce_pricing_web_internal_portlet_CommerceDiscountPortlet_fm .fds table'
 		);
 		this.applicationsMenuPage = new ApplicationsMenuPage(page);
 		this.page = page;
 	}
 
-	async enterPromoCodeToWidget(promoCode) {
+	async enterPromoCodeToWidget(promoCode: string) {
 		await this.page.getByPlaceholder('Enter Promo Code').fill(promoCode);
 		await this.page.getByPlaceholder('Enter Promo Code').waitFor();
 		await this.page

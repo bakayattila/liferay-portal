@@ -9,6 +9,7 @@ import {CommerceLayoutsPage} from '../commerce-order-content-web/commerceLayouts
 import {CommerceDNDTablePage} from '../commerceDNDTablePage';
 
 type TAddress = {
+	asGuest?: boolean | false;
 	city: string;
 	countryLabel: string;
 	name: string;
@@ -33,19 +34,31 @@ export class CheckoutPage extends CommerceDNDTablePage {
 	readonly configurationMenuItem: Locator;
 	readonly continueButton: Locator;
 	readonly countryInput: Locator;
+	readonly emailInput: Locator;
 	readonly goToOrderDetailsButton: Locator;
 	readonly headingDeliveryGroupModal: (name: string) => Locator;
 	readonly iframeOkButton: Locator;
 	readonly layoutsPage: CommerceLayoutsPage;
+	readonly multishippingTabLink: Locator;
+	readonly multishippingTableLocator: Locator;
 	readonly nameInput: Locator;
 	readonly optionsButton: Locator;
+	readonly orderItemsTabLink: Locator;
+	readonly orderItemsTableLocator: Locator;
 	readonly orderSuccessMessage: Locator;
 	readonly page: Page;
 	readonly phoneNumberInput: Locator;
 	readonly previousButton: Locator;
 	readonly regionInput: Locator;
+	readonly saveButton: Locator;
 	readonly shippingAddressSelect: Locator;
 	readonly shippingCost: Locator;
+	readonly subtypeErrorMessage: Locator;
+	readonly subtypeInput: Locator;
+	readonly subtypeMenuItem: (name: string) => Locator;
+	readonly subtypeResetModalTitle: Locator;
+	readonly subtypeResetSubtypeInput: Locator;
+	readonly orderSummaryShippingMethod: Locator;
 	readonly useAsBillingCheckbox: Locator;
 	readonly viewDeliveryGroupTableButton: Locator;
 	readonly zipInput: Locator;
@@ -53,7 +66,7 @@ export class CheckoutPage extends CommerceDNDTablePage {
 	constructor(page: Page) {
 		super(
 			page,
-			'#_com_liferay_commerce_checkout_web_internal_portlet_CommerceCheckoutPortlet_fm .dnd-table'
+			'#_com_liferay_commerce_checkout_web_internal_portlet_CommerceCheckoutPortlet_fm .fds table'
 		);
 		this.activeCheckoutStep = page.locator(
 			'.multi-step-item.active .multi-step-indicator-label'
@@ -89,6 +102,7 @@ export class CheckoutPage extends CommerceDNDTablePage {
 			name: 'Configuration',
 		});
 		this.countryInput = page.getByTitle('Country');
+		this.emailInput = page.locator('input[id*="_email"]');
 		this.headingDeliveryGroupModal = (name: string) => {
 			return page.getByRole('heading', {exact: true, name});
 		};
@@ -97,12 +111,26 @@ export class CheckoutPage extends CommerceDNDTablePage {
 			name: 'Go to Order Details',
 		});
 		this.layoutsPage = new CommerceLayoutsPage(page);
+		this.multishippingTabLink = page.getByRole('link', {
+			exact: true,
+			name: 'Multishipping',
+		});
+		this.multishippingTableLocator = page.locator(
+			'div.multishipping-container'
+		);
 		this.nameInput = page.getByPlaceholder('Name', {exact: true});
 		this.optionsButton = page
 			.locator(
 				'#portlet_com_liferay_commerce_checkout_web_internal_portlet_CommerceCheckoutPortlet'
 			)
 			.getByLabel('Options');
+		this.orderItemsTabLink = page.getByRole('link', {
+			exact: true,
+			name: 'Order Items',
+		});
+		this.orderItemsTableLocator = page.locator(
+			'#_com_liferay_commerce_checkout_web_internal_portlet_CommerceCheckoutPortlet_commerceOrderItems'
+		);
 		this.orderSuccessMessage = page.getByText(
 			'Success! Your order has been processed.'
 		);
@@ -115,8 +143,22 @@ export class CheckoutPage extends CommerceDNDTablePage {
 		this.commerceShippingAddress = page.getByTestId(
 			'commerceShippingAddress'
 		);
+		this.saveButton = page.getByLabel('Save');
 		this.shippingAddressSelect = page.getByText('Choose Shipping Address');
 		this.shippingCost = page.locator('.shipping-cost');
+		this.subtypeErrorMessage = page.getByText(
+			'previous selection is not valid anymore'
+		);
+		this.subtypeInput = page.getByPlaceholder('Subtype');
+		this.subtypeMenuItem = (name: string) =>
+			page.getByRole('option', {name});
+		this.subtypeResetModalTitle = page.getByRole('heading', {
+			name: 'Reset Subtype',
+		});
+		this.subtypeResetSubtypeInput = page
+			.getByLabel('Reset Subtype')
+			.getByPlaceholder('Subtype');
+		this.orderSummaryShippingMethod = page.locator('div.shipping-method');
 		this.useAsBillingCheckbox = page.getByLabel(
 			'Use shipping address as billing address'
 		);
@@ -125,6 +167,7 @@ export class CheckoutPage extends CommerceDNDTablePage {
 	}
 
 	async addAddress({
+		asGuest = false,
 		phoneNumber = '',
 		regionLabel = '',
 		useAsBilling = true,
@@ -138,6 +181,10 @@ export class CheckoutPage extends CommerceDNDTablePage {
 		await this.addressInput.fill(address.street);
 		await this.useAsBillingCheckbox.setChecked(useAsBilling);
 		await this.zipInput.fill(address.zip);
+
+		if (asGuest) {
+			await this.emailInput.fill('guestemail@liferay.com');
+		}
 	}
 
 	async addCheckoutWidget() {

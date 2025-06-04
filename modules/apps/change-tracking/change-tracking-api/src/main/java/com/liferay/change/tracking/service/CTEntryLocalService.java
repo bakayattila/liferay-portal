@@ -105,6 +105,10 @@ public interface CTEntryLocalService
 	@Indexable(type = IndexableType.DELETE)
 	public CTEntry deleteCTEntry(CTEntry ctEntry) throws PortalException;
 
+	@Indexable(type = IndexableType.DELETE)
+	public CTEntry deleteCTEntry(CTEntry ctEntry, boolean force)
+		throws PortalException;
+
 	/**
 	 * Deletes the ct entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
@@ -220,10 +224,6 @@ public interface CTEntryLocalService
 	public CTEntry fetchCTEntryByUuidAndCompanyId(String uuid, long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public CTEntry fetchTimelineCTEntry(
-		long ctCollectionId, long modelClassNameId, long modelClassPK);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -254,6 +254,9 @@ public interface CTEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CTEntry> getCTEntries(
 		long ctCollectionId, long modelClassNameId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CTEntry> getCTEntries(long[] ctEntryIds);
 
 	/**
 	 * Returns the number of ct entries.

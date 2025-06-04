@@ -8,11 +8,11 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.FormConfigSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -46,30 +46,80 @@ public class FormConfig implements Cloneable, Serializable {
 
 	protected Object formReference;
 
-	public Object getFormSuccessSubmissionResult() {
-		return formSuccessSubmissionResult;
+	public FormType getFormType() {
+		return formType;
 	}
 
-	public void setFormSuccessSubmissionResult(
-		Object formSuccessSubmissionResult) {
+	public String getFormTypeAsString() {
+		if (formType == null) {
+			return null;
+		}
 
-		this.formSuccessSubmissionResult = formSuccessSubmissionResult;
+		return formType.toString();
 	}
 
-	public void setFormSuccessSubmissionResult(
-		UnsafeSupplier<Object, Exception>
-			formSuccessSubmissionResultUnsafeSupplier) {
+	public void setFormType(FormType formType) {
+		this.formType = formType;
+	}
+
+	public void setFormType(
+		UnsafeSupplier<FormType, Exception> formTypeUnsafeSupplier) {
 
 		try {
-			formSuccessSubmissionResult =
-				formSuccessSubmissionResultUnsafeSupplier.get();
+			formType = formTypeUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Object formSuccessSubmissionResult;
+	protected FormType formType;
+
+	public Integer getNumberOfSteps() {
+		return numberOfSteps;
+	}
+
+	public void setNumberOfSteps(Integer numberOfSteps) {
+		this.numberOfSteps = numberOfSteps;
+	}
+
+	public void setNumberOfSteps(
+		UnsafeSupplier<Integer, Exception> numberOfStepsUnsafeSupplier) {
+
+		try {
+			numberOfSteps = numberOfStepsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Integer numberOfSteps;
+
+	public Object getSuccessFormSubmissionResult() {
+		return successFormSubmissionResult;
+	}
+
+	public void setSuccessFormSubmissionResult(
+		Object successFormSubmissionResult) {
+
+		this.successFormSubmissionResult = successFormSubmissionResult;
+	}
+
+	public void setSuccessFormSubmissionResult(
+		UnsafeSupplier<Object, Exception>
+			successFormSubmissionResultUnsafeSupplier) {
+
+		try {
+			successFormSubmissionResult =
+				successFormSubmissionResultUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Object successFormSubmissionResult;
 
 	@Override
 	public FormConfig clone() throws CloneNotSupportedException {
@@ -100,6 +150,39 @@ public class FormConfig implements Cloneable, Serializable {
 
 	public String toString() {
 		return FormConfigSerDes.toJSON(this);
+	}
+
+	public static enum FormType {
+
+		MULTISTEP("Multistep"), SIMPLE("Simple");
+
+		public static FormType create(String value) {
+			for (FormType formType : values()) {
+				if (Objects.equals(formType.getValue(), value) ||
+					Objects.equals(formType.name(), value)) {
+
+					return formType;
+				}
+			}
+
+			return null;
+		}
+
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private FormType(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
 	}
 
 }

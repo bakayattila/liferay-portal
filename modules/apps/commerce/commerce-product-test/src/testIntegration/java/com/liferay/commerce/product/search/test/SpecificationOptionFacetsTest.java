@@ -108,11 +108,11 @@ public class SpecificationOptionFacetsTest {
 		CPSpecificationOption cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
 				RandomTestUtil.randomString(), serviceContext.getUserId(),
-				cpOptionCategory.getCPOptionCategoryId(), 0,
+				cpOptionCategory.getCPOptionCategoryId(), null,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
 				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
-				serviceContext);
+				true, serviceContext);
 
 		_cpDefinitionSpecificationOptionValueLocalService.
 			addCPDefinitionSpecificationOptionValue(
@@ -120,7 +120,7 @@ public class SpecificationOptionFacetsTest {
 				cpSpecificationOption.getCPSpecificationOptionId(),
 				cpOptionCategory.getCPOptionCategoryId(),
 				RandomTestUtil.randomDouble(),
-				RandomTestUtil.randomLocaleStringMap(), serviceContext);
+				RandomTestUtil.randomLocaleStringMap(), true, serviceContext);
 
 		SearchContext searchContext = SearchContextTestUtil.getSearchContext(
 			_commerceCatalog.getGroupId());
@@ -186,10 +186,10 @@ public class SpecificationOptionFacetsTest {
 		CPSpecificationOption cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
 				RandomTestUtil.randomString(), serviceContext.getUserId(),
-				cpOptionCategory.getCPOptionCategoryId(), 0,
+				cpOptionCategory.getCPOptionCategoryId(), null,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), false,
-				RandomTestUtil.randomString(), 0, serviceContext);
+				RandomTestUtil.randomString(), 0, true, serviceContext);
 
 		_cpDefinitionSpecificationOptionValueLocalService.
 			addCPDefinitionSpecificationOptionValue(
@@ -197,7 +197,7 @@ public class SpecificationOptionFacetsTest {
 				cpSpecificationOption.getCPSpecificationOptionId(),
 				cpOptionCategory.getCPOptionCategoryId(),
 				RandomTestUtil.randomDouble(),
-				RandomTestUtil.randomLocaleStringMap(), serviceContext);
+				RandomTestUtil.randomLocaleStringMap(), true, serviceContext);
 
 		SearchContext searchContext = SearchContextTestUtil.getSearchContext(
 			_commerceCatalog.getGroupId());

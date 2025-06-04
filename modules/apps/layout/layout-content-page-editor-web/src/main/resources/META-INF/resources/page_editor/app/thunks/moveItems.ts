@@ -36,8 +36,8 @@ export default function moveItems({itemIds, parentItemIds, positions}: Props) {
 			parentItemIds,
 			positions,
 			segmentsExperienceId,
-		}).then((layoutData) => {
-			dispatch(moveItemsAction({itemIds: sortedItemIds, layoutData}));
-		});
+		}).then((layoutData) =>
+			dispatch(moveItemsAction({itemIds: sortedItemIds, layoutData}))
+		);
 	};
 }

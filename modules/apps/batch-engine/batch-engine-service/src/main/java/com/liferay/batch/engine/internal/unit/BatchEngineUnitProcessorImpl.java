@@ -80,12 +80,14 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 				BatchEngineUnitMetaInfo batchEngineUnitMetaInfo =
 					batchEngineUnit.getBatchEngineUnitMetaInfo();
 
-				String featureFlag = batchEngineUnitMetaInfo.getFeatureFlag();
+				String featureFlagKey =
+					batchEngineUnitMetaInfo.getFeatureFlagKey();
 
-				if (_isFeatureFlagDisabled(featureFlag)) {
+				if (_isFeatureFlagDisabled(featureFlagKey)) {
 					_featureFlagBatchEngineUnitProcessor.
 						registerBatchEngineUnit(
-							batchEngineUnitMetaInfo.getCompanyId(), featureFlag,
+							batchEngineUnitMetaInfo.getCompanyId(),
+							featureFlagKey,
 							() -> {
 								CompletableFuture<Void> localCompletableFuture =
 									new CompletableFuture<>();
@@ -153,8 +155,11 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 						"(!(batch.engine.task.item.delegate.name=*)))",
 						"(&(batch.engine.entity.class.name=",
 						_getObjectEntryClassName(batchEngineUnitConfiguration),
-						")(batch.engine.task.item.delegate.name=",
+						")(batch.engine.task.item.delegate=true)",
+						"(batch.engine.task.item.delegate.name=",
 						batchEngineUnitConfiguration.getTaskItemDelegateName(),
+						")(companyId=",
+						batchEngineUnitConfiguration.getCompanyId(),
 						"))(&(batch.engine.entity.class.name=",
 						batchEngineUnitConfiguration.getClassName(),
 						")(batch.engine.task.item.delegate.name=",
@@ -364,8 +369,8 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 		String contentType = null;
 
 		if (batchEngineUnit.isValid()) {
-			batchEngineUnitConfiguration = _updateBatchEngineUnitConfiguration(
-				batchEngineUnit.getBatchEngineUnitConfiguration());
+			batchEngineUnitConfiguration =
+				batchEngineUnit.getBatchEngineUnitConfiguration();
 
 			UnsyncByteArrayOutputStream compressedUnsyncByteArrayOutputStream =
 				new UnsyncByteArrayOutputStream();
@@ -399,8 +404,9 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 		}
 
 		return _execute(
-			batchEngineUnit, batchEngineUnitConfiguration, content, contentType,
-			completableFuture);
+			batchEngineUnit,
+			_updateBatchEngineUnitConfiguration(batchEngineUnitConfiguration),
+			content, contentType, completableFuture);
 	}
 
 	private BatchEngineUnitConfiguration _updateBatchEngineUnitConfiguration(

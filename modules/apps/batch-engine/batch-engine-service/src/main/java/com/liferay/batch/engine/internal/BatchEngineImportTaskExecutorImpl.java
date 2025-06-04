@@ -26,6 +26,7 @@ import com.liferay.batch.engine.internal.strategy.OnErrorContinueBatchEngineImpo
 import com.liferay.batch.engine.internal.strategy.OnErrorFailBatchEngineImportStrategy;
 import com.liferay.batch.engine.internal.task.progress.BatchEngineTaskProgress;
 import com.liferay.batch.engine.internal.task.progress.BatchEngineTaskProgressFactory;
+import com.liferay.batch.engine.internal.util.ErrorMessageUtil;
 import com.liferay.batch.engine.internal.util.ItemIndexThreadLocal;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.BatchEngineImportTaskErrorLocalService;
@@ -37,6 +38,7 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.SearchContext;
@@ -119,7 +121,7 @@ public class BatchEngineImportTaskExecutorImpl
 
 			_updateBatchEngineImportTask(
 				BatchEngineTaskExecuteStatus.FAILED, batchEngineImportTask,
-				throwable.toString());
+				throwable);
 
 			return;
 		}
@@ -160,7 +162,7 @@ public class BatchEngineImportTaskExecutorImpl
 
 			_updateBatchEngineImportTask(
 				BatchEngineTaskExecuteStatus.FAILED, batchEngineImportTask,
-				throwable.toString());
+				throwable);
 		}
 		finally {
 			file.delete();
@@ -300,7 +302,9 @@ public class BatchEngineImportTaskExecutorImpl
 			batchEngineImportTask.getCompanyId(),
 			batchEngineImportTask.getUserId(),
 			batchEngineImportTask.getBatchEngineImportTaskId(), null,
-			processedItemsCount, exception.toString());
+			processedItemsCount,
+			ErrorMessageUtil.getErrorMessage(
+				exception, batchEngineImportTask.getUserId()));
 
 		if (batchEngineImportTask.getImportStrategy() ==
 				BatchEngineImportTaskConstants.
@@ -316,7 +320,7 @@ public class BatchEngineImportTaskExecutorImpl
 		}
 	}
 
-	private void _importItems(
+	private Void _importItems(
 			BatchEngineImportTask batchEngineImportTask,
 			BatchEngineTaskItemDelegate<?> batchEngineTaskItemDelegate,
 			File file)
@@ -328,7 +332,9 @@ public class BatchEngineImportTaskExecutorImpl
 		try (InputStream inputStream = new FileInputStream(file);
 			BatchEngineImportTaskItemReader batchEngineImportTaskItemReader =
 				_getBatchEngineImportTaskItemReader(
-					batchEngineImportTask, inputStream, parameters)) {
+					batchEngineImportTask, inputStream, parameters);
+			SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
 
 			BatchEngineTaskItemDelegateExecutor
 				batchEngineTaskItemDelegateExecutor =
@@ -392,6 +398,8 @@ public class BatchEngineImportTaskExecutorImpl
 					items, processedItemsCount);
 			}
 		}
+
+		return null;
 	}
 
 	private Object _readItem(
@@ -416,10 +424,12 @@ public class BatchEngineImportTaskExecutorImpl
 
 	private void _updateBatchEngineImportTask(
 		BatchEngineTaskExecuteStatus batchEngineTaskExecuteStatus,
-		BatchEngineImportTask batchEngineImportTask, String errorMessage) {
+		BatchEngineImportTask batchEngineImportTask, Throwable throwable) {
 
 		batchEngineImportTask.setEndTime(new Date());
-		batchEngineImportTask.setErrorMessage(errorMessage);
+		batchEngineImportTask.setErrorMessage(
+			ErrorMessageUtil.getErrorMessage(
+				throwable, batchEngineImportTask.getUserId()));
 		batchEngineImportTask.setExecuteStatus(
 			batchEngineTaskExecuteStatus.toString());
 

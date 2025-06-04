@@ -18,12 +18,18 @@ export class PlacedOrdersPage extends CommerceDNDTablePage {
 	readonly layoutsPage: CommerceLayoutsPage;
 	readonly optionsButton: Locator;
 	readonly orderAccountName: (accountName: string) => Locator;
+	readonly orderCell: (orderId: string) => Locator;
+	readonly orderColumn: (rowIndex: number, rowColumn: number) => Locator;
+	readonly orderDateSortButton: Locator;
 	readonly orderItemActionsButton: Locator;
 	readonly orderItemActionsButtonEdit: Locator;
 	readonly page: Page;
 	readonly pageLabel: Locator;
 	readonly pageTitle: Locator;
 	readonly panelList: Locator;
+	readonly placedOrdersTable: Locator;
+	readonly placedOrderTableOrderDate: (orderDate: string) => Locator;
+	readonly placedOrderTableViewButton: Locator;
 	readonly searchButton: Locator;
 	readonly searchInput: Locator;
 	readonly commerceShippingAddress: Locator;
@@ -32,7 +38,7 @@ export class PlacedOrdersPage extends CommerceDNDTablePage {
 	constructor(page: Page) {
 		super(
 			page,
-			'#portlet_com_liferay_commerce_order_content_web_internal_portlet_CommerceOrderContentPortlet .dnd-table'
+			'#portlet_com_liferay_commerce_order_content_web_internal_portlet_CommerceOrderContentPortlet .fds table'
 		);
 
 		this.commerceBillingAddress = page.getByTestId(
@@ -62,6 +68,12 @@ export class PlacedOrdersPage extends CommerceDNDTablePage {
 			.getByLabel('Options');
 		this.orderAccountName = (accountName: string) =>
 			page.getByText(accountName);
+		this.orderCell = (orderId) => page.getByRole('cell', {name: orderId});
+		this.orderColumn = (rowIndex, colIndex) =>
+			page.getByRole('row').nth(rowIndex).locator('td').nth(colIndex);
+		this.orderDateSortButton = page
+			.getByRole('columnheader', {name: 'Order Date'})
+			.getByRole('button');
 		this.orderItemActionsButton = page.getByRole('button', {
 			name: 'Actions',
 		});
@@ -78,6 +90,13 @@ export class PlacedOrdersPage extends CommerceDNDTablePage {
 		this.panelList = page
 			.getByTestId('specificationFacetPanel')
 			.getByRole('button');
+		this.placedOrdersTable = page.locator(
+			'#portlet_com_liferay_commerce_order_content_web_internal_portlet_CommerceOrderContentPortlet .fds table'
+		);
+		this.placedOrderTableOrderDate = (orderDate) =>
+			this.placedOrdersTable.getByText(orderDate);
+		this.placedOrderTableViewButton =
+			this.placedOrdersTable.getByLabel('View');
 		this.searchButton = page.getByRole('button', {name: 'Search'});
 		this.searchInput = page.getByPlaceholder('Search');
 		this.commerceShippingAddress = page.getByTestId(

@@ -48,7 +48,7 @@ components:
                     example: right stairs, first room on the left
                     type: string
                 externalReferenceCode:
-                    example: "AB-34098-789-N"
+                    example: AB-34098-789-N
                     readOnly: true
                     type: string
                 id:
@@ -82,6 +82,9 @@ components:
                 street3:
                     example: suite 200
                     type: string
+                subtype:
+                    example: box
+                    type: string
                 vatNumber:
                     example: "353246836565"
                     type: string
@@ -89,10 +92,10 @@ components:
                     example: "91765"
                     type: string
             required:
-                - city
-                - countryISOCode
-                - name
-                - street1
+                -   city
+                -   countryISOCode
+                -   name
+                -   street1
             type: object
         Channel:
             properties:
@@ -112,38 +115,6 @@ components:
                     type: string
                 type:
                     type: string
-            type: object
-        CustomField:
-            # @review
-            description:
-                Represents the value of each custom field. Fields can contain different information types (e.g.,
-                geolocation, strings, etc.).
-            properties:
-                customValue:
-                    $ref: "#/components/schemas/CustomValue"
-                dataType:
-                    description:
-                        The field type (e.g., image, text, etc.).
-                    readOnly: true
-                    type: string
-                name:
-                    description:
-                        The field's internal name. This is valid for comparisons and unique in the structured content.
-                    type: string
-        CustomValue:
-            properties:
-                data:
-                    description:
-                        The field's content for simple types.
-                    type: object
-                data_i18n:
-                    additionalProperties:
-                        type: string
-                    type: object
-                geo:
-                    $ref: "#/components/schemas/Geo"
-                    description:
-                        A point determined by latitude and longitude.
             type: object
         Error:
             properties:
@@ -170,25 +141,10 @@ components:
                     readOnly: true
                     type: integer
             required:
-                - errorCode
-                - errorDescription
-                - message
-                - status
-            type: object
-        Geo:
-            description:
-                A point determined by latitude and longitude.
-            properties:
-                latitude:
-                    description:
-                        The latitude of a point in space.
-                    format: double
-                    type: number
-                longitude:
-                    description:
-                        The longitude of a point in space.
-                    format: double
-                    type: number
+                -   errorCode
+                -   errorDescription
+                -   message
+                -   status
             type: object
         Order:
             properties:
@@ -247,6 +203,14 @@ components:
                 currencyCode:
                     example: USD
                     type: string
+                currencyExternalReferenceCode:
+                    example: AAB-34098-789-N
+                    type: string
+                currencyId:
+                    example: 30130
+                    format: int64
+                    minimum: 0
+                    type: integer
                 customFields:
                     additionalProperties: true
                     type: object
@@ -619,8 +583,8 @@ components:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
             required:
-                - channelId
-                - currencyCode
+                -   channelId
+                -   currencyCode
             type: object
         OrderAccountGroup:
             properties:
@@ -643,7 +607,7 @@ components:
                     type: integer
                 customFields:
                     items:
-                        $ref: "#/components/schemas/CustomField"
+                        type: customField
                     type: array
                 decimalQuantity:
                     example: 10.1
@@ -896,11 +860,11 @@ components:
                     example: Laptops, Beverages
                     type: string
                 displayDate:
-                    example: "2017-07-21"
+                    example: 2017-07-21
                     format: date
                     type: string
                 expirationDate:
-                    example: "2017-08-21"
+                    example: 2017-08-21
                     format: date
                     type: string
                 externalReferenceCode:
@@ -947,8 +911,8 @@ components:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
             required:
-                - name
-                - type
+                -   name
+                -   type
             type: object
         OrderRuleAccount:
             properties:
@@ -985,8 +949,8 @@ components:
                     minimum: 0
                     type: integer
             required:
-                - accountId
-                - orderRuleId
+                -   accountId
+                -   orderRuleId
             type: object
         OrderRuleAccountGroup:
             properties:
@@ -1023,8 +987,8 @@ components:
                     minimum: 0
                     type: integer
             required:
-                - accountGroupId
-                - orderRuleId
+                -   accountGroupId
+                -   orderRuleId
             type: object
         OrderRuleChannel:
             properties:
@@ -1061,8 +1025,8 @@ components:
                     minimum: 0
                     type: integer
             required:
-                - channelId
-                - orderRuleId
+                -   channelId
+                -   orderRuleId
             type: object
         OrderRuleOrderType:
             properties:
@@ -1099,8 +1063,8 @@ components:
                     minimum: 0
                     type: integer
             required:
-                - orderRuleId
-                - orderTypeId
+                -   orderRuleId
+                -   orderTypeId
             type: object
         OrderType:
             properties:
@@ -1126,7 +1090,7 @@ components:
                         hu_HU: Title HU
                     type: object
                 displayDate:
-                    example: "2017-07-21"
+                    example: 2017-07-21
                     format: date
                     type: string
                 displayOrder:
@@ -1135,7 +1099,7 @@ components:
                     minimum: 0
                     type: integer
                 expirationDate:
-                    example: "2017-08-21"
+                    example: 2017-08-21
                     format: date
                     type: string
                 externalReferenceCode:
@@ -1165,7 +1129,7 @@ components:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
             required:
-                - name
+                -   name
             type: object
         OrderTypeChannel:
             properties:
@@ -1180,7 +1144,7 @@ components:
                     $ref: "#/components/schemas/Channel"
                     readOnly: true
                 channelExternalReferenceCode:
-                    example: "PAB-34098-789-N"
+                    example: PAB-34098-789-N
                     type: string
                 channelId:
                     example: 30130
@@ -1194,7 +1158,7 @@ components:
                     readOnly: true
                     type: integer
                 orderTypeExternalReferenceCode:
-                    example: "DAB-34098-789-N"
+                    example: DAB-34098-789-N
                     type: string
                 orderTypeId:
                     example: 30324
@@ -1202,8 +1166,8 @@ components:
                     minimum: 0
                     type: integer
             required:
-                - channelId
-                - orderTypeId
+                -   channelId
+                -   orderTypeId
             type: object
         ShippingAddress:
             properties:
@@ -1217,7 +1181,7 @@ components:
                     example: right stairs, first room on the left
                     type: string
                 externalReferenceCode:
-                    example: "AB-34098-789-N"
+                    example: AB-34098-789-N
                     readOnly: true
                     type: string
                 id:
@@ -1251,14 +1215,17 @@ components:
                 street3:
                     example: suite 200
                     type: string
+                subtype:
+                    example: box
+                    type: string
                 zip:
                     example: "91765"
                     type: string
             required:
-                - city
-                - countryISOCode
-                - name
-                - street1
+                -   city
+                -   countryISOCode
+                -   name
+                -   street1
             type: object
         Status:
             properties:
@@ -1298,11 +1265,11 @@ components:
                         hu_HU: Term Description HU
                     type: object
                 displayDate:
-                    example: "2017-07-21"
+                    example: 2017-07-21
                     format: date
                     type: string
                 expirationDate:
-                    example: "2017-08-21"
+                    example: 2017-08-21
                     format: date
                     type: string
                 externalReferenceCode:
@@ -1347,8 +1314,8 @@ components:
                     $ref: "#/components/schemas/Status"
                     readOnly: true
             required:
-                - name
-                - type
+                -   name
+                -   type
             type: object
         TermOrderType:
             properties:
@@ -1385,8 +1352,8 @@ components:
                     readOnly: true
                     type: integer
             required:
-                - orderTypeId
-                - termId
+                -   orderTypeId
+                -   termId
             type: object
         VirtualItem:
             properties:
@@ -1423,10 +1390,10 @@ info:
         name: Commerce Team
     description:
         "Liferay Commerce Admin Order API. A Java client JAR is available for use with the group ID 'com.liferay',
-        artifact ID 'com.liferay.headless.commerce.admin.order.client', and version '4.0.44'."
+        artifact ID 'com.liferay.headless.commerce.admin.order.client', and version '4.0.50'."
     license:
-        name: "Apache 2.0"
-        url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
     title: Liferay Commerce Admin Order API
     version: v1.0
 openapi: 3.0.0
@@ -1434,18 +1401,18 @@ paths:
     /order-rule-account-groups/{orderRuleAccountGroupId}:
         delete:
             parameters:
-                - in: path
-                  explode: false
-                  name: orderRuleAccountGroupId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: orderRuleAccountGroupId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -1462,26 +1429,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Deletes a Order Rule Account Group by ID.
             tags: ["OrderRuleAccountGroup"]
     /order-rule-account-groups/{orderRuleAccountGroupId}/account-group:
         get:
             operationId: getOrderRuleAccountGroupAccountGroup
             parameters:
-                - in: path
-                  name: orderRuleAccountGroupId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: orderRuleAccountGroupId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -1527,28 +1494,28 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets account group associated to the pricing object.
             tags: ["OrderAccountGroup"]
     /order-rule-accounts/{orderRuleAccountId}:
         delete:
             operationId: deleteOrderRuleAccount
             parameters:
-                - in: path
-                  explode: false
-                  name: orderRuleAccountId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: orderRuleAccountId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -1565,26 +1532,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Deletes a Order Rule Account by ID.
             tags: ["OrderRuleAccount"]
     /order-rule-accounts/{orderRuleAccountId}/account:
         get:
             operationId: getOrderRuleAccountAccount
             parameters:
-                - in: path
-                  name: orderRuleAccountId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: orderRuleAccountId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -1630,28 +1597,28 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets account associated to the pricing object.
             tags: ["Account"]
     /order-rule-channels/{orderRuleChannelId}:
         delete:
             operationId: deleteOrderRuleChannel
             parameters:
-                - in: path
-                  explode: false
-                  name: orderRuleChannelId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: orderRuleChannelId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -1668,26 +1635,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Deletes a Order Rule Channel by ID.
             tags: ["OrderRuleChannel"]
     /order-rule-channels/{orderRuleChannelId}/channel:
         get:
             operationId: getOrderRuleChannelChannel
             parameters:
-                - in: path
-                  name: orderRuleChannelId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: orderRuleChannelId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -1733,28 +1700,28 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets channel associated to the pricing object.
             tags: ["Channel"]
     /order-rule-order-types/{orderRuleOrderTypeId}:
         delete:
             operationId: deleteOrderRuleOrderType
             parameters:
-                - in: path
-                  explode: false
-                  name: orderRuleOrderTypeId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: orderRuleOrderTypeId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -1771,26 +1738,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Deletes a Order Rule Order Type by ID.
             tags: ["OrderRuleOrderType"]
     /order-rule-order-types/{orderRuleOrderTypeId}/order-type:
         get:
             operationId: getOrderRuleOrderTypeOrderType
             parameters:
-                - in: path
-                  name: orderRuleOrderTypeId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: orderRuleOrderTypeId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -1836,41 +1803,41 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets order type associated to the pricing object.
             tags: ["OrderType"]
     /order-rules:
         get:
             operationId: getOrderRulesPage
             parameters:
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -1917,10 +1884,10 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order Rules.
             tags: ["OrderRule"]
         post:
@@ -1985,27 +1952,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order Rule.
             tags: ["OrderRule"]
     /order-rules/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deleteOrderRuleByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 204:
                     content:
@@ -2022,26 +1989,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Deletes a Order Rule by external reference code.
             tags: ["OrderRule"]
         get:
             operationId: getOrderRuleByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -2087,26 +2054,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a Order Rule by external reference code.
             tags: ["OrderRule"]
         patch:
             operationId: patchOrderRuleByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2161,26 +2128,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Updates a Order Rule by external reference code.
             tags: ["OrderRule"]
         put:
             operationId: putOrderRuleByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2235,10 +2202,10 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Replaces a order rule with information sent in the request body. Any missing fields are deleted
                 unless they are required.
             tags: ["OrderRule"]
@@ -2246,31 +2213,31 @@ paths:
         get:
             operationId: getOrderRuleByExternalReferenceCodeOrderRuleAccountGroupsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
-                - in: query
-                  explode: true
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
-                - in: query
-                  explode: true
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
             responses:
                 200:
                     content:
@@ -2317,26 +2284,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order Rule Account Groups.
             tags: ["OrderRuleAccountGroup"]
         post:
             operationId: postOrderRuleByExternalReferenceCodeOrderRuleAccountGroup
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2397,41 +2364,41 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order Rule Account Group.
             tags: ["OrderRuleAccountGroup"]
     /order-rules/by-externalReferenceCode/{externalReferenceCode}/order-rule-accounts:
         get:
             operationId: getOrderRuleByExternalReferenceCodeOrderRuleAccountsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
-                - in: query
-                  explode: true
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
-                - in: query
-                  explode: true
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
             responses:
                 200:
                     content:
@@ -2478,26 +2445,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order Rule Account.
             tags: ["OrderRuleAccount"]
         post:
             operationId: postOrderRuleByExternalReferenceCodeOrderRuleAccount
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2558,41 +2525,41 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order Rule Account.
             tags: ["OrderRuleAccount"]
     /order-rules/by-externalReferenceCode/{externalReferenceCode}/order-rule-channels:
         get:
             operationId: getOrderRuleByExternalReferenceCodeOrderRuleChannelsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
-                - in: query
-                  explode: true
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
-                - in: query
-                  explode: true
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
             responses:
                 200:
                     content:
@@ -2639,26 +2606,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order Rule Channel.
             tags: ["OrderRuleChannel"]
         post:
             operationId: postOrderRuleByExternalReferenceCodeOrderRuleChannel
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2719,41 +2686,41 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order Rule Channel.
             tags: ["OrderRuleChannel"]
     /order-rules/by-externalReferenceCode/{externalReferenceCode}/order-rule-order-types:
         get:
             operationId: getOrderRuleByExternalReferenceCodeOrderRuleOrderTypesPage
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
-                - in: query
-                  explode: true
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
-                - in: query
-                  explode: true
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
             responses:
                 200:
                     content:
@@ -2800,26 +2767,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order Rule Order Types.
             tags: ["OrderRuleOrderType"]
         post:
             operationId: postOrderRuleByExternalReferenceCodeOrderRuleOrderType
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -2880,25 +2847,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order Rule Order Type.
             tags: ["OrderRuleOrderType"]
     /order-rules/{id}:
         delete:
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 204:
                     content:
@@ -2915,25 +2882,25 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an OrderRule by ID.
             tags:
-                - OrderRule
+                -   OrderRule
         get:
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -2979,25 +2946,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an OrderRule by ID.
             tags:
-                - OrderRule
+                -   OrderRule
         patch:
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -3055,54 +3022,54 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an OrderRule by ID.
             tags:
-                - OrderRule
+                -   OrderRule
     /order-rules/{id}/order-rule-account-groups:
         get:
             operationId: getOrderRuleIdOrderRuleAccountGroupsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -3149,27 +3116,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order rule Account Groups.
             tags: ["OrderRuleAccountGroup"]
         post:
             operationId: postOrderRuleIdOrderRuleAccountGroup
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -3230,52 +3197,52 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order rule Account Group.
     /order-rules/{id}/order-rule-accounts:
         get:
             operationId: getOrderRuleIdOrderRuleAccountsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -3322,27 +3289,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order rule Accounts.
             tags: ["OrderRuleAccount"]
         post:
             operationId: postOrderRuleIdOrderRuleAccount
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -3403,52 +3370,52 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order rule Account.
     /order-rules/{id}/order-rule-channels:
         get:
             operationId: getOrderRuleIdOrderRuleChannelsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -3495,27 +3462,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order rule Channels.
             tags: ["OrderRuleChannel"]
         post:
             operationId: postOrderRuleIdOrderRuleChannel
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -3576,43 +3543,43 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order rule Channel.
             tags: ["OrderRuleChannel"]
     /order-rules/{id}/order-rule-order-types:
         get:
             operationId: getOrderRuleIdOrderRuleOrderTypesPage
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -3659,27 +3626,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order rule Order Types.
             tags: ["OrderRuleOrderType"]
         post:
             operationId: postOrderRuleIdOrderRuleOrderType
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -3740,28 +3707,28 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Order rule Order Type.
             tags: ["OrderRuleOrderType"]
     /order-type-channels/{orderTypeChannelId}:
         delete:
             operationId: deleteOrderTypeChannel
             parameters:
-                - in: path
-                  explode: false
-                  name: orderTypeChannelId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: orderTypeChannelId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -3778,26 +3745,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes a Order Type Channel by ID.
             tags: ["OrderTypeChannel"]
     /order-type-channels/{orderTypeChannelId}/channel:
         get:
             operationId: getOrderTypeChannelChannel
             parameters:
-                - in: path
-                  name: orderTypeChannelId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: orderTypeChannelId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -3843,41 +3810,41 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets channel associated to the order type object.
             tags: ["Channel"]
     /order-types:
         get:
             operationId: getOrderTypesPage
             parameters:
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -3927,13 +3894,13 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a List of OrderTypes.
             tags:
-                - OrderType
+                -   OrderType
         post:
             operationId: postOrderType
             requestBody:
@@ -3996,26 +3963,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates a OrderType.
             tags:
-                - OrderType
+                -   OrderType
     /order-types/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deleteOrderTypeByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 204:
                     content:
@@ -4032,25 +3999,25 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an OrderType by external reference code.
             tags:
-                - OrderType
+                -   OrderType
         get:
             operationId: getOrderTypeByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -4096,25 +4063,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an OrderType by external reference code.
             tags:
-                - OrderType
+                -   OrderType
         patch:
             operationId: patchOrderTypeByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -4172,25 +4139,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an OrderType by external reference code.
             tags:
-                - OrderType
+                -   OrderType
         put:
             operationId: putOrderTypeByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -4248,43 +4215,43 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Replaces a order type with information sent in the request body. Any missing fields are deleted
                 unless they are required.
             tags:
-                - OrderType
+                -   OrderType
     /order-types/by-externalReferenceCode/{externalReferenceCode}/order-type-channels:
         get:
             operationId: getOrderTypeByExternalReferenceCodeOrderTypeChannelsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
-                - in: query
-                  explode: true
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
-                - in: query
-                  explode: true
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
             responses:
                 200:
                     content:
@@ -4331,26 +4298,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a list of Order Type Channels.
             tags: ["OrderTypeChannel"]
         post:
             operationId: postOrderTypeByExternalReferenceCodeOrderTypeChannel
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -4411,26 +4378,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates a Order Type Channel.
             tags: ["OrderTypeChannel"]
     /order-types/{id}:
         delete:
             operationId: deleteOrderType
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 204:
                     content:
@@ -4447,26 +4414,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an OrderType by ID.
             tags:
-                - OrderType
+                -   OrderType
         get:
             operationId: getOrderType
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -4512,26 +4479,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an OrderType by ID.
             tags:
-                - OrderType
+                -   OrderType
         patch:
             operationId: patchOrderType
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -4589,49 +4556,49 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an OrderType by ID.
             tags:
-                - OrderType
+                -   OrderType
     /order-types/{id}/order-type-channels:
         get:
             operationId: getOrderTypeIdOrderTypeChannelsPage
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -4678,27 +4645,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a list of Order Type Channels.
             tags: ["OrderTypeChannel"]
         post:
             operationId: postOrderTypeIdOrderTypeChannel
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -4759,40 +4726,40 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates a Order Type Channel.
             tags: ["OrderTypeChannel"]
     /orderItems:
         get:
             parameters:
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -4839,25 +4806,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Order Items.
             tags: ["OrderItem"]
     /orderItems/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deleteOrderItemByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 204:
                     description:
@@ -4873,25 +4840,25 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Order Item by external reference code.
             tags:
-                - OrderItem
+                -   OrderItem
         get:
             operationId: getOrderItemByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -4937,25 +4904,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Order Item by external reference code.
             tags:
-                - OrderItem
+                -   OrderItem
         patch:
             operationId: patchOrderItemByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -4966,10 +4933,14 @@ paths:
                             $ref: "#/components/schemas/OrderItem"
                 required: true
             responses:
-                202:
-                    description:
-                        Async
-                204:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/OrderItem"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/OrderItem"
                     description:
                         Updated
                 400:
@@ -5006,24 +4977,24 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Order Item by external reference code.
             tags:
-                - OrderItem
+                -   OrderItem
         put:
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -5078,27 +5049,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Order Item by external reference code.
             tags:
-                - OrderItem
+                -   OrderItem
     /orderItems/{id}:
         delete:
             operationId: deleteOrderItem
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 204:
                     description:
@@ -5114,26 +5085,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Order Item by ID.
             tags:
-                - OrderItem
+                -   OrderItem
         get:
             operationId: getOrderItem
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -5179,26 +5150,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Order Item by ID.
             tags:
-                - OrderItem
+                -   OrderItem
         patch:
             operationId: patchOrderItem
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -5209,10 +5180,14 @@ paths:
                             $ref: "#/components/schemas/OrderItem"
                 required: true
             responses:
-                202:
-                    description:
-                        Async
-                204:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/OrderItem"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/OrderItem"
                     description:
                         Updated
                 400:
@@ -5249,25 +5224,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Order Item by ID.
             tags:
-                - OrderItem
+                -   OrderItem
         put:
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -5322,27 +5297,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Update an Order Item by ID.
             tags:
-                - OrderItem
+                -   OrderItem
     /orderItems/{id}/shippingAddress:
         get:
             operationId: getOrderItemShippingAddress
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -5388,26 +5363,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Order Item by ID.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
     /orderNotes/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deleteOrderNoteByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 204:
                     description:
@@ -5423,25 +5398,25 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Order Note by external reference code.
             tags:
-                - OrderNote
+                -   OrderNote
         get:
             operationId: getOrderNoteByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -5487,25 +5462,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Order Note by external reference code.
             tags:
-                - OrderNote
+                -   OrderNote
         patch:
             operationId: patchOrderNoteByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -5556,27 +5531,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Order Note by external reference code.
             tags:
-                - OrderNote
+                -   OrderNote
     /orderNotes/{id}:
         delete:
             operationId: deleteOrderNote
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 204:
                     description:
@@ -5592,26 +5567,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Order Note by ID.
             tags:
-                - OrderNote
+                -   OrderNote
         get:
             operationId: getOrderNote
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -5657,26 +5632,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Order Note by ID.
             tags:
-                - OrderNote
+                -   OrderNote
         patch:
             operationId: patchOrderNote
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -5727,42 +5702,42 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Order Note by ID.
             tags:
-                - OrderNote
+                -   OrderNote
     /orders:
         get:
             operationId: getOrdersPage
             parameters:
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -5812,13 +5787,13 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a List of Orders.
             tags:
-                - Order
+                -   Order
         post:
             operationId: postOrder
             requestBody:
@@ -5881,26 +5856,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates a Order.
             tags:
-                - Order
+                -   Order
     /orders/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deleteOrderByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 204:
                     description:
@@ -5916,25 +5891,25 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Order by external reference code.
             tags:
-                - Order
+                -   Order
         get:
             operationId: getOrderByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -5980,25 +5955,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Order by external reference code.
             tags:
-                - Order
+                -   Order
         patch:
             operationId: patchOrderByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -6053,25 +6028,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Order by external reference code.
             tags:
-                - Order
+                -   Order
         put:
             operationId: putOrderByExternalReferenceCode
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -6126,27 +6101,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Replaces a order with information sent in the request body. Any missing fields are deleted
                 unless they are required.
             tags:
-                - Order
+                -   Order
     /orders/by-externalReferenceCode/{externalReferenceCode}/account:
         get:
             operationId: getOrderByExternalReferenceCodeAccount
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -6192,26 +6167,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a billing Address related to an Order.
             tags:
-                - Account
+                -   Account
     /orders/by-externalReferenceCode/{externalReferenceCode}/billingAddress:
         get:
             operationId: getOrderByExternalReferenceCodeBillingAddress
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -6257,25 +6232,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a billing Address related to an Order.
             tags:
-                - BillingAddress
+                -   BillingAddress
         patch:
             operationId: patchOrderByExternalReferenceCodeBillingAddress
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -6326,26 +6301,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a billing Address related to an Order.
             tags:
-                - BillingAddress
+                -   BillingAddress
     /orders/by-externalReferenceCode/{externalReferenceCode}/channel:
         get:
             operationId: getOrderByExternalReferenceCodeChannel
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -6391,36 +6366,36 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a channel related to an Order.
             tags:
-                - Channel
+                -   Channel
     /orders/by-externalReferenceCode/{externalReferenceCode}/orderItems:
         get:
             operationId: getOrderByExternalReferenceCodeOrderItemsPage
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -6470,25 +6445,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a list of Order Items related to an Order.
             tags:
-                - OrderItem
+                -   OrderItem
         post:
             operationId: postOrderByExternalReferenceCodeOrderItem
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -6549,36 +6524,36 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates an Order Item.
             tags:
-                - OrderItem
+                -   OrderItem
     /orders/by-externalReferenceCode/{externalReferenceCode}/orderNotes:
         get:
             operationId: getOrderByExternalReferenceCodeOrderNotesPage
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -6628,25 +6603,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a list of Order Notes related to an Order.
             tags:
-                - OrderNote
+                -   OrderNote
         post:
             operationId: postOrderByExternalReferenceCodeOrderNote
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -6707,26 +6682,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates an Order Note.
             tags:
-                - OrderNote
+                -   OrderNote
     /orders/by-externalReferenceCode/{externalReferenceCode}/shippingAddress:
         get:
             operationId: getOrderByExternalReferenceCodeShippingAddress
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             responses:
                 200:
                     content:
@@ -6772,25 +6747,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a shipping Address related to an Order.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
         patch:
             operationId: patchOrderByExternalReferenceCodeShippingAddress
             parameters:
-                - in: path
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
+                -   in: path
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
             requestBody:
                 content:
                     application/json:
@@ -6841,27 +6816,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a shipping Address related to an Order.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
     /orders/{id}:
         delete:
             operationId: deleteOrder
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 204:
                     description:
@@ -6877,26 +6852,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Order by ID.
             tags:
-                - Order
+                -   Order
         get:
             operationId: getOrder
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -6942,26 +6917,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets an Order by ID.
             tags:
-                - Order
+                -   Order
         patch:
             operationId: patchOrder
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -7016,27 +6991,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Order by ID.
             tags:
-                - Order
+                -   Order
     /orders/{id}/account:
         get:
             operationId: getOrderIdAccount
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -7082,27 +7057,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a billing Address related to an Order.
             tags:
-                - Account
+                -   Account
     /orders/{id}/billingAddress:
         get:
             operationId: getOrderIdBillingAddress
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -7148,26 +7123,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a billing Address related to an Order.
             tags:
-                - BillingAddress
+                -   BillingAddress
         patch:
             operationId: patchOrderIdBillingAddress
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -7218,27 +7193,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a billing Address related to an Order.
             tags:
-                - BillingAddress
+                -   BillingAddress
     /orders/{id}/channel:
         get:
             operationId: getOrderIdChannel
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -7284,37 +7259,37 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a channel related to an Order.
             tags:
-                - Channel
+                -   Channel
     /orders/{id}/orderItems:
         get:
             operationId: getOrderIdOrderItemsPage
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -7364,26 +7339,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a list of Order Items related to an Order.
             tags:
-                - OrderItem
+                -   OrderItem
         post:
             operationId: postOrderIdOrderItem
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -7444,37 +7419,37 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates an Order Item.
             tags:
-                - OrderItem
+                -   OrderItem
     /orders/{id}/orderNotes:
         get:
             operationId: getOrderIdOrderNotesPage
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
             responses:
                 200:
                     content:
@@ -7524,26 +7499,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a list of Order Notes related to an Order.
             tags:
-                - OrderNote
+                -   OrderNote
         post:
             operationId: postOrderIdOrderNote
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -7604,27 +7579,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Creates or updates an Order Note.
             tags:
-                - OrderNote
+                -   OrderNote
     /orders/{id}/shippingAddress:
         get:
             operationId: getOrderIdShippingAddress
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -7670,26 +7645,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a shipping Address related to an Order.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
         patch:
             operationId: patchOrderIdShippingAddress
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -7740,29 +7715,29 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates a shipping Address related to an Order.
             tags:
-                - ShippingAddress
+                -   ShippingAddress
     /term-order-types/{termOrderTypeId}:
         delete:
             operationId: deleteTermOrderType
             parameters:
-                - in: path
-                  explode: false
-                  name: termOrderTypeId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: termOrderTypeId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             responses:
                 204:
                     content:
@@ -7779,26 +7754,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Deletes a Term Order Type by ID.
             tags: ["TermOrderType"]
     /term-order-types/{termOrderTypeId}/order-type:
         get:
             operationId: getTermOrderTypeOrderType
             parameters:
-                - in: path
-                  name: termOrderTypeId
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: termOrderTypeId
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -7844,41 +7819,41 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets order type associated to the term.
             tags: ["OrderType"]
     /terms:
         get:
             operationId: getTermsPage
             parameters:
-                - in: query
-                  name: filter
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
-                - in: query
-                  name: sort
-                  required: false
-                  schema:
-                      type: string
+                -   in: query
+                    name: filter
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
+                -   in: query
+                    name: sort
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -7925,10 +7900,10 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Terms.
             tags: ["Term"]
         post:
@@ -7993,27 +7968,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Term.
             tags: ["Term"]
     /terms/by-externalReferenceCode/{externalReferenceCode}:
         delete:
             operationId: deleteTermByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 204:
                     content:
@@ -8030,26 +8005,26 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Deletes a Term by external reference code.
             tags: ["Term"]
         get:
             operationId: getTermByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             responses:
                 200:
                     content:
@@ -8095,26 +8070,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a Term by external reference code.
             tags: ["Term"]
         patch:
             operationId: patchTermByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -8169,26 +8144,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Updates a Term by external reference code.
             tags: ["Term"]
         put:
             operationId: putTermByExternalReferenceCode
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -8243,10 +8218,10 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Replaces a term with information sent in the request body. Any missing fields are deleted
                 unless they are required.
             tags: ["Term"]
@@ -8254,31 +8229,31 @@ paths:
         get:
             operationId: getTermByExternalReferenceCodeTermOrderTypesPage
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
-                - in: query
-                  explode: true
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
-                - in: query
-                  explode: true
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                  style: form
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
+                -   in: query
+                    explode: true
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
+                -   in: query
+                    explode: true
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                    style: form
             responses:
                 200:
                     content:
@@ -8325,26 +8300,26 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Term Order Types.
             tags: ["TermOrderType"]
         post:
             operationId: postTermByExternalReferenceCodeTermOrderType
             parameters:
-                - in: path
-                  explode: false
-                  name: externalReferenceCode
-                  required: true
-                  schema:
-                      description:
-                          The resource external reference code
-                      example: AB-34098-789-N
-                      minLength: 1
-                      type: string
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: externalReferenceCode
+                    required: true
+                    schema:
+                        description:
+                            The resource external reference code
+                        example: AB-34098-789-N
+                        minLength: 1
+                        type: string
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -8405,25 +8380,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Term Order Type.
             tags: ["TermOrderType"]
     /terms/{id}:
         delete:
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 204:
                     content:
@@ -8440,25 +8415,25 @@ paths:
                     description:
                         Authentication information is missing or invalid
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Deletes an Term by ID.
             tags:
-                - Term
+                -   Term
         get:
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             responses:
                 200:
                     content:
@@ -8504,25 +8479,25 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.read
             summary: Gets a Term by ID.
             tags:
-                - Term
+                -   Term
         patch:
             parameters:
-                - in: path
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
+                -   in: path
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
             requestBody:
                 content:
                     application/json:
@@ -8580,44 +8555,44 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - CommerceOpenApiAdmin.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   CommerceOpenApiAdmin.write
             summary: Updates an Term by ID.
             tags:
-                - Term
+                -   Term
     /terms/{id}/term-order-types:
         get:
             operationId: getTermIdTermOrderTypesPage
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
-                - in: query
-                  name: page
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: pageSize
-                  required: false
-                  schema:
-                      type: integer
-                - in: query
-                  name: search
-                  required: false
-                  schema:
-                      type: string
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
+                -   in: query
+                    name: page
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: pageSize
+                    required: false
+                    schema:
+                        type: integer
+                -   in: query
+                    name: search
+                    required: false
+                    schema:
+                        type: string
             responses:
                 200:
                     content:
@@ -8664,27 +8639,27 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.read
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.read
             summary: Gets a list of Term Order Types.
             tags: ["TermOrderType"]
         post:
             operationId: postTermIdTermOrderType
             parameters:
-                - in: path
-                  explode: false
-                  name: id
-                  required: true
-                  schema:
-                      description:
-                          The resource Id
-                      example: 30130
-                      format: int64
-                      minimum: 0
-                      type: integer
-                  style: simple
+                -   in: path
+                    explode: false
+                    name: id
+                    required: true
+                    schema:
+                        description:
+                            The resource Id
+                        example: 30130
+                        format: int64
+                        minimum: 0
+                        type: integer
+                    style: simple
             requestBody:
                 content:
                     application/json:
@@ -8745,58 +8720,58 @@ paths:
                     description:
                         Unexpected error
             security:
-                - BasicAuth: []
-                - BearerAuth: []
-                - OAuth2:
-                      - HeadlessCommerceAdminOrder.write
+                -   BasicAuth: []
+                -   BearerAuth: []
+                -   OAuth2:
+                        -   HeadlessCommerceAdminOrder.write
             summary: Creates or updates a Term Order Type.
             tags: ["TermOrderType"]
 servers:
-    - description:
-          Liferay Commerce API server
-      url: https://commerce.{environment}.liferay.com/commerce-admin-order/{basePath}
-      variables:
-          basePath:
-              default: v1.0
-          environment:
-              default: api
-              enum:
-                  - api
-                  - api.dev
-                  - api.uat
-    - description:
-          Liferay Commerce Local Development (Hosts file)
-      url: "{protocol}://{host}:{port}/o/commerce-admin-order/{basePath}"
-      variables:
-          basePath:
-              default: v1.0
-          host:
-              default: test.dev
-          port:
-              default: "8080"
-              enum:
-                  - "443"
-                  - "8080"
-                  - "8443"
-          protocol:
-              default: http
-              enum:
-                  - http
-                  - https
-    - description:
-          Liferay Commerce Local Development with Ngrok
-      url: "{protocol}://{host}.ngrok.io/o/commerce-admin-order/{basePath}"
-      variables:
-          basePath:
-              default: v1.0
-          host:
-              default: commerce
-          protocol:
-              default: http
-              enum:
-                  - http
-                  - https
-    - description:
-          SwaggerHub API Auto Mocking
-      url:
-          https://virtserver.swaggerhub.com/liferayinc/commerce-admin-order/v1.0
+    -   description:
+            Liferay Commerce API server
+        url: https://commerce.{environment}.liferay.com/commerce-admin-order/{basePath}
+        variables:
+            basePath:
+                default: v1.0
+            environment:
+                default: api
+                enum:
+                    -   api
+                    -   api.dev
+                    -   api.uat
+    -   description:
+            Liferay Commerce Local Development (Hosts file)
+        url: "{protocol}://{host}:{port}/o/commerce-admin-order/{basePath}"
+        variables:
+            basePath:
+                default: v1.0
+            host:
+                default: test.dev
+            port:
+                default: "8080"
+                enum:
+                    -   "443"
+                    -   "8080"
+                    -   "8443"
+            protocol:
+                default: http
+                enum:
+                    -   http
+                    -   https
+    -   description:
+            Liferay Commerce Local Development with Ngrok
+        url: "{protocol}://{host}.ngrok.io/o/commerce-admin-order/{basePath}"
+        variables:
+            basePath:
+                default: v1.0
+            host:
+                default: commerce
+            protocol:
+                default: http
+                enum:
+                    -   http
+                    -   https
+    -   description:
+            SwaggerHub API Auto Mocking
+        url:
+            https://virtserver.swaggerhub.com/liferayinc/commerce-admin-order/v1.0

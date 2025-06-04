@@ -23,7 +23,7 @@ export function getMinQuantity(
 	);
 }
 
-export function getMultiple(
+export function getMultipleQuantity(
 	incrementalOrderQuantity = 1,
 	multipleQuantity = 1,
 	precision = 0
@@ -73,7 +73,7 @@ export function getProductMaxQuantity(
 
 	const maxDifference = maxQuantity % multipleQuantity;
 
-	if (!maxDifference) {
+	if (!maxDifference || maxQuantity < multipleQuantity) {
 		return maxQuantity.toFixed(precision);
 	}
 

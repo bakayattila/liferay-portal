@@ -4,12 +4,27 @@
  */
 
 import {
-	ObjectAdminRestClient,
+	ObjectDefinition,
+	ObjectDefinitionAPI,
 	ObjectField,
 	ObjectFolder,
-} from '../../../apps/object/object-admin-rest-client-js/src/main/resources/META-INF/resources/node';
+	ObjectFolderAPI,
+} from '@liferay/object-admin-rest-client-js';
+
 import {getRandomInt} from '../utils/getRandomInt';
 import {ApiHelpers} from './ApiHelpers';
+
+export interface CreateObjectField {
+	attachmentSource?: string;
+	formulaFieldOutput?: 'Decimal' | 'Integer';
+	listTypeDefinitionName?: string;
+	mandatory?: boolean;
+	objectDefinitionLabel?: string;
+
+	objectDefinitionNodes: unknown;
+	objectFieldBusinessType: string;
+	objectFieldLabel: string;
+}
 
 export class ObjectAdminApiHelper {
 	readonly apiHelpers: ApiHelpers;
@@ -20,11 +35,15 @@ export class ObjectAdminApiHelper {
 		this.basePath = 'object-admin/v1.0';
 	}
 
-	async getObjectDefinitionByExternalReferenceCode(
-		externalReferenceCode: string
-	): Promise<ObjectDefinition> {
+	async getAllObjectDefinitions() {
 		return this.apiHelpers.get(
-			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions/by-external-reference-code/${externalReferenceCode}`
+			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions`
+		);
+	}
+
+	async getAllObjectDefinitionsFields(objectDefinitionId: number) {
+		return this.apiHelpers.get(
+			`${this.apiHelpers.baseUrl}${this.basePath}/object-definitions/${objectDefinitionId}/object-fields`
 		);
 	}
 
@@ -39,21 +58,28 @@ export class ObjectAdminApiHelper {
 	}
 
 	async postRandomObjectDefinition({
+		className,
 		objectFields,
 		objectFolderExternalReferenceCode,
+		panelCategoryKey,
+		scope = 'company',
 		status,
 		titleObjectFieldName,
 	}: {
+		className?: string;
 		objectFields?: Partial<ObjectField>[];
 		objectFolderExternalReferenceCode?: string;
+		panelCategoryKey?: string;
+		scope?: 'site' | 'company';
 		status: {code: number};
 		titleObjectFieldName?: string;
 	}) {
 		const objectDefinitionExternalReferenceCode =
 			'ObjectDefinition' + getRandomInt();
 
-		const requestBody = {
+		const requestBody: ObjectDefinition = {
 			active: true,
+			className,
 			externalReferenceCode: objectDefinitionExternalReferenceCode,
 			label: {
 				en_US: objectDefinitionExternalReferenceCode,
@@ -69,6 +95,7 @@ export class ObjectAdminApiHelper {
 					indexedLanguageId: '',
 					label: {en_US: 'textField'},
 					listTypeDefinitionId: 0,
+					localized: false,
 					name: 'textField',
 					required: false,
 					system: false,
@@ -76,10 +103,11 @@ export class ObjectAdminApiHelper {
 				},
 			],
 			objectFolderExternalReferenceCode,
+			panelCategoryKey: panelCategoryKey ?? '',
 			pluralLabel: {
 				en_US: objectDefinitionExternalReferenceCode,
 			},
-			scope: 'company',
+			scope,
 			status,
 			titleObjectFieldName: titleObjectFieldName ?? 'id',
 		};
@@ -89,31 +117,29 @@ export class ObjectAdminApiHelper {
 				objectFolderExternalReferenceCode;
 		}
 
-		const objectAdminRestClient = await this.apiHelpers.buildRestClient(
-			ObjectAdminRestClient
-		);
+		const objectDefinitionAPIClient =
+			await this.apiHelpers.buildRestClient(ObjectDefinitionAPI);
 
-		return objectAdminRestClient.objectDefinition.postObjectDefinition({
-			requestBody,
-		});
+		return (
+			await objectDefinitionAPIClient.postObjectDefinition(requestBody)
+		).body;
 	}
 
 	async postRandomObjectFolder(): Promise<ObjectFolder> {
 		const objectFolderExternalReferenceCode =
 			'objectFolder' + getRandomInt();
 
-		const objectAdminRestClient = await this.apiHelpers.buildRestClient(
-			ObjectAdminRestClient
-		);
+		const objectFolderAPIClient =
+			await this.apiHelpers.buildRestClient(ObjectFolderAPI);
 
-		return objectAdminRestClient.objectFolder.postObjectFolder({
-			requestBody: {
+		return (
+			await objectFolderAPIClient.postObjectFolder({
 				externalReferenceCode: objectFolderExternalReferenceCode,
 				label: {
 					en_US: objectFolderExternalReferenceCode,
 				},
 				name: objectFolderExternalReferenceCode,
-			},
-		});
+			})
+		).body;
 	}
 }

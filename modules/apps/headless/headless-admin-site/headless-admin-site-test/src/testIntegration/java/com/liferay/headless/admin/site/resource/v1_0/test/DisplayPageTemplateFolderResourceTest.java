@@ -6,15 +6,27 @@
 package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.headless.admin.site.client.dto.v1_0.DisplayPageTemplateFolder;
 import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
+import com.liferay.petra.function.UnsafeRunnable;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -22,10 +34,17 @@ import org.junit.runner.RunWith;
  * @author Rubén Pulido
  * @author Bárbara Cabrera
  */
-@FeatureFlags("LPD-35443")
+@FeatureFlag("LPD-35443")
 @RunWith(Arquillian.class)
 public class DisplayPageTemplateFolderResourceTest
 	extends BaseDisplayPageTemplateFolderResourceTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Override
 	@Test
@@ -47,6 +66,31 @@ public class DisplayPageTemplateFolderResourceTest
 				fetchLayoutPageTemplateCollection(
 					postDisplayPageTemplateFolder.getExternalReferenceCode(),
 					testGroup.getGroupId()));
+
+		DisplayPageTemplateFolder liveGroupDisplayPageTemplateFolder =
+			testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPage_addDisplayPageTemplateFolder(
+				testGroup.getExternalReferenceCode(),
+				randomDisplayPageTemplateFolder());
+
+		_enableLocalStaging();
+
+		_assertProblemException(
+			"BAD_REQUEST", null,
+			() ->
+				displayPageTemplateFolderResource.
+					deleteSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+						testGroup.getExternalReferenceCode(),
+						liveGroupDisplayPageTemplateFolder.
+							getExternalReferenceCode()));
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGetSiteDisplayPageTemplateFolderPermissionsPage()
+		throws Exception {
+
+		super.testGetSiteDisplayPageTemplateFolderPermissionsPage();
 	}
 
 	@Override
@@ -68,46 +112,15 @@ public class DisplayPageTemplateFolderResourceTest
 		assertEquals(
 			postDisplayPageTemplateFolder, getDisplayPageTemplateFolder);
 		assertValid(getDisplayPageTemplateFolder);
-	}
 
-	@Ignore
-	@Override
-	@Test
-	public void testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderPermissionsPage()
-		throws Exception {
+		_enableLocalStaging();
 
-		super.
-			testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderPermissionsPage();
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPage()
-		throws Exception {
-
-		super.
-			testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPage();
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPageWithPagination()
-		throws Exception {
-
-		super.
-			testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPageWithPagination();
-	}
-
-	@Ignore
-	@Override
-	@Test
-	public void testGetSiteSiteExternalReferenceCodeDisplayPageTemplateFolderPermissionsPage()
-		throws Exception {
-
-		super.
-			testGetSiteSiteExternalReferenceCodeDisplayPageTemplateFolderPermissionsPage();
+		assertEquals(
+			postDisplayPageTemplateFolder,
+			displayPageTemplateFolderResource.
+				getSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+					testGroup.getExternalReferenceCode(),
+					postDisplayPageTemplateFolder.getExternalReferenceCode()));
 	}
 
 	@Override
@@ -133,22 +146,29 @@ public class DisplayPageTemplateFolderResourceTest
 
 		_testPatchSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
 			displayPageTemplateFolder.getExternalReferenceCode(), null);
+		_testPatchSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+			displayPageTemplateFolder.getExternalReferenceCode(),
+			StringPool.BLANK);
 
-		try {
-			displayPageTemplateFolderResource.
-				patchSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
-					testGroup.getExternalReferenceCode(),
-					RandomTestUtil.randomString(),
-					randomDisplayPageTemplateFolder());
+		_assertProblemException(
+			"NOT_FOUND", null,
+			() ->
+				displayPageTemplateFolderResource.
+					patchSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+						testGroup.getExternalReferenceCode(),
+						RandomTestUtil.randomString(),
+						randomDisplayPageTemplateFolder()));
 
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
+		_enableLocalStaging();
 
-			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertNull(problem.getTitle());
-		}
+		_assertProblemException(
+			"BAD_REQUEST", null,
+			() ->
+				displayPageTemplateFolderResource.
+					patchSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+						testGroup.getExternalReferenceCode(),
+						displayPageTemplateFolder.getExternalReferenceCode(),
+						displayPageTemplateFolder));
 	}
 
 	@Override
@@ -160,6 +180,54 @@ public class DisplayPageTemplateFolderResourceTest
 			testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder();
 
 		_testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderWithExistingParentExternalReferenceCode();
+
+		DisplayPageTemplateFolder postDisplayPageTemplateFolder =
+			testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder_addDisplayPageTemplateFolder(
+				randomDisplayPageTemplateFolder());
+
+		_testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderWithInvalidKey(
+			postDisplayPageTemplateFolder.getKey(),
+			StringBundler.concat(
+				"Duplicate display page template folder for group ",
+				testGroup.getGroupId(), " with key ",
+				postDisplayPageTemplateFolder.getKey()));
+
+		String key =
+			RandomTestUtil.randomString() + StringPool.AMPERSAND +
+				RandomTestUtil.randomString();
+
+		_testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderWithInvalidKey(
+			key,
+			StringBundler.concat(
+				"Key ", key,
+				" must contain only alphanumeric characters, dashes, and ",
+				"underscores"));
+
+		key = RandomTestUtil.randomString(80);
+
+		_testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderWithInvalidKey(
+			key,
+			StringBundler.concat(
+				"Key ", key, " must have fewer than 75 characters"));
+
+		_enableLocalStaging();
+
+		_assertProblemException(
+			"BAD_REQUEST", null,
+			() ->
+				displayPageTemplateFolderResource.
+					postSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+						testGroup.getExternalReferenceCode(),
+						randomDisplayPageTemplateFolder()));
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testPutSiteDisplayPageTemplateFolderPermissionsPage()
+		throws Exception {
+
+		super.testPutSiteDisplayPageTemplateFolderPermissionsPage();
 	}
 
 	@Override
@@ -192,32 +260,28 @@ public class DisplayPageTemplateFolderResourceTest
 
 		displayPageTemplateFolder =
 			_testPutSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
-				displayPageTemplateFolder, null);
+				displayPageTemplateFolder, StringPool.BLANK);
 
-		Assert.assertEquals(
-			parentDisplayPageTemplateFolder.getExternalReferenceCode(),
+		Assert.assertNull(
 			displayPageTemplateFolder.
 				getParentDisplayPageTemplateFolderExternalReferenceCode());
-	}
 
-	@Ignore
-	@Override
-	@Test
-	public void testPutSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderPermissionsPage()
-		throws Exception {
+		DisplayPageTemplateFolder liveGroupDisplayPageTemplateFolder =
+			_testPutSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+				randomDisplayPageTemplateFolder(),
+				RandomTestUtil.randomString());
 
-		super.
-			testPutSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderPermissionsPage();
-	}
+		_enableLocalStaging();
 
-	@Ignore
-	@Override
-	@Test
-	public void testPutSiteSiteExternalReferenceCodeDisplayPageTemplateFolderPermissionsPage()
-		throws Exception {
-
-		super.
-			testPutSiteSiteExternalReferenceCodeDisplayPageTemplateFolderPermissionsPage();
+		_assertProblemException(
+			"BAD_REQUEST", null,
+			() ->
+				displayPageTemplateFolderResource.
+					putSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+						testGroup.getExternalReferenceCode(),
+						liveGroupDisplayPageTemplateFolder.
+							getExternalReferenceCode(),
+						parentDisplayPageTemplateFolder));
 	}
 
 	@Override
@@ -239,6 +303,17 @@ public class DisplayPageTemplateFolderResourceTest
 		return displayPageTemplateFolder;
 	}
 
+	@Ignore
+	@Override
+	@Test
+	protected DisplayPageTemplateFolder
+			testGetSiteDisplayPageTemplateFolderPermissionsPage_addDisplayPageTemplateFolder()
+		throws Exception {
+
+		return super.
+			testGetSiteDisplayPageTemplateFolderPermissionsPage_addDisplayPageTemplateFolder();
+	}
+
 	@Override
 	protected DisplayPageTemplateFolder
 			testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPage_addDisplayPageTemplateFolder(
@@ -246,8 +321,25 @@ public class DisplayPageTemplateFolderResourceTest
 				DisplayPageTemplateFolder displayPageTemplateFolder)
 		throws Exception {
 
-		return testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder_addDisplayPageTemplateFolder(
-			displayPageTemplateFolder);
+		return displayPageTemplateFolderResource.
+			postSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+				siteExternalReferenceCode, displayPageTemplateFolder);
+	}
+
+	@Override
+	protected String
+			testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPage_getIrrelevantSiteExternalReferenceCode()
+		throws Exception {
+
+		return irrelevantGroup.getExternalReferenceCode();
+	}
+
+	@Override
+	protected String
+			testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPage_getSiteExternalReferenceCode()
+		throws Exception {
+
+		return testGroup.getExternalReferenceCode();
 	}
 
 	@Override
@@ -256,10 +348,44 @@ public class DisplayPageTemplateFolderResourceTest
 				DisplayPageTemplateFolder displayPageTemplateFolder)
 		throws Exception {
 
-		return displayPageTemplateFolderResource.
-			postSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
-				testGroup.getExternalReferenceCode(),
-				displayPageTemplateFolder);
+		return testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateFoldersPage_addDisplayPageTemplateFolder(
+			testGroup.getExternalReferenceCode(), displayPageTemplateFolder);
+	}
+
+	@Ignore
+	@Override
+	@Test
+	protected DisplayPageTemplateFolder
+			testPutSiteDisplayPageTemplateFolderPermissionsPage_addDisplayPageTemplateFolder()
+		throws Exception {
+
+		return super.
+			testPutSiteDisplayPageTemplateFolderPermissionsPage_addDisplayPageTemplateFolder();
+	}
+
+	private void _assertProblemException(
+			String status, String title,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		try {
+			unsafeRunnable.run();
+
+			Assert.fail();
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals(status, problem.getStatus());
+			Assert.assertEquals(title, problem.getTitle());
+		}
+	}
+
+	private void _enableLocalStaging() throws Exception {
+		_stagingLocalService.enableLocalStaging(
+			TestPropsValues.getUserId(), testGroup, true, false,
+			ServiceContextTestUtil.getServiceContext(
+				testGroup, TestPropsValues.getUserId()));
 	}
 
 	private void
@@ -300,18 +426,35 @@ public class DisplayPageTemplateFolderResourceTest
 					getParentDisplayPageTemplateFolderExternalReferenceCode();
 		}
 
-		Assert.assertEquals(
-			parentDisplayPageTemplateFolderExternalReferenceCode,
-			patchDisplayPageTemplateFolder.
-				getParentDisplayPageTemplateFolderExternalReferenceCode());
+		if (Validator.isBlank(
+				parentDisplayPageTemplateFolderExternalReferenceCode)) {
+
+			Assert.assertNull(
+				patchDisplayPageTemplateFolder.
+					getParentDisplayPageTemplateFolderExternalReferenceCode());
+		}
+		else {
+			Assert.assertEquals(
+				parentDisplayPageTemplateFolderExternalReferenceCode,
+				patchDisplayPageTemplateFolder.
+					getParentDisplayPageTemplateFolderExternalReferenceCode());
+		}
 	}
 
 	private void _testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderWithExistingParentExternalReferenceCode()
 		throws Exception {
 
+		DisplayPageTemplateFolder displayPageTemplateFolder =
+			randomDisplayPageTemplateFolder();
+
+		displayPageTemplateFolder.setKey(StringPool.BLANK);
+
 		DisplayPageTemplateFolder parentDisplayPageTemplateFolder =
 			testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder_addDisplayPageTemplateFolder(
-				randomDisplayPageTemplateFolder());
+				displayPageTemplateFolder);
+
+		Assert.assertNotNull(
+			Validator.isNotNull(parentDisplayPageTemplateFolder.getKey()));
 
 		DisplayPageTemplateFolder randomDisplayPageTemplateFolder =
 			randomDisplayPageTemplateFolder();
@@ -327,6 +470,9 @@ public class DisplayPageTemplateFolderResourceTest
 		assertEquals(
 			randomDisplayPageTemplateFolder, postDisplayPageTemplateFolder);
 		Assert.assertEquals(
+			randomDisplayPageTemplateFolder.getKey(),
+			postDisplayPageTemplateFolder.getKey());
+		Assert.assertEquals(
 			randomDisplayPageTemplateFolder.
 				getParentDisplayPageTemplateFolderExternalReferenceCode(),
 			postDisplayPageTemplateFolder.
@@ -335,6 +481,25 @@ public class DisplayPageTemplateFolderResourceTest
 		Assert.assertNotNull(
 			postDisplayPageTemplateFolder.
 				getParentDisplayPageTemplateFolderExternalReferenceCode());
+	}
+
+	private void
+			_testPostSiteSiteByExternalReferenceCodeDisplayPageTemplateFolderWithInvalidKey(
+				String key, String title)
+		throws Exception {
+
+		DisplayPageTemplateFolder displayPageTemplateFolder =
+			randomDisplayPageTemplateFolder();
+
+		displayPageTemplateFolder.setKey(key);
+
+		_assertProblemException(
+			"CONFLICT", title,
+			() ->
+				displayPageTemplateFolderResource.
+					postSiteSiteByExternalReferenceCodeDisplayPageTemplateFolder(
+						testGroup.getExternalReferenceCode(),
+						displayPageTemplateFolder));
 	}
 
 	private DisplayPageTemplateFolder
@@ -363,5 +528,8 @@ public class DisplayPageTemplateFolderResourceTest
 	@Inject
 	private LayoutPageTemplateCollectionService
 		_layoutPageTemplateCollectionService;
+
+	@Inject
+	private StagingLocalService _stagingLocalService;
 
 }

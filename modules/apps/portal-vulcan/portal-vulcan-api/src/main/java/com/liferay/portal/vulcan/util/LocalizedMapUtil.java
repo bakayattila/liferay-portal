@@ -13,13 +13,13 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.ws.rs.BadRequestException;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.ws.rs.BadRequestException;
 
 /**
  * @author Brian Wing Shun Chan
@@ -39,6 +39,27 @@ public class LocalizedMapUtil {
 			Locale locale = entry.getKey();
 
 			i18nMap.put(LocaleUtil.toBCP47LanguageId(locale), entry.getValue());
+		}
+
+		return i18nMap;
+	}
+
+	public static Map<String, String> getI18nMap(
+		boolean acceptAllLanguages, Set<Locale> availableLocales,
+		Map<String, String> localizedMap) {
+
+		if (!acceptAllLanguages) {
+			return null;
+		}
+
+		Map<String, String> i18nMap = new HashMap<>();
+
+		for (Locale locale : availableLocales) {
+			String languageId = LocaleUtil.toLanguageId(locale);
+
+			if (localizedMap.containsKey(languageId)) {
+				i18nMap.put(languageId, localizedMap.get(languageId));
+			}
 		}
 
 		return i18nMap;
@@ -236,10 +257,6 @@ public class LocalizedMapUtil {
 		String defaultLanguageId, Map<String, String> i18nMap,
 		String siteDefaultValue) {
 
-		if ((defaultLanguageId == null) && (siteDefaultValue == null)) {
-			return i18nMap;
-		}
-
 		String siteDefaultLanguageId = LocaleUtil.toLanguageId(
 			LocaleUtil.getSiteDefault());
 
@@ -258,11 +275,41 @@ public class LocalizedMapUtil {
 				entry.getValue());
 		}
 
+		if (!newI18nMap.containsKey(defaultLanguageId) &&
+			newI18nMap.containsKey("en_US")) {
+
+			defaultLanguageId = "en_US";
+		}
+
+		if ((defaultLanguageId == null) && (siteDefaultValue == null)) {
+			return newI18nMap;
+		}
+
 		newI18nMap.putIfAbsent(
 			siteDefaultLanguageId,
 			MapUtil.getString(newI18nMap, defaultLanguageId, siteDefaultValue));
 
 		return newI18nMap;
+	}
+
+	public static Map<Locale, String> populateLocalizedMap(
+		Map<String, String> i18nMap) {
+
+		return populateLocalizedMap(null, i18nMap, null);
+	}
+
+	public static Map<Locale, String> populateLocalizedMap(
+		String defaultLanguageId, Map<String, String> i18nMap) {
+
+		return populateLocalizedMap(defaultLanguageId, i18nMap, null);
+	}
+
+	public static Map<Locale, String> populateLocalizedMap(
+		String defaultLanguageId, Map<String, String> i18nMap,
+		String siteDefaultValue) {
+
+		return getLocalizedMap(
+			populateI18nMap(defaultLanguageId, i18nMap, siteDefaultValue));
 	}
 
 	public static void validateI18n(

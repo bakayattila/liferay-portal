@@ -69,7 +69,7 @@ public class ObjectDefinitionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(77);
+		StringBundler sb = new StringBundler(83);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -111,6 +111,8 @@ public class ObjectDefinitionCacheModel
 		sb.append(enableCategorization);
 		sb.append(", enableComments=");
 		sb.append(enableComments);
+		sb.append(", enableFriendlyURLCustomization=");
+		sb.append(enableFriendlyURLCustomization);
 		sb.append(", enableIndexSearch=");
 		sb.append(enableIndexSearch);
 		sb.append(", enableLocalization=");
@@ -119,6 +121,10 @@ public class ObjectDefinitionCacheModel
 		sb.append(enableObjectEntryDraft);
 		sb.append(", enableObjectEntryHistory=");
 		sb.append(enableObjectEntryHistory);
+		sb.append(", enableObjectEntryVersioning=");
+		sb.append(enableObjectEntryVersioning);
+		sb.append(", friendlyURLSeparator=");
+		sb.append(friendlyURLSeparator);
 		sb.append(", label=");
 		sb.append(label);
 		sb.append(", modifiable=");
@@ -224,11 +230,22 @@ public class ObjectDefinitionCacheModel
 
 		objectDefinitionImpl.setEnableCategorization(enableCategorization);
 		objectDefinitionImpl.setEnableComments(enableComments);
+		objectDefinitionImpl.setEnableFriendlyURLCustomization(
+			enableFriendlyURLCustomization);
 		objectDefinitionImpl.setEnableIndexSearch(enableIndexSearch);
 		objectDefinitionImpl.setEnableLocalization(enableLocalization);
 		objectDefinitionImpl.setEnableObjectEntryDraft(enableObjectEntryDraft);
 		objectDefinitionImpl.setEnableObjectEntryHistory(
 			enableObjectEntryHistory);
+		objectDefinitionImpl.setEnableObjectEntryVersioning(
+			enableObjectEntryVersioning);
+
+		if (friendlyURLSeparator == null) {
+			objectDefinitionImpl.setFriendlyURLSeparator("");
+		}
+		else {
+			objectDefinitionImpl.setFriendlyURLSeparator(friendlyURLSeparator);
+		}
 
 		if (label == null) {
 			objectDefinitionImpl.setLabel("");
@@ -342,6 +359,8 @@ public class ObjectDefinitionCacheModel
 
 		enableComments = objectInput.readBoolean();
 
+		enableFriendlyURLCustomization = objectInput.readBoolean();
+
 		enableIndexSearch = objectInput.readBoolean();
 
 		enableLocalization = objectInput.readBoolean();
@@ -349,6 +368,9 @@ public class ObjectDefinitionCacheModel
 		enableObjectEntryDraft = objectInput.readBoolean();
 
 		enableObjectEntryHistory = objectInput.readBoolean();
+
+		enableObjectEntryVersioning = objectInput.readBoolean();
+		friendlyURLSeparator = objectInput.readUTF();
 		label = objectInput.readUTF();
 
 		modifiable = objectInput.readBoolean();
@@ -436,6 +458,8 @@ public class ObjectDefinitionCacheModel
 
 		objectOutput.writeBoolean(enableComments);
 
+		objectOutput.writeBoolean(enableFriendlyURLCustomization);
+
 		objectOutput.writeBoolean(enableIndexSearch);
 
 		objectOutput.writeBoolean(enableLocalization);
@@ -443,6 +467,15 @@ public class ObjectDefinitionCacheModel
 		objectOutput.writeBoolean(enableObjectEntryDraft);
 
 		objectOutput.writeBoolean(enableObjectEntryHistory);
+
+		objectOutput.writeBoolean(enableObjectEntryVersioning);
+
+		if (friendlyURLSeparator == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(friendlyURLSeparator);
+		}
 
 		if (label == null) {
 			objectOutput.writeUTF("");
@@ -538,10 +571,13 @@ public class ObjectDefinitionCacheModel
 	public String dbTableName;
 	public boolean enableCategorization;
 	public boolean enableComments;
+	public boolean enableFriendlyURLCustomization;
 	public boolean enableIndexSearch;
 	public boolean enableLocalization;
 	public boolean enableObjectEntryDraft;
 	public boolean enableObjectEntryHistory;
+	public boolean enableObjectEntryVersioning;
+	public String friendlyURLSeparator;
 	public String label;
 	public boolean modifiable;
 	public String name;

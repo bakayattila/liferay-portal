@@ -16,7 +16,7 @@ import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.blogs.configuration.BlogsFileUploadsConfiguration;
 import com.liferay.blogs.constants.BlogsPortletKeys;
-import com.liferay.blogs.item.selector.criterion.BlogsItemSelectorCriterion;
+import com.liferay.blogs.item.selector.BlogsItemSelectorCriterion;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.blogs.settings.BlogsGroupServiceSettings;
@@ -62,14 +62,14 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.PropsValues;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Adolfo Pérez
@@ -365,29 +365,29 @@ public class BlogsEditEntryDisplayContext {
 			() -> {
 				BlogsEntry blogsEntry = getBlogsEntry();
 
-				if (blogsEntry != null) {
-					return HashMapBuilder.<String, Object>put(
-						"content", UnicodeFormatter.toString(getContent())
-					).put(
-						"customDescription", isCustomAbstract()
-					).put(
-						"description", getDescription()
-					).put(
-						"pending", blogsEntry.isPending()
-					).put(
-						"status", blogsEntry.getStatus()
-					).put(
-						"subtitle",
-						BeanParamUtil.getString(
-							getBlogsEntry(), _httpServletRequest, "subtitle")
-					).put(
-						"title", getTitle()
-					).put(
-						"userId", blogsEntry.getUserId()
-					).build();
+				if (blogsEntry == null) {
+					return null;
 				}
 
-				return null;
+				return HashMapBuilder.<String, Object>put(
+					"content", UnicodeFormatter.toString(getContent())
+				).put(
+					"customDescription", isCustomAbstract()
+				).put(
+					"description", getDescription()
+				).put(
+					"pending", blogsEntry.isPending()
+				).put(
+					"status", blogsEntry.getStatus()
+				).put(
+					"subtitle",
+					BeanParamUtil.getString(
+						getBlogsEntry(), _httpServletRequest, "subtitle")
+				).put(
+					"title", getTitle()
+				).put(
+					"userId", blogsEntry.getUserId()
+				).build();
 			}
 		).build();
 	}
@@ -571,13 +571,13 @@ public class BlogsEditEntryDisplayContext {
 			_assetCategoryIds = new long[0];
 		}
 		else {
-			List<Long> assetCategoryIdsList = ListUtil.fromArray(
+			List<Long> assetCategoryIds = ListUtil.fromArray(
 				assetEntry.getCategoryIds());
 
-			assetCategoryIdsList.removeAll(
+			assetCategoryIds.removeAll(
 				ListUtil.fromArray(_getCurrentFriendlyURLAssetCategoryIds()));
 
-			_assetCategoryIds = ArrayUtil.toLongArray(assetCategoryIdsList);
+			_assetCategoryIds = ArrayUtil.toLongArray(assetCategoryIds);
 		}
 
 		return _assetCategoryIds;

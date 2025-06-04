@@ -61,6 +61,7 @@ create table SamlSpAuthRequest (
 	companyId LONG,
 	createDate DATE null,
 	samlIdpEntityId VARCHAR(1024) null,
+	samlRelayState VARCHAR(2048) null,
 	samlSpAuthRequestKey VARCHAR(75) null
 );
 

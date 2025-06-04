@@ -30,12 +30,36 @@ class WebComponent extends HTMLElement {
 						featureFlags: (this.getAttribute('featureFlags') ?? '')
 							.split(',')
 							.map((featureflag) => featureflag.trim()),
+						kpi: {
+							kpiConnectorQuartelyRelease:
+								this.getAttribute(
+									'kpiConnectorQuartelyRelease'
+								) || '',
+							kpiLowCodePublishedApps:
+								this.getAttribute('kpiLowCodePublishedApps') ||
+								'',
+							kpiPartnershipIntegration:
+								this.getAttribute(
+									'kpiPartnershipIntegration'
+								) || '',
+							kpiProjectUsingMarketplaceApps:
+								this.getAttribute(
+									'kpiProjectUsingMarketplaceApps'
+								) || '',
+							kpiQuartelyReleaseApps:
+								this.getAttribute('kpiQuartelyReleaseApps') ||
+								'',
+						},
 						marketoFormId: this.getAttribute('marketoFormId') || '',
 						productId: this.getAttribute('productId') || '',
 						trialAccountCheck:
 							(this.getAttribute('trialAccountCheck') as any) ||
 							'true',
 						trialEulaURL: this.getAttribute('trialEulaURL') || '',
+						useSiteTaxonomyVocabularyQuery:
+							this.getAttribute(
+								'useSiteTaxonomyVocabularyQuery'
+							) === 'true',
 					}}
 				/>
 			);

@@ -288,14 +288,6 @@ public class LayoutRevisionLocalServiceImpl
 	}
 
 	@Override
-	public LayoutRevision fetchLayoutRevision(
-		long layoutSetBranchId, long layoutBranchId, boolean head, long plid) {
-
-		return layoutRevisionPersistence.fetchByL_L_H_P(
-			layoutSetBranchId, layoutBranchId, head, plid);
-	}
-
-	@Override
 	public List<LayoutRevision> getChildLayoutRevisions(
 		long layoutSetBranchId, long parentLayoutRevisionId, long plid) {
 
@@ -673,7 +665,7 @@ public class LayoutRevisionLocalServiceImpl
 				parentLayoutRevisionId);
 
 		for (PortletPreferences portletPreferences : portletPreferencesList) {
-			javax.portlet.PortletPreferences jxPortletPreferences =
+			jakarta.portlet.PortletPreferences jxPortletPreferences =
 				_portletPreferenceValueLocalService.getPreferences(
 					portletPreferences);
 
@@ -730,11 +722,7 @@ public class LayoutRevisionLocalServiceImpl
 			LayoutTypeControllerTracker.getLayoutTypeController(
 				layout.getType());
 
-		if (layoutTypeController.isWorkflowEnabled()) {
-			return true;
-		}
-
-		return false;
+		return layoutTypeController.isWorkflowEnabled();
 	}
 
 	protected LayoutRevision updateMajor(LayoutRevision layoutRevision)

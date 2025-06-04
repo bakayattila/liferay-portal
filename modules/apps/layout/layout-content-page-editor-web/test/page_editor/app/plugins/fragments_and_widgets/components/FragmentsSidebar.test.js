@@ -4,7 +4,8 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {act, render, screen} from '@testing-library/react';
+import {useMarketplaceConfiguration} from '@liferay/marketplace-js-components-web';
+import {act, fireEvent, render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import {DndProvider} from 'react-dnd';
@@ -37,6 +38,19 @@ jest.mock('frontend-js-web', () => ({
 	...jest.requireActual('frontend-js-web'),
 	sub: jest.fn((key, arg) => key.replace('x', arg)),
 }));
+
+jest.mock('@liferay/marketplace-js-components-web', () => {
+	const mockGetProducts = {
+		getProducts: jest.fn(),
+	};
+	const mockMarketplaceRest = jest.fn(() => mockGetProducts);
+	mockMarketplaceRest.getBaseResourceURL = jest.fn(() => 'mocked-base-url');
+
+	return {
+		MarketplaceRest: mockMarketplaceRest,
+		useMarketplaceConfiguration: jest.fn(),
+	};
+});
 
 const DEFAULT_WIDGETS = [
 	{
@@ -209,14 +223,20 @@ const renderComponent = (widgets = DEFAULT_WIDGETS) => {
 
 describe('FragmentsSidebar', () => {
 	afterEach(() => {
+		jest.useRealTimers();
+		jest.clearAllMocks();
+	});
+
+	beforeEach(() => {
 		TabsPanel.mockClear();
 		jest.useFakeTimers();
+		useMarketplaceConfiguration.mockReturnValue({authorized: false});
 	});
 
 	it('has a sidebar panel title', () => {
 		renderComponent();
 
-		expect(screen.getByText('fragments-and-widgets')).toBeInTheDocument();
+		expect(screen.getByText('components')).toBeInTheDocument();
 	});
 
 	it('normalizes fragments and widgets format', () => {
@@ -231,12 +251,14 @@ describe('FragmentsSidebar', () => {
 		);
 	});
 
-	it('filters fragments and widgets according to a input value', () => {
+	it('filters fragments and widgets according to a input value', async () => {
 		renderComponent();
 		const input = screen.getByLabelText('search-fragments-and-widgets');
 
-		act(() => {
-			userEvent.type(input, 't 1');
+		await act(async () => {
+			await userEvent.type(input, 't 1', {
+				advanceTimers: jest.advanceTimersByTime,
+			});
 
 			jest.runAllTimers();
 		});
@@ -247,12 +269,14 @@ describe('FragmentsSidebar', () => {
 		expect(screen.queryByText('Fragment 3')).not.toBeInTheDocument();
 	});
 
-	it('filters collections according to a input value', () => {
+	it('filters collections according to a input value', async () => {
 		renderComponent();
 		const input = screen.getByLabelText('search-fragments-and-widgets');
 
-		act(() => {
-			userEvent.type(input, 'Widget Collection 1');
+		await act(async () => {
+			await userEvent.type(input, 'Widget Collection 1', {
+				advanceTimers: jest.advanceTimersByTime,
+			});
 
 			jest.runAllTimers();
 		});
@@ -264,12 +288,14 @@ describe('FragmentsSidebar', () => {
 		expect(screen.queryByText('Fragment 3')).not.toBeInTheDocument();
 	});
 
-	it('filters widget template according to a input value', () => {
+	it('filters widget template according to a input value', async () => {
 		renderComponent();
 		const input = screen.getByLabelText('search-fragments-and-widgets');
 
-		act(() => {
-			userEvent.type(input, 'Template Portlet 1');
+		await act(async () => {
+			await userEvent.type(input, 'Template Portlet 1', {
+				advanceTimers: jest.advanceTimersByTime,
+			});
 
 			jest.runAllTimers();
 		});
@@ -509,21 +535,34 @@ describe('FragmentsSidebar', () => {
 	});
 
 	describe('Button to switch the display style', () => {
+		const clickOnComponentsOptions = () => {
+			const componentsOptions = screen.getByTitle('components-options');
+
+			expect(componentsOptions).toBeInTheDocument();
+
+			fireEvent.click(componentsOptions);
+		};
 		it('shows the card view when the display style is list', () => {
 			renderComponent();
 
-			expect(
-				screen.getByTitle('switch-to-card-view')
-			).toBeInTheDocument();
+			clickOnComponentsOptions();
+
+			expect(screen.getByText('switch-to-card-view')).toBeInTheDocument();
 		});
 
-		it('shows the list view when the display style is card', () => {
+		it('shows the list view when the display style is card', async () => {
 			renderComponent();
 
-			userEvent.click(screen.getByTitle('switch-to-card-view'));
+			clickOnComponentsOptions();
+
+			await userEvent.click(screen.getByText('switch-to-card-view'), {
+				advanceTimers: jest.advanceTimersByTime,
+			});
+
+			clickOnComponentsOptions();
 
 			expect(
-				screen.getByTitle('switch-to-list[noun]-view')
+				screen.getByText('switch-to-list[noun]-view')
 			).toBeInTheDocument();
 		});
 	});

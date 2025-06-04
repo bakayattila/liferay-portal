@@ -126,6 +126,30 @@ export class ChangeTrackingPage {
 		await this.deleteComment(editedComment);
 	}
 
+	async assertStatus(status: string, title: string) {
+		await this.goToPublicationHistory();
+
+		await this.page
+			.locator('.fds tbody tr')
+			.filter({
+				has: this.page.getByText(title),
+			})
+			.filter({
+				has: this.page.getByText(status, {exact: true}),
+			})
+			.waitFor();
+
+		await this.page
+			.locator('.fds tbody tr')
+			.filter({
+				has: this.page.getByText(title),
+			})
+			.filter({
+				has: this.page.getByText(status, {exact: true}),
+			})
+			.isVisible();
+	}
+
 	async deleteComment(comment) {
 		const commentsDiv = this.page.locator('div.publications-comments');
 
@@ -169,11 +193,22 @@ export class ChangeTrackingPage {
 	}
 
 	async enablePublications(check: boolean) {
-		await this.page.getByLabel('Open Applications MenuCtrl+Alt+A').click();
+		await this.goToPublicationsViaApplicationMenu();
 
-		await this.page.getByRole('menuitem', {name: 'Publications'}).click();
+		if (
+			await this.page
+				.getByTestId('headerTitle')
+				.filter({hasText: 'Publications'})
+				.isVisible()
+		) {
+			await this.page.getByLabel('Options').click();
 
-		await expect(this.page.getByText('Enable Publications')).toBeVisible();
+			await this.page.getByRole('menuitem', {name: 'Settings'}).click();
+
+			await expect(
+				this.page.getByText('Enable Publications')
+			).toBeVisible();
+		}
 
 		const checkBox = this.page.getByRole('checkbox', {
 			name: 'Enable Publications',
@@ -207,6 +242,20 @@ export class ChangeTrackingPage {
 		if (!(await changeTrackingIndicatorButton.isVisible())) {
 			await this.enablePublications(true);
 		}
+	}
+
+	async goToPublicationsViaApplicationMenu() {
+		await this.page.getByLabel('Open Applications MenuCtrl+Alt+A').click();
+
+		await this.page.getByRole('menuitem', {name: 'Publications'}).click();
+
+		const enablePublications = this.page.getByText('Enable Publications');
+
+		const publicationsHeader = this.page
+			.getByTestId('headerTitle')
+			.filter({hasText: 'Publications'});
+
+		await expect(enablePublications.or(publicationsHeader)).toBeVisible();
 	}
 
 	async goToPublicationHistory() {
@@ -259,10 +308,41 @@ export class ChangeTrackingPage {
 			.waitFor();
 	}
 
+	async goToReviewChangesScheduled(title: string) {
+		await this.goto();
+
+		await this.selectTab('Scheduled');
+
+		await this.page
+			.locator('#fnsd___table-id div')
+			.filter({hasText: title})
+			.first()
+			.waitFor();
+
+		await this.page.getByRole('link', {exact: true, name: title}).click();
+
+		await this.page
+			.locator(
+				'#_com_liferay_change_tracking_web_portlet_PublicationsPortlet_controlMenu'
+			)
+			.filter({hasText: 'Review Changes'})
+			.waitFor();
+	}
+
+	async switchLanguage(language: string) {
+		await this.page.getByLabel('show-available-locales').click();
+
+		await this.page
+			.getByRole('menuitem', {
+				name: `${language} Translated`,
+			})
+			.click();
+	}
+
 	async workOnProduction() {
 		const apiHelpers = new ApiHelpers(this.page);
 
-		await apiHelpers.headlessChangeTracking.checkoutCTCollection('0');
+		await apiHelpers.headlessChangeTracking.checkoutCTCollection(0);
 
 		await this.page.reload();
 	}
@@ -271,7 +351,7 @@ export class ChangeTrackingPage {
 		const apiHelpers = new ApiHelpers(this.page);
 
 		await apiHelpers.headlessChangeTracking.checkoutCTCollection(
-			ctCollection.id
+			ctCollection.body.id
 		);
 
 		await this.page.reload();
@@ -317,6 +397,22 @@ export class ChangeTrackingPage {
 		);
 	}
 
+	async publishSandboxPublication(title: string) {
+		await this.goto();
+
+		await this.page.getByRole('link', {name: title}).first().click();
+
+		await this.page.getByRole('link', {name: 'Publish'}).waitFor();
+
+		await this.page.getByRole('link', {name: 'Publish'}).click();
+
+		await expect(
+			this.page.getByText('No unresolved conflicts, ready to publish.')
+		).toBeVisible();
+
+		await this.page.getByRole('button', {name: 'Publish'}).click();
+	}
+
 	async toggleSandboxConfiguration(check: boolean) {
 		await this.goto();
 
@@ -324,7 +420,7 @@ export class ChangeTrackingPage {
 
 		await this.page.getByRole('menuitem', {name: 'Settings'}).click();
 
-		await expect(this.page.getByText('Sandbox Only')).toBeVisible();
+		await expect(this.page.getByText('Enable Publications')).toBeVisible();
 
 		const checkBox = this.page.getByRole('checkbox', {
 			name: 'enable-sandbox-only',
@@ -347,6 +443,48 @@ export class ChangeTrackingPage {
 			await expect(publicationsEnabled).toBeChecked();
 
 			await expect(checkBox).not.toBeChecked();
+		}
+	}
+
+	async viewChanges({
+		changed,
+		isVisible,
+		site,
+		title,
+		type,
+	}: {
+		changed?: string;
+		isVisible?: boolean;
+		site?: string;
+		title: string;
+		type?: string;
+	}) {
+		let fdsRow = this.page.locator('.fds tbody tr').filter({
+			has: this.page.getByText(title),
+		});
+
+		if (changed) {
+			fdsRow = fdsRow.filter({
+				has: this.page.getByRole('cell', {name: changed}),
+			});
+		}
+
+		if (site) {
+			fdsRow = fdsRow.filter({
+				has: this.page.getByRole('cell', {name: site}),
+			});
+		}
+		if (type) {
+			fdsRow = fdsRow.filter({
+				has: this.page.getByRole('cell', {name: type}),
+			});
+		}
+
+		if (isVisible === true) {
+			await expect(fdsRow).toBeVisible();
+		}
+		else if (isVisible === false) {
+			await expect(fdsRow).toBeHidden();
 		}
 	}
 

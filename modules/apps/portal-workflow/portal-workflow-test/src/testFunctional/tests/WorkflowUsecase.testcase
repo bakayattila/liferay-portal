@@ -295,7 +295,6 @@ definition {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Training";
 
 		Workflow.openWorkflowListView();
 
@@ -956,7 +955,7 @@ definition {
 			assetType = "Blogs Entry",
 			user = "Test Test");
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 		Workflow.confirmWorkflowAction();
 
@@ -972,7 +971,7 @@ definition {
 			workflowAssignedTo = "Test Test",
 			workflowTask = "Review");
 
-		LexiconEntry.gotoEllipsisMenuItem(menuItem = "Approve");
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Approve");
 
 		Button.clickDone();
 

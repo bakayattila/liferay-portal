@@ -16,7 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,13 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotEmpty;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -42,11 +40,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 	description = "A reference specifying the class name and an optional subtype.",
 	value = "ClassSubtypeReference"
 )
-@JsonFilter("Liferay.Vulcan")
-@Schema(
+@io.swagger.v3.oas.annotations.media.Schema(
 	description = "A reference specifying the class name and an optional subtype.",
 	requiredProperties = {"className"}
 )
+@JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ClassSubtypeReference")
 public class ClassSubtypeReference implements Serializable {
 
@@ -59,7 +57,7 @@ public class ClassSubtypeReference implements Serializable {
 			ClassSubtypeReference.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getClassName() {
 		if (_classNameSupplier != null) {
 			className = _classNameSupplier.get();
@@ -101,7 +99,7 @@ public class ClassSubtypeReference implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _classNameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public ItemExternalReference getSubTypeExternalReference() {
 		if (_subTypeExternalReferenceSupplier != null) {
@@ -208,8 +206,8 @@ public class ClassSubtypeReference implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.ClassSubtypeReference",
 		name = "x-class-name"
 	)

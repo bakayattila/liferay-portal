@@ -5,12 +5,17 @@
 
 import productIconFallback from '../assets/icons/purchased_app_icon.svg';
 import productImageFallback from '../assets/images/app_placeholder.png';
-import {PRODUCT_IMAGE_FALLBACK_CATEGORIES} from '../enums/Product';
+import {
+	ProductImageFallbackCategories,
+	ProductSpecificationKey,
+	ProductType,
+} from '../enums/Product';
 import i18n from '../i18n';
 
 export function getProductFallback(): DeliveryProduct {
 	return {
 		attachments: [],
+		catalogName: '',
 		categories: [],
 		createDate: '',
 		description: i18n.translate('this-product-is-no-longer-available'),
@@ -25,15 +30,14 @@ export function getProductFallback(): DeliveryProduct {
 		shortDescription: i18n.translate('this-product-is-no-longer-available'),
 		skus: [],
 		urlImage: '',
+		urls: {en_US: ''},
 	};
 }
 
-export function getProductImageFallback(
-	type: PRODUCT_IMAGE_FALLBACK_CATEGORIES
-) {
+export function getProductImageFallback(type: ProductImageFallbackCategories) {
 	const productImagesFallback = {
-		[PRODUCT_IMAGE_FALLBACK_CATEGORIES.PRODUCT_IMAGE]: productImageFallback,
-		[PRODUCT_IMAGE_FALLBACK_CATEGORIES.PRODUCT_ICON]: productIconFallback,
+		[ProductImageFallbackCategories.PRODUCT_IMAGE]: productImageFallback,
+		[ProductImageFallbackCategories.PRODUCT_ICON]: productIconFallback,
 	};
 
 	return productImagesFallback[type] || '';
@@ -100,4 +104,16 @@ export function getProductCategoriesByVocabularyName(
 				)
 		)
 		.map(({name}) => name);
+}
+
+export function getProductType(product: DeliveryProduct) {
+	const specification = getSpecificationByKey(
+		ProductSpecificationKey.APP_TYPE,
+		product
+	);
+
+	return {
+		isCloud: specification?.value === ProductType.CLOUD,
+		isDXP: specification?.value === ProductType.DXP,
+	};
 }

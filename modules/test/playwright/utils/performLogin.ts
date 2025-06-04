@@ -5,6 +5,7 @@
 
 import {Cookie, Page, expect} from '@playwright/test';
 
+import {ApiHelpers, getHeader} from '../helpers/ApiHelpers';
 import {liferayConfig} from '../liferay.config';
 
 export type LoginScreenName =
@@ -35,6 +36,15 @@ export const userData = {
 		surname: 'Test',
 	},
 };
+
+interface LoginOptions {
+	apiHelpers?: ApiHelpers;
+	domain?: string;
+	loginUrl?: string;
+	page: Page;
+	rememberMe?: boolean;
+	screenName: LoginScreenName | string;
+}
 
 async function performLogin(
 	page: Page,
@@ -76,11 +86,55 @@ async function performLogin(
 			.click();
 	}
 
-	await expect(
-		page.getByLabel(`${name} ${surname} User Profile`)
-	).toBeVisible({
+	await expect(page.getByLabel(`${name} ${surname}`)).toBeVisible({
 		timeout: 30 * 1000,
 	});
+
+	return await page.context().cookies();
+}
+
+export async function performLoginViaApi({
+	apiHelpers,
+	domain = '@liferay.com',
+	loginUrl = liferayConfig.environment.baseUrl,
+	page,
+	rememberMe = true,
+	screenName,
+}: LoginOptions) {
+	const {password} = userData[screenName || 'test'];
+
+	const params = new URLSearchParams({
+		login: `${screenName}${domain}`,
+		password,
+		rememberMe: String(rememberMe),
+	});
+
+	try {
+		await page.goto(loginUrl);
+
+		const url = `${loginUrl}/c/portal/login`;
+
+		await page.request.post(url, {
+			data: params.toString(),
+			headers: await getHeader(page, 'application/x-www-form-urlencoded'),
+		});
+
+		await page.goto(loginUrl);
+
+		if (!apiHelpers) {
+			apiHelpers = new ApiHelpers(page, loginUrl);
+		}
+
+		const {alternateName} =
+			await apiHelpers.headlessAdminUser.getMyUserAccount();
+
+		expect(alternateName).toBe(screenName);
+	}
+	catch (error) {
+		error.message = `Login via API failed\n\n${error.message}`;
+
+		throw error;
+	}
 
 	return await page.context().cookies();
 }

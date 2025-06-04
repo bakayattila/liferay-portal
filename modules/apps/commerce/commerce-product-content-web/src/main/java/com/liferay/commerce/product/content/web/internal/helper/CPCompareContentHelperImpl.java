@@ -27,6 +27,7 @@ import com.liferay.commerce.product.service.CPMeasurementUnitLocalService;
 import com.liferay.commerce.product.service.CPOptionCategoryLocalService;
 import com.liferay.commerce.product.util.CPCompareHelper;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -41,17 +42,17 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -318,16 +319,10 @@ public class CPCompareContentHelperImpl implements CPCompareContentHelper {
 		List<CPDefinitionOptionValueRel> cpDefinitionOptionValueRels,
 		Locale locale) {
 
-		List<String> cpDefinitionOptionValueRelValues = new ArrayList<>();
-
-		for (CPDefinitionOptionValueRel cpDefinitionOptionValueRel :
-				cpDefinitionOptionValueRels) {
-
-			cpDefinitionOptionValueRelValues.add(
-				cpDefinitionOptionValueRel.getName(locale));
-		}
-
-		return cpDefinitionOptionValueRelValues;
+		return TransformUtil.transform(
+			cpDefinitionOptionValueRels,
+			cpDefinitionOptionValueRel -> cpDefinitionOptionValueRel.getName(
+				locale));
 	}
 
 	protected List<CPSpecificationOption> getCPSpecificationOptions(
@@ -341,7 +336,10 @@ public class CPCompareContentHelperImpl implements CPCompareContentHelper {
 
 		for (CPDefinitionSpecificationOptionValue
 				cpDefinitionSpecificationOptionValue :
-					cpDefinition.getCPDefinitionSpecificationOptionValues()) {
+					_cpDefinitionSpecificationOptionValueLocalService.
+						getCPDefinitionSpecificationOptionValues(
+							cpDefinition.getCPDefinitionId(), true,
+							QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
 
 			CPSpecificationOption cpSpecificationOption =
 				cpDefinitionSpecificationOptionValue.getCPSpecificationOption();

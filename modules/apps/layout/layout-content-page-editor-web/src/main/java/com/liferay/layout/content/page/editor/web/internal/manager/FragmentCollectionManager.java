@@ -25,8 +25,8 @@ import com.liferay.layout.content.page.editor.web.internal.constants.ContentPage
 import com.liferay.layout.page.template.info.item.capability.EditPageInfoItemCapability;
 import com.liferay.layout.util.PortalPreferencesUtil;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -48,6 +48,8 @@ import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,8 +60,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -381,19 +381,11 @@ public class FragmentCollectionManager {
 				continue;
 			}
 
-			fragmentEntryMapsList.sort(
-				(fragmentEntryMap1, fragmentEntryMap2) -> {
-					String name1 = String.valueOf(
-						fragmentEntryMap1.get("name"));
-					String name2 = String.valueOf(
-						fragmentEntryMap2.get("name"));
-
-					return name1.compareTo(name2);
-				});
-
 			fragmentCollectionContributorMaps.put(
 				fragmentCollectionContributor.getFragmentCollectionKey(),
 				HashMapBuilder.<String, Object>put(
+					"deprecated", fragmentCollectionContributor.isDeprecated()
+				).put(
 					"fragmentCollectionId",
 					fragmentCollectionContributor.getFragmentCollectionKey()
 				).put(
@@ -414,19 +406,17 @@ public class FragmentCollectionManager {
 		DropZoneLayoutStructureItem masterDropZoneLayoutStructureItem,
 		ThemeDisplay themeDisplay) {
 
-		List<Map<String, Object>> filteredFragmentCompositions =
-			new ArrayList<>();
+		return TransformUtil.transform(
+			fragmentCompositions,
+			fragmentComposition -> {
+				if (!_isAllowedFragmentEntryKey(
+						fragmentComposition.getFragmentCompositionKey(),
+						masterDropZoneLayoutStructureItem)) {
 
-		for (FragmentComposition fragmentComposition : fragmentCompositions) {
-			if (!_isAllowedFragmentEntryKey(
-					fragmentComposition.getFragmentCompositionKey(),
-					masterDropZoneLayoutStructureItem)) {
+					return null;
+				}
 
-				continue;
-			}
-
-			filteredFragmentCompositions.add(
-				HashMapBuilder.<String, Object>put(
+				return HashMapBuilder.<String, Object>put(
 					"fieldTypes", _jsonFactory.createJSONArray()
 				).put(
 					"fragmentEntryKey",
@@ -448,10 +438,8 @@ public class FragmentCollectionManager {
 					"name", fragmentComposition.getName()
 				).put(
 					"type", ContentPageEditorConstants.TYPE_COMPOSITION
-				).build());
-		}
-
-		return filteredFragmentCompositions;
+				).build();
+			});
 	}
 
 	private List<Map<String, Object>> _getFragmentEntryMapsList(
@@ -460,28 +448,25 @@ public class FragmentCollectionManager {
 		DropZoneLayoutStructureItem masterDropZoneLayoutStructureItem,
 		ThemeDisplay themeDisplay) {
 
-		List<Map<String, Object>> fragmentEntryMapsList = new ArrayList<>();
+		return TransformUtil.transform(
+			fragmentEntries,
+			fragmentEntry -> {
+				if (!_isAllowedFragmentEntryKey(
+						fragmentEntry.getFragmentEntryKey(),
+						masterDropZoneLayoutStructureItem) ||
+					((fragmentEntry.isTypeInput() ||
+					  Objects.equals(
+						  fragmentEntry.getFragmentEntryKey(),
+						  "INPUTS-stepper") ||
+					  Objects.equals(
+						  fragmentEntry.getFragmentEntryKey(),
+						  "INPUTS-submit-button")) &&
+					 hideInputFragments)) {
 
-		for (FragmentEntry fragmentEntry : fragmentEntries) {
-			if (!_isAllowedFragmentEntryKey(
-					fragmentEntry.getFragmentEntryKey(),
-					masterDropZoneLayoutStructureItem) ||
-				((fragmentEntry.isTypeInput() ||
-				  Objects.equals(
-					  fragmentEntry.getFragmentEntryKey(), "INPUTS-stepper") ||
-				  Objects.equals(
-					  fragmentEntry.getFragmentEntryKey(),
-					  "INPUTS-submit-button")) &&
-				 hideInputFragments) ||
-				(Objects.equals(
-					fragmentEntry.getFragmentEntryKey(), "INPUTS-stepper") &&
-				 !FeatureFlagManagerUtil.isEnabled("LPD-10727"))) {
+					return null;
+				}
 
-				continue;
-			}
-
-			fragmentEntryMapsList.add(
-				HashMapBuilder.<String, Object>put(
+				return HashMapBuilder.<String, Object>put(
 					"fieldTypes",
 					_getFieldTypesJSONArray(fragmentEntry.getTypeOptions())
 				).put(
@@ -504,10 +489,8 @@ public class FragmentCollectionManager {
 				).put(
 					"type",
 					FragmentConstants.getTypeLabel(fragmentEntry.getType())
-				).build());
-		}
-
-		return fragmentEntryMapsList;
+				).build();
+			});
 	}
 
 	private String _getFragmentUniqueKey(
@@ -546,6 +529,24 @@ public class FragmentCollectionManager {
 
 		sortedFragmentCollectionMapsList.addAll(
 			fragmentCollectionMaps.values());
+
+		for (Map<String, Object> fragmentCollectionMap :
+				sortedFragmentCollectionMapsList) {
+
+			List<Map<String, Object>> fragmentEntries =
+				(List<Map<String, Object>>)fragmentCollectionMap.get(
+					"fragmentEntries");
+
+			fragmentEntries.sort(
+				(fragmentEntryMap1, fragmentEntryMap2) -> {
+					String name1 = String.valueOf(
+						fragmentEntryMap1.get("name"));
+					String name2 = String.valueOf(
+						fragmentEntryMap2.get("name"));
+
+					return name1.compareTo(name2);
+				});
+		}
 
 		return sortedFragmentCollectionMapsList;
 	}

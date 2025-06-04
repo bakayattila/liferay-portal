@@ -26,7 +26,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -44,9 +44,13 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Pagination;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.ProcessMetricResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.ProcessMetricSerDes;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -85,7 +85,7 @@ public abstract class BaseProcessMetricResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,13 +99,12 @@ public abstract class BaseProcessMetricResourceTestCase {
 
 		_processMetricResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		ProcessMetricResource.Builder builder = ProcessMetricResource.builder();
-
-		processMetricResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		processMetricResource = ProcessMetricResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -178,6 +177,21 @@ public abstract class BaseProcessMetricResourceTestCase {
 	}
 
 	@Test
+	public void testGetProcessMetric() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGraphQLGetProcessMetric() throws Exception {
+		Assert.assertTrue(true);
+	}
+
+	@Test
+	public void testGraphQLGetProcessMetricNotFound() throws Exception {
+		Assert.assertTrue(true);
+	}
+
+	@Test
 	public void testGetProcessMetricsPage() throws Exception {
 		Page<ProcessMetric> page = processMetricResource.getProcessMetricsPage(
 			RandomTestUtil.randomString(), Pagination.of(1, 10), null);
@@ -211,11 +225,11 @@ public abstract class BaseProcessMetricResourceTestCase {
 
 	@Test
 	public void testGetProcessMetricsPageWithPagination() throws Exception {
-		Page<ProcessMetric> processMetricPage =
+		Page<ProcessMetric> processMetricsPage =
 			processMetricResource.getProcessMetricsPage(null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			processMetricPage.getTotalCount());
+			processMetricsPage.getTotalCount());
 
 		ProcessMetric processMetric1 =
 			testGetProcessMetricsPage_addProcessMetric(randomProcessMetric());
@@ -453,21 +467,6 @@ public abstract class BaseProcessMetricResourceTestCase {
 	@Test
 	public void testGraphQLGetProcessMetricsPage() throws Exception {
 		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetProcessMetric() throws Exception {
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetProcessMetric() throws Exception {
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetProcessMetricNotFound() throws Exception {
-		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(
@@ -1168,7 +1167,9 @@ public abstract class BaseProcessMetricResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseProcessMetricResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private

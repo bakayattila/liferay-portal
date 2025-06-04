@@ -16,7 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,12 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Andrea Sbarra
@@ -54,7 +53,7 @@ public class Cart implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Cart.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAccount() {
 		if (_accountSupplier != null) {
 			account = _accountSupplier.get();
@@ -95,7 +94,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _accountSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getAccountId() {
 		if (_accountIdSupplier != null) {
 			accountId = _accountIdSupplier.get();
@@ -136,7 +135,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _accountIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Attachment[] getAttachments() {
 		if (_attachmentsSupplier != null) {
@@ -178,7 +177,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Attachment[]> _attachmentsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getAuthor() {
 		if (_authorSupplier != null) {
 			author = _authorSupplier.get();
@@ -219,7 +218,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _authorSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Address getBillingAddress() {
 		if (_billingAddressSupplier != null) {
@@ -261,7 +260,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Address> _billingAddressSupplier;
 
-	@Schema(example = "AAB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AAB-34098-789-N")
 	public String getBillingAddressExternalReferenceCode() {
 		if (_billingAddressExternalReferenceCodeSupplier != null) {
 			billingAddressExternalReferenceCode =
@@ -307,7 +306,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _billingAddressExternalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getBillingAddressId() {
 		if (_billingAddressIdSupplier != null) {
 			billingAddressId = _billingAddressIdSupplier.get();
@@ -348,7 +347,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _billingAddressIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public CartItem[] getCartItems() {
 		if (_cartItemsSupplier != null) {
@@ -390,7 +389,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<CartItem[]> _cartItemsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getChannelId() {
 		if (_channelIdSupplier != null) {
 			channelId = _channelIdSupplier.get();
@@ -431,7 +430,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _channelIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCouponCode() {
 		if (_couponCodeSupplier != null) {
 			couponCode = _couponCodeSupplier.get();
@@ -472,7 +471,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _couponCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getCreateDate() {
 		if (_createDateSupplier != null) {
 			createDate = _createDateSupplier.get();
@@ -513,7 +512,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _createDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getCurrencyCode() {
 		if (_currencyCodeSupplier != null) {
 			currencyCode = _currencyCodeSupplier.get();
@@ -554,7 +553,94 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _currencyCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AAB-34098-789-N")
+	public String getCurrencyExternalReferenceCode() {
+		if (_currencyExternalReferenceCodeSupplier != null) {
+			currencyExternalReferenceCode =
+				_currencyExternalReferenceCodeSupplier.get();
+
+			_currencyExternalReferenceCodeSupplier = null;
+		}
+
+		return currencyExternalReferenceCode;
+	}
+
+	public void setCurrencyExternalReferenceCode(
+		String currencyExternalReferenceCode) {
+
+		this.currencyExternalReferenceCode = currencyExternalReferenceCode;
+
+		_currencyExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCurrencyExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			currencyExternalReferenceCodeUnsafeSupplier) {
+
+		_currencyExternalReferenceCodeSupplier = () -> {
+			try {
+				return currencyExternalReferenceCodeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String currencyExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String> _currencyExternalReferenceCodeSupplier;
+
+	@DecimalMin("0")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
+	public Long getCurrencyId() {
+		if (_currencyIdSupplier != null) {
+			currencyId = _currencyIdSupplier.get();
+
+			_currencyIdSupplier = null;
+		}
+
+		return currencyId;
+	}
+
+	public void setCurrencyId(Long currencyId) {
+		this.currencyId = currencyId;
+
+		_currencyIdSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setCurrencyId(
+		UnsafeSupplier<Long, Exception> currencyIdUnsafeSupplier) {
+
+		_currencyIdSupplier = () -> {
+			try {
+				return currencyIdUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Long currencyId;
+
+	@JsonIgnore
+	private Supplier<Long> _currencyIdSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, ?> getCustomFields() {
 		if (_customFieldsSupplier != null) {
@@ -596,7 +682,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, ?>> _customFieldsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getDeliveryTermId() {
 		if (_deliveryTermIdSupplier != null) {
 			deliveryTermId = _deliveryTermIdSupplier.get();
@@ -637,7 +723,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _deliveryTermIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getDeliveryTermLabel() {
 		if (_deliveryTermLabelSupplier != null) {
 			deliveryTermLabel = _deliveryTermLabelSupplier.get();
@@ -678,7 +764,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _deliveryTermLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String[] getErrorMessages() {
 		if (_errorMessagesSupplier != null) {
 			errorMessages = _errorMessagesSupplier.get();
@@ -719,7 +805,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _errorMessagesSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -760,7 +846,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getFriendlyURLSeparator() {
 		if (_friendlyURLSeparatorSupplier != null) {
 			friendlyURLSeparator = _friendlyURLSeparatorSupplier.get();
@@ -801,7 +887,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _friendlyURLSeparatorSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -840,7 +926,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getLastPriceUpdateDate() {
 		if (_lastPriceUpdateDateSupplier != null) {
 			lastPriceUpdateDate = _lastPriceUpdateDateSupplier.get();
@@ -881,7 +967,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _lastPriceUpdateDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Date getModifiedDate() {
 		if (_modifiedDateSupplier != null) {
 			modifiedDate = _modifiedDateSupplier.get();
@@ -922,7 +1008,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _modifiedDateSupplier;
 
-	@Schema(example = "Order Name")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "Order Name")
 	public String getName() {
 		if (_nameSupplier != null) {
 			name = _nameSupplier.get();
@@ -961,7 +1047,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _nameSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public CartComment[] getNotes() {
 		if (_notesSupplier != null) {
@@ -1003,7 +1089,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<CartComment[]> _notesSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getOrderStatusInfo() {
 		if (_orderStatusInfoSupplier != null) {
@@ -1045,7 +1131,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Status> _orderStatusInfoSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getOrderType() {
 		if (_orderTypeSupplier != null) {
 			orderType = _orderTypeSupplier.get();
@@ -1086,7 +1172,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _orderTypeSupplier;
 
-	@Schema(example = "AB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AB-34098-789-N")
 	public String getOrderTypeExternalReferenceCode() {
 		if (_orderTypeExternalReferenceCodeSupplier != null) {
 			orderTypeExternalReferenceCode =
@@ -1131,7 +1217,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _orderTypeExternalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getOrderTypeId() {
 		if (_orderTypeIdSupplier != null) {
 			orderTypeId = _orderTypeIdSupplier.get();
@@ -1172,7 +1258,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _orderTypeIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getOrderUUID() {
 		if (_orderUUIDSupplier != null) {
 			orderUUID = _orderUUIDSupplier.get();
@@ -1213,7 +1299,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _orderUUIDSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentMethod() {
 		if (_paymentMethodSupplier != null) {
 			paymentMethod = _paymentMethodSupplier.get();
@@ -1254,7 +1340,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentMethodSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentMethodLabel() {
 		if (_paymentMethodLabelSupplier != null) {
 			paymentMethodLabel = _paymentMethodLabelSupplier.get();
@@ -1295,7 +1381,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentMethodLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getPaymentMethodType() {
 		if (_paymentMethodTypeSupplier != null) {
 			paymentMethodType = _paymentMethodTypeSupplier.get();
@@ -1336,7 +1422,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _paymentMethodTypeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Integer getPaymentStatus() {
 		if (_paymentStatusSupplier != null) {
 			paymentStatus = _paymentStatusSupplier.get();
@@ -1377,7 +1463,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Integer> _paymentStatusSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getPaymentStatusInfo() {
 		if (_paymentStatusInfoSupplier != null) {
@@ -1419,7 +1505,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Status> _paymentStatusInfoSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentStatusLabel() {
 		if (_paymentStatusLabelSupplier != null) {
 			paymentStatusLabel = _paymentStatusLabelSupplier.get();
@@ -1460,7 +1546,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentStatusLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getPaymentTermId() {
 		if (_paymentTermIdSupplier != null) {
 			paymentTermId = _paymentTermIdSupplier.get();
@@ -1501,7 +1587,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _paymentTermIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPaymentTermLabel() {
 		if (_paymentTermLabelSupplier != null) {
 			paymentTermLabel = _paymentTermLabelSupplier.get();
@@ -1542,7 +1628,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _paymentTermLabelSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPrintedNote() {
 		if (_printedNoteSupplier != null) {
 			printedNote = _printedNoteSupplier.get();
@@ -1583,7 +1669,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _printedNoteSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPurchaseOrderNumber() {
 		if (_purchaseOrderNumberSupplier != null) {
 			purchaseOrderNumber = _purchaseOrderNumberSupplier.get();
@@ -1624,7 +1710,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _purchaseOrderNumberSupplier;
 
-	@Schema(example = "2017-07-21")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "2017-07-21")
 	public Date getRequestedDeliveryDate() {
 		if (_requestedDeliveryDateSupplier != null) {
 			requestedDeliveryDate = _requestedDeliveryDateSupplier.get();
@@ -1665,7 +1751,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Date> _requestedDeliveryDateSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Address getShippingAddress() {
 		if (_shippingAddressSupplier != null) {
@@ -1707,7 +1793,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Address> _shippingAddressSupplier;
 
-	@Schema(example = "AAB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "AAB-34098-789-N")
 	public String getShippingAddressExternalReferenceCode() {
 		if (_shippingAddressExternalReferenceCodeSupplier != null) {
 			shippingAddressExternalReferenceCode =
@@ -1753,7 +1839,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _shippingAddressExternalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Long getShippingAddressId() {
 		if (_shippingAddressIdSupplier != null) {
 			shippingAddressId = _shippingAddressIdSupplier.get();
@@ -1794,7 +1880,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _shippingAddressIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getShippingMethod() {
 		if (_shippingMethodSupplier != null) {
 			shippingMethod = _shippingMethodSupplier.get();
@@ -1835,7 +1921,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _shippingMethodSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getShippingOption() {
 		if (_shippingOptionSupplier != null) {
 			shippingOption = _shippingOptionSupplier.get();
@@ -1876,7 +1962,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _shippingOptionSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getStatus() {
 		if (_statusSupplier != null) {
 			status = _statusSupplier.get();
@@ -1917,7 +2003,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _statusSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Step[] getSteps() {
 		if (_stepsSupplier != null) {
@@ -1959,7 +2045,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Step[]> _stepsSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Summary getSummary() {
 		if (_summarySupplier != null) {
@@ -2001,7 +2087,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Summary> _summarySupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getUseAsBilling() {
 		if (_useAsBillingSupplier != null) {
 			useAsBilling = _useAsBillingSupplier.get();
@@ -2042,7 +2128,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _useAsBillingSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public Boolean getValid() {
 		if (_validSupplier != null) {
 			valid = _validSupplier.get();
@@ -2083,7 +2169,7 @@ public class Cart implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _validSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Status getWorkflowStatusInfo() {
 		if (_workflowStatusInfoSupplier != null) {
@@ -2342,6 +2428,35 @@ public class Cart implements Serializable {
 			sb.append(_escape(currencyCode));
 
 			sb.append("\"");
+		}
+
+		String currencyExternalReferenceCode =
+			getCurrencyExternalReferenceCode();
+
+		if (currencyExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(currencyExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
+		Long currencyId = getCurrencyId();
+
+		if (currencyId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"currencyId\": ");
+
+			sb.append(currencyId);
 		}
 
 		Map<String, ?> customFields = getCustomFields();
@@ -2921,8 +3036,8 @@ public class Cart implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.delivery.cart.dto.v1_0.Cart",
 		name = "x-class-name"
 	)

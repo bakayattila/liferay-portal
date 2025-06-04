@@ -4,7 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Web Content Administration";
+	property testray.main.component.name = "Web Content";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -70,7 +70,7 @@ definition {
 				pageName = "Display Page Name",
 				pageType = "Display Page Templates");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Add a widget page") {
@@ -137,7 +137,12 @@ definition {
 				pageName = "Display Page Name",
 				pageType = "Display Page Templates");
 
-			PortletEntry.saveAsDraft();
+			WebContent.saveAsDraftWithPermissions();
+
+			AssertTextEquals(
+				key_status = "Draft",
+				locator1 = "WCEditWebContent#WORKFLOW_STATUS",
+				value1 = "Draft");
 		}
 
 		task ("Preview the draft web content") {
@@ -209,7 +214,7 @@ definition {
 				pageName = "Display Page Name",
 				pageType = "Display Page Templates");
 
-			PortletEntry.submitForWorkflow();
+			WebContent.submitForWorkflowWithPermission();
 		}
 
 		task ("Preview the pending web content") {
@@ -340,7 +345,7 @@ definition {
 				pageName = "Display Page Name",
 				pageType = "Display Page Templates");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Preview the web content article") {
@@ -803,7 +808,7 @@ definition {
 				displayPageTemplateType = "None",
 				pageType = "Display Page Templates");
 
-			PortletEntry.publish();
+			WebContent.publishExistingWCArticleWithPermissions();
 		}
 
 		task ("Navigate to the display page template via friendly URL") {
@@ -886,7 +891,7 @@ definition {
 					pageName = "Display Page Name",
 					pageType = "Display Page Templates");
 
-				PortletEntry.publish();
+				WebContent.publishExistingWCArticleWithPermissions();
 			}
 		}
 
@@ -908,9 +913,7 @@ definition {
 
 			AssetPublisherPortlet.clickAssetTitle(assetTitle = "WC Title 1");
 
-			AssetPublisherPortlet.changePagination(
-				currentPageNumber = "2 of 2",
-				paginationItem = 2);
+			AssetPublisherPortlet.changePagination(pageNumber = 2);
 
 			AssetPublisherPortlet.viewAssetPG(
 				assetContent = "WC Content 1",

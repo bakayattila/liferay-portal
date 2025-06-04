@@ -8,13 +8,13 @@ package com.liferay.batch.planner.rest.client.serdes.v1_0;
 import com.liferay.batch.planner.rest.client.dto.v1_0.Field;
 import com.liferay.batch.planner.rest.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Matija Petanjek
@@ -316,6 +316,10 @@ public class FieldSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

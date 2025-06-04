@@ -5,13 +5,14 @@
 
 package com.liferay.headless.admin.site.client.serdes.v1_0;
 
-import com.liferay.headless.admin.site.client.dto.v1_0.CustomField;
 import com.liferay.headless.admin.site.client.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.client.dto.v1_0.Keyword;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.client.dto.v1_0.SitePage;
 import com.liferay.headless.admin.site.client.dto.v1_0.TaxonomyCategory;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -21,8 +22,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -109,7 +108,7 @@ public class SitePageSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < sitePage.getCustomFields().length; i++) {
-				sb.append(String.valueOf(sitePage.getCustomFields()[i]));
+				sb.append(sitePage.getCustomFields()[i]);
 
 				if ((i + 1) < sitePage.getCustomFields().length) {
 					sb.append(", ");
@@ -295,20 +294,6 @@ public class SitePageSerDes {
 
 			sb.append(
 				_escape(sitePage.getParentSitePageExternalReferenceCode()));
-
-			sb.append("\"");
-		}
-
-		if (sitePage.getSiteExternalReferenceCode() != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"siteExternalReferenceCode\": ");
-
-			sb.append("\"");
-
-			sb.append(_escape(sitePage.getSiteExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -561,15 +546,6 @@ public class SitePageSerDes {
 					sitePage.getParentSitePageExternalReferenceCode()));
 		}
 
-		if (sitePage.getSiteExternalReferenceCode() == null) {
-			map.put("siteExternalReferenceCode", null);
-		}
-		else {
-			map.put(
-				"siteExternalReferenceCode",
-				String.valueOf(sitePage.getSiteExternalReferenceCode()));
-		}
-
 		if (sitePage.getTaxonomyCategories() == null) {
 			map.put("taxonomyCategories", null);
 		}
@@ -691,11 +667,6 @@ public class SitePageSerDes {
 				return false;
 			}
 			else if (Objects.equals(
-						jsonParserFieldName, "siteExternalReferenceCode")) {
-
-				return false;
-			}
-			else if (Objects.equals(
 						jsonParserFieldName, "taxonomyCategories")) {
 
 				return false;
@@ -749,12 +720,16 @@ public class SitePageSerDes {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
 
-					CustomField[] customFieldsArray =
-						new CustomField[jsonParserFieldValues.length];
+					com.liferay.headless.admin.site.client.custom.field.
+						CustomField[] customFieldsArray = new
+						com.liferay.headless.admin.site.client.custom.field.
+							CustomField[jsonParserFieldValues.length];
 
 					for (int i = 0; i < customFieldsArray.length; i++) {
-						customFieldsArray[i] = CustomFieldSerDes.toDTO(
-							(String)jsonParserFieldValues[i]);
+						customFieldsArray[i] =
+							com.liferay.headless.admin.site.client.custom.field.
+								CustomField.toDTO(
+									(String)jsonParserFieldValues[i]);
 					}
 
 					sitePage.setCustomFields(customFieldsArray);
@@ -882,14 +857,6 @@ public class SitePageSerDes {
 				}
 			}
 			else if (Objects.equals(
-						jsonParserFieldName, "siteExternalReferenceCode")) {
-
-				if (jsonParserFieldValue != null) {
-					sitePage.setSiteExternalReferenceCode(
-						(String)jsonParserFieldValue);
-				}
-			}
-			else if (Objects.equals(
 						jsonParserFieldName, "taxonomyCategories")) {
 
 				if (jsonParserFieldValue != null) {
@@ -997,6 +964,10 @@ public class SitePageSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

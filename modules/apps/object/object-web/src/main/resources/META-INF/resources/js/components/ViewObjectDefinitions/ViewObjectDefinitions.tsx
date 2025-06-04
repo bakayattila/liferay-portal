@@ -166,14 +166,13 @@ export default function ViewObjectDefinitions({
 		addObjectDefinition: false,
 		addObjectField: false,
 		addObjectFolder: false,
-		bindToRootObjectDefinition: false,
 		deleteObjectDefinition: false,
 		deleteObjectFolder: false,
 		editObjectFolder: false,
 		importModal: false,
 		moveObjectDefinition: false,
+		objectDefinitionOnRootModelDeletionNotAllowed: false,
 		objectFieldDeletionNotAllowed: false,
-		unbindFromRootObjectDefinition: false,
 	});
 
 	const [updatedFDSItemsActions, setUpdatedFDSItemsActions] = useState(
@@ -221,7 +220,7 @@ export default function ViewObjectDefinitions({
 		}) => {
 			if (
 				action.data.id === 'bind' &&
-				Liferay.FeatureFlags['LPS-187142']
+				Liferay.FeatureFlags['LPD-34594']
 			) {
 				setSelectedObjectDefinition(itemData);
 
@@ -232,14 +231,28 @@ export default function ViewObjectDefinitions({
 			}
 
 			if (action.data.id === 'deleteObjectDefinition') {
-				deleteObjectDefinition({
-					baseResourceURL,
-					handleDeleteObjectDefinition: setDeletedObjectDefinition,
-					handleShowDeleteObjectDefinitionModal,
-					objectDefinitionId: itemData.id,
-					objectDefinitionName: itemData.name,
-					onAfterDeleteObjectDefinition: () => setReloadFDS(true),
-				});
+				if (
+					itemData.rootObjectDefinitionExternalReferenceCode &&
+					Liferay.FeatureFlags['LPD-34594']
+				) {
+					setSelectedObjectDefinition(itemData);
+
+					setShowModal((previousState) => ({
+						...previousState,
+						objectDefinitionOnRootModelDeletionNotAllowed: true,
+					}));
+				}
+				else {
+					deleteObjectDefinition({
+						baseResourceURL,
+						handleDeleteObjectDefinition:
+							setDeletedObjectDefinition,
+						handleShowDeleteObjectDefinitionModal,
+						objectDefinitionId: itemData.id,
+						objectDefinitionName: itemData.name,
+						onAfterDeleteObjectDefinition: () => setReloadFDS(true),
+					});
+				}
 			}
 
 			if (action.data.id === 'moveObjectDefinition') {
@@ -253,7 +266,7 @@ export default function ViewObjectDefinitions({
 
 			if (
 				action.data.id === 'unbind' &&
-				Liferay.FeatureFlags['LPS-187142']
+				Liferay.FeatureFlags['LPD-34594']
 			) {
 				setSelectedObjectDefinition(itemData);
 
@@ -365,7 +378,7 @@ export default function ViewObjectDefinitions({
 	const fields = useMemo(() => {
 		const updatedTableFields = [...tableFields];
 
-		if (Liferay.FeatureFlags['LPS-187142']) {
+		if (Liferay.FeatureFlags['LPD-34594']) {
 			const inheritanceField = {
 				contentRenderer: 'objectDefinitionInheritanceDataRenderer',
 				expand: false,
@@ -511,7 +524,6 @@ export default function ViewObjectDefinitions({
 
 			{objectFoldersRequestInfo && selectedObjectFolder && (
 				<ViewObjectDefinitionsModals
-					baseResourceURL={baseResourceURL}
 					deletedObjectDefinition={deletedObjectDefinition}
 					learnResourceContext={learnResourceContext}
 					modalImportProperties={modalImportProperties}

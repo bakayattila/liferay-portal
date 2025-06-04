@@ -44,12 +44,12 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.InputStream;
 
 import java.net.URL;
 import java.net.URLConnection;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -140,7 +140,7 @@ public class LayoutGetFaviconURLTest {
 					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					LayoutPageTemplateConstants.
 						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					RandomTestUtil.randomString(), null,
+					null, RandomTestUtil.randomString(), null,
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
 					_serviceContext);
 
@@ -190,7 +190,7 @@ public class LayoutGetFaviconURLTest {
 	public void testLayoutWhenSetToLayoutAndMasterLayout() throws Exception {
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,

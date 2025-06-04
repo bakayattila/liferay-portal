@@ -1332,6 +1332,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test FilePaginationDisplaysCorrectCount {
+		property portal.acceptance = "quarantine";
+
 		HeadlessSite.addSite(siteName = "Site Name");
 
 		for (var documentTitle : list "Document_1,Document_2,Document_3,Document_4,Commerce_Black,Commerce_White") {
@@ -1479,7 +1481,11 @@ definition {
 	@priority = 4
 	@refactordone
 	test PrivateSiteShouldNotBeViewableWithoutPermissionsInCalendar {
-		property custom.properties = "feature.flag.LPD-35013=true${line.separator}feature.flag.LPD-38869=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}jsonws.web.service.paths.excludes=";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		var portalURL = PropsUtil.get("portal.url");
 

@@ -12,11 +12,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.tools.rest.builder.test.constant.v1_0.StringTestEntity;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,10 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Alejandro Tardín
@@ -52,7 +51,7 @@ public class ChildTestEntity1 extends TestEntity implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(ChildTestEntity1.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getProperty1() {
 		if (_property1Supplier != null) {
 			property1 = _property1Supplier.get();
@@ -271,6 +270,40 @@ public class ChildTestEntity1 extends TestEntity implements Serializable {
 			sb.append("\"");
 		}
 
+		StringTestEntity[] stringTestEntities = getStringTestEntities();
+
+		if (stringTestEntities != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"stringTestEntities\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < stringTestEntities.length; i++) {
+				sb.append(stringTestEntities[i]);
+
+				if ((i + 1) < stringTestEntities.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		StringTestEntity stringTestEntity = getStringTestEntity();
+
+		if (stringTestEntity != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"stringTestEntity\": ");
+
+			sb.append(stringTestEntity);
+		}
+
 		TestEntity testEntities = getTestEntities();
 
 		if (testEntities != null) {
@@ -304,8 +337,8 @@ public class ChildTestEntity1 extends TestEntity implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.portal.tools.rest.builder.test.dto.v1_0.ChildTestEntity1",
 		name = "x-class-name"
 	)

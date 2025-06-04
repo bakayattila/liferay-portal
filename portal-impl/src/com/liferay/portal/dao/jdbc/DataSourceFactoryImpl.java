@@ -11,7 +11,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.jdbc.pool.metrics.HikariConnectionPoolMetrics;
 import com.liferay.portal.dao.jdbc.util.AntiTimeDriftDataSourceWrapper;
 import com.liferay.portal.dao.jdbc.util.DataSourceWrapper;
-import com.liferay.portal.dao.jdbc.util.RetryDataSourceWrapper;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
@@ -143,6 +142,8 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 			}
 			catch (Exception exception) {
 				_log.error("Unable to lookup " + jndiName, exception);
+
+				throw exception;
 			}
 		}
 		else {
@@ -172,15 +173,6 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Created data source " + dataSource.getClass());
-		}
-
-		if (PropsValues.RETRY_DATA_SOURCE_MAX_RETRIES > 0) {
-			DBType dbType = DBManagerUtil.getDBType(
-				DialectDetector.getDialect(dataSource));
-
-			if (dbType == DBType.SYBASE) {
-				dataSource = new RetryDataSourceWrapper(dataSource);
-			}
 		}
 
 		if (Boolean.getBoolean("jdbc.data.source.anti.time.drift")) {
@@ -272,7 +264,10 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 	}
 
 	protected boolean isPropertyLiferay(String key) {
-		if (StringUtil.equalsIgnoreCase(key, "jndi.name")) {
+		if (StringUtil.equalsIgnoreCase(
+				key, "data.source.unavailable.timeout") ||
+			StringUtil.equalsIgnoreCase(key, "jndi.name")) {
+
 			return true;
 		}
 

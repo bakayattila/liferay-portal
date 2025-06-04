@@ -264,7 +264,7 @@ public class DDMFormInstanceStagedModelDataHandlerTest
 					).toString())));
 
 		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.addStructure(
-			TestPropsValues.getUserId(), stagingGroup.getGroupId(), 0,
+			null, TestPropsValues.getUserId(), stagingGroup.getGroupId(), 0,
 			PortalUtil.getClassNameId(DDMFormInstance.class.getName()), null,
 			HashMapBuilder.put(
 				LocaleUtil.getSiteDefault(), RandomTestUtil.randomString()
@@ -287,12 +287,13 @@ public class DDMFormInstanceStagedModelDataHandlerTest
 
 		ObjectDefinition objectDefinition =
 			ObjectDefinitionLocalServiceUtil.addCustomObjectDefinition(
-				userId, 0, null, false, true, false, false,
+				userId, 0, null, false, false, true, false, false, false, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionTestUtil.getRandomName(), null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
 				Collections.singletonList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,

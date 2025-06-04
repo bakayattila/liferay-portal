@@ -26,11 +26,10 @@ import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
+import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 import java.util.Locale;
-
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -70,14 +69,14 @@ public class CategoryResourceImpl extends BaseCategoryResourceImpl {
 				cpDefinition.getCPDefinitionId(), pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems = _assetCategoryService.getCategoriesCount(
+		int totalCount = _assetCategoryService.getCategoriesCount(
 			_classNameLocalService.getClassNameId(cpDefinition.getModelClass()),
 			cpDefinition.getCPDefinitionId());
 
 		return Page.of(
 			_toProductCategories(
 				assetCategories, contextAcceptLanguage.getPreferredLocale()),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@NestedField(parentClass = Product.class, value = "categories")
@@ -101,14 +100,14 @@ public class CategoryResourceImpl extends BaseCategoryResourceImpl {
 				cpDefinition.getCPDefinitionId(), pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems = _assetCategoryService.getCategoriesCount(
+		int totalCount = _assetCategoryService.getCategoriesCount(
 			_classNameLocalService.getClassNameId(cpDefinition.getModelClass()),
 			cpDefinition.getCPDefinitionId());
 
 		return Page.of(
 			_toProductCategories(
 				assetCategories, contextAcceptLanguage.getPreferredLocale()),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -157,16 +156,11 @@ public class CategoryResourceImpl extends BaseCategoryResourceImpl {
 			List<AssetCategory> assetCategories, Locale locale)
 		throws Exception {
 
-		List<Category> categories = new ArrayList<>();
-
-		for (AssetCategory category : assetCategories) {
-			categories.add(
-				_categoryDTOConverter.toDTO(
-					new DefaultDTOConverterContext(
-						category.getCategoryId(), locale)));
-		}
-
-		return categories;
+		return transform(
+			assetCategories,
+			category -> _categoryDTOConverter.toDTO(
+				new DefaultDTOConverterContext(
+					category.getCategoryId(), locale)));
 	}
 
 	private void _updateProductCategories(

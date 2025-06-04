@@ -9,13 +9,13 @@ import com.liferay.headless.admin.site.client.dto.v1_0.ClientExtension;
 import com.liferay.headless.admin.site.client.dto.v1_0.Settings;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -150,24 +150,26 @@ public class SettingsSerDes {
 			sb.append("\"");
 		}
 
-		if (settings.getMasterPage() != null) {
+		if (settings.getMasterPageItemExternalReference() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"masterPage\": ");
+			sb.append("\"masterPageItemExternalReference\": ");
 
-			sb.append(String.valueOf(settings.getMasterPage()));
+			sb.append(
+				String.valueOf(settings.getMasterPageItemExternalReference()));
 		}
 
-		if (settings.getStyleBook() != null) {
+		if (settings.getStyleBookItemExternalReference() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"styleBook\": ");
+			sb.append("\"styleBookItemExternalReference\": ");
 
-			sb.append(String.valueOf(settings.getStyleBook()));
+			sb.append(
+				String.valueOf(settings.getStyleBookItemExternalReference()));
 		}
 
 		if (settings.getThemeCSSClientExtension() != null) {
@@ -201,14 +203,7 @@ public class SettingsSerDes {
 
 			sb.append("\"themeSettings\": ");
 
-			if (settings.getThemeSettings() instanceof String) {
-				sb.append("\"");
-				sb.append((String)settings.getThemeSettings());
-				sb.append("\"");
-			}
-			else {
-				sb.append(settings.getThemeSettings());
-			}
+			sb.append(_toJSON(settings.getThemeSettings()));
 		}
 
 		if (settings.getThemeSpritemapClientExtension() != null) {
@@ -288,18 +283,22 @@ public class SettingsSerDes {
 			map.put("javascript", String.valueOf(settings.getJavascript()));
 		}
 
-		if (settings.getMasterPage() == null) {
-			map.put("masterPage", null);
+		if (settings.getMasterPageItemExternalReference() == null) {
+			map.put("masterPageItemExternalReference", null);
 		}
 		else {
-			map.put("masterPage", String.valueOf(settings.getMasterPage()));
+			map.put(
+				"masterPageItemExternalReference",
+				String.valueOf(settings.getMasterPageItemExternalReference()));
 		}
 
-		if (settings.getStyleBook() == null) {
-			map.put("styleBook", null);
+		if (settings.getStyleBookItemExternalReference() == null) {
+			map.put("styleBookItemExternalReference", null);
 		}
 		else {
-			map.put("styleBook", String.valueOf(settings.getStyleBook()));
+			map.put(
+				"styleBookItemExternalReference",
+				String.valueOf(settings.getStyleBookItemExternalReference()));
 		}
 
 		if (settings.getThemeCSSClientExtension() == null) {
@@ -374,10 +373,16 @@ public class SettingsSerDes {
 			else if (Objects.equals(jsonParserFieldName, "javascript")) {
 				return false;
 			}
-			else if (Objects.equals(jsonParserFieldName, "masterPage")) {
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"masterPageItemExternalReference")) {
+
 				return false;
 			}
-			else if (Objects.equals(jsonParserFieldName, "styleBook")) {
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"styleBookItemExternalReference")) {
+
 				return false;
 			}
 			else if (Objects.equals(
@@ -389,7 +394,7 @@ public class SettingsSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "themeSettings")) {
-				return false;
+				return true;
 			}
 			else if (Objects.equals(
 						jsonParserFieldName, "themeSpritemapClientExtension")) {
@@ -469,16 +474,24 @@ public class SettingsSerDes {
 					settings.setJavascript((String)jsonParserFieldValue);
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "masterPage")) {
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"masterPageItemExternalReference")) {
+
 				if (jsonParserFieldValue != null) {
-					settings.setMasterPage(
-						MasterPageSerDes.toDTO((String)jsonParserFieldValue));
+					settings.setMasterPageItemExternalReference(
+						ItemExternalReferenceSerDes.toDTO(
+							(String)jsonParserFieldValue));
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "styleBook")) {
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"styleBookItemExternalReference")) {
+
 				if (jsonParserFieldValue != null) {
-					settings.setStyleBook(
-						StyleBookSerDes.toDTO((String)jsonParserFieldValue));
+					settings.setStyleBookItemExternalReference(
+						ItemExternalReferenceSerDes.toDTO(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(
@@ -497,7 +510,8 @@ public class SettingsSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "themeSettings")) {
 				if (jsonParserFieldValue != null) {
-					settings.setThemeSettings((Object)jsonParserFieldValue);
+					settings.setThemeSettings(
+						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -554,6 +568,10 @@ public class SettingsSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

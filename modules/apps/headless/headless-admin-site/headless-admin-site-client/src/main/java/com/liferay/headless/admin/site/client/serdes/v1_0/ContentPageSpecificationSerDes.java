@@ -9,13 +9,13 @@ import com.liferay.headless.admin.site.client.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -48,6 +48,27 @@ public class ContentPageSpecificationSerDes {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("{");
+
+		if (contentPageSpecification.
+				getDraftContentPageSpecificationExternalReferenceCode() !=
+					null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append(
+				"\"draftContentPageSpecificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					contentPageSpecification.
+						getDraftContentPageSpecificationExternalReferenceCode()));
+
+			sb.append("\"");
+		}
 
 		if (contentPageSpecification.getPageExperiences() != null) {
 			if (sb.length() > 1) {
@@ -101,6 +122,20 @@ public class ContentPageSpecificationSerDes {
 			sb.append(String.valueOf(contentPageSpecification.getSettings()));
 		}
 
+		if (contentPageSpecification.getStatus() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append("\"");
+
+			sb.append(contentPageSpecification.getStatus());
+
+			sb.append("\"");
+		}
+
 		if (contentPageSpecification.getType() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -136,6 +171,20 @@ public class ContentPageSpecificationSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (contentPageSpecification.
+				getDraftContentPageSpecificationExternalReferenceCode() ==
+					null) {
+
+			map.put("draftContentPageSpecificationExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"draftContentPageSpecificationExternalReferenceCode",
+				String.valueOf(
+					contentPageSpecification.
+						getDraftContentPageSpecificationExternalReferenceCode()));
+		}
+
 		if (contentPageSpecification.getPageExperiences() == null) {
 			map.put("pageExperiences", null);
 		}
@@ -164,6 +213,14 @@ public class ContentPageSpecificationSerDes {
 				String.valueOf(contentPageSpecification.getSettings()));
 		}
 
+		if (contentPageSpecification.getStatus() == null) {
+			map.put("status", null);
+		}
+		else {
+			map.put(
+				"status", String.valueOf(contentPageSpecification.getStatus()));
+		}
+
 		if (contentPageSpecification.getType() == null) {
 			map.put("type", null);
 		}
@@ -189,7 +246,13 @@ public class ContentPageSpecificationSerDes {
 
 		@Override
 		protected boolean parseMaps(String jsonParserFieldName) {
-			if (Objects.equals(jsonParserFieldName, "pageExperiences")) {
+			if (Objects.equals(
+					jsonParserFieldName,
+					"draftContentPageSpecificationExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "pageExperiences")) {
 				return false;
 			}
 			else if (Objects.equals(
@@ -198,6 +261,9 @@ public class ContentPageSpecificationSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "settings")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "type")) {
@@ -212,7 +278,17 @@ public class ContentPageSpecificationSerDes {
 			ContentPageSpecification contentPageSpecification,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "pageExperiences")) {
+			if (Objects.equals(
+					jsonParserFieldName,
+					"draftContentPageSpecificationExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					contentPageSpecification.
+						setDraftContentPageSpecificationExternalReferenceCode(
+							(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "pageExperiences")) {
 				if (jsonParserFieldValue != null) {
 					Object[] jsonParserFieldValues =
 						(Object[])jsonParserFieldValue;
@@ -241,6 +317,13 @@ public class ContentPageSpecificationSerDes {
 				if (jsonParserFieldValue != null) {
 					contentPageSpecification.setSettings(
 						SettingsSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				if (jsonParserFieldValue != null) {
+					contentPageSpecification.setStatus(
+						ContentPageSpecification.Status.create(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "type")) {
@@ -295,6 +378,10 @@ public class ContentPageSpecificationSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

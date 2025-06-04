@@ -50,6 +50,10 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.InternalServerErrorException;
+
 import java.math.BigDecimal;
 
 import java.net.URLEncoder;
@@ -57,10 +61,6 @@ import java.net.URLEncoder;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.InternalServerErrorException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -379,9 +379,9 @@ public class PunchOutSessionResourceImpl
 				commerceOrder.getCommerceOrderId(), -1, -1);
 
 		CommerceContext commerceContext = _commerceContextFactory.create(
-			contextCompany.getCompanyId(), commerceOrder.getGroupId(),
-			contextUser.getUserId(), commerceOrder.getCommerceOrderId(),
-			commerceOrder.getCommerceAccountId());
+			commerceOrder.getCommerceAccountId(), commerceOrder.getGroupId(),
+			null, commerceOrder.getCommerceOrderId(),
+			contextCompany.getCompanyId());
 
 		for (CartItem cartItem : cartItems) {
 			if (!commerceOrderItems.isEmpty()) {

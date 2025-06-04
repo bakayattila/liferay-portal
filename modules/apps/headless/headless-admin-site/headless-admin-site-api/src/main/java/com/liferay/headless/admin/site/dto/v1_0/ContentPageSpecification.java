@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,19 +30,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Rubén Pulido
  * @generated
  */
 @Generated("")
 @GraphQLName(
-	description = "A page specification of a content page. A content page may contain 0 or 1 page specifications in draft status and 0 or 1 page specifications in published status.",
+	description = "A page specification of a content page. A content page will contain 1 page specification for its draft layout and 1 page specification for its published layout.",
 	value = "ContentPageSpecification"
 )
 @JsonFilter("Liferay.Vulcan")
@@ -55,7 +53,62 @@ public class ContentPageSpecification
 			ContentPageSpecification.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The draft content page specification external reference code or null if it is a draft content page specification."
+	)
+	public String getDraftContentPageSpecificationExternalReferenceCode() {
+		if (_draftContentPageSpecificationExternalReferenceCodeSupplier !=
+				null) {
+
+			draftContentPageSpecificationExternalReferenceCode =
+				_draftContentPageSpecificationExternalReferenceCodeSupplier.
+					get();
+
+			_draftContentPageSpecificationExternalReferenceCodeSupplier = null;
+		}
+
+		return draftContentPageSpecificationExternalReferenceCode;
+	}
+
+	public void setDraftContentPageSpecificationExternalReferenceCode(
+		String draftContentPageSpecificationExternalReferenceCode) {
+
+		this.draftContentPageSpecificationExternalReferenceCode =
+			draftContentPageSpecificationExternalReferenceCode;
+
+		_draftContentPageSpecificationExternalReferenceCodeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setDraftContentPageSpecificationExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			draftContentPageSpecificationExternalReferenceCodeUnsafeSupplier) {
+
+		_draftContentPageSpecificationExternalReferenceCodeSupplier = () -> {
+			try {
+				return draftContentPageSpecificationExternalReferenceCodeUnsafeSupplier.
+					get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(
+		description = "The draft content page specification external reference code or null if it is a draft content page specification."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String draftContentPageSpecificationExternalReferenceCode;
+
+	@JsonIgnore
+	private Supplier<String>
+		_draftContentPageSpecificationExternalReferenceCodeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public PageExperience[] getPageExperiences() {
 		if (_pageExperiencesSupplier != null) {
@@ -126,6 +179,25 @@ public class ContentPageSpecification
 
 		sb.append("{");
 
+		String draftContentPageSpecificationExternalReferenceCode =
+			getDraftContentPageSpecificationExternalReferenceCode();
+
+		if (draftContentPageSpecificationExternalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append(
+				"\"draftContentPageSpecificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(draftContentPageSpecificationExternalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		PageExperience[] pageExperiences = getPageExperiences();
 
 		if (pageExperiences != null) {
@@ -176,6 +248,22 @@ public class ContentPageSpecification
 			sb.append(String.valueOf(settings));
 		}
 
+		Status status = getStatus();
+
+		if (status != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append("\"");
+
+			sb.append(status);
+
+			sb.append("\"");
+		}
+
 		Type type = getType();
 
 		if (type != null) {
@@ -197,8 +285,8 @@ public class ContentPageSpecification
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification",
 		name = "x-class-name"
 	)

@@ -7,11 +7,11 @@ import {act, render, screen} from '@testing-library/react';
 import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
-import {checkAccessibility} from '@liferay/layout-js-components-web';
 
 import ContentTypeModal, {
 	ModalContent,
 } from '../../../src/main/resources/META-INF/resources/js/components/ContentTypeModal';
+import {checkAccessibility} from '../../__lib__/checkAccessibility';
 
 const DEFAULT_PROPS = {
 	mappingTypes: [

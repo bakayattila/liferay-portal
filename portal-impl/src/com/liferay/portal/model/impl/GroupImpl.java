@@ -688,41 +688,32 @@ public class GroupImpl extends GroupBaseImpl {
 			return null;
 		}
 
-		try {
-			if ((_stagingGroup == null) ||
-				(_stagingGroup == _NULL_STAGING_GROUP)) {
+		if ((_stagingGroup == null) || (_stagingGroup == _NULL_STAGING_GROUP)) {
+			_stagingGroup = GroupLocalServiceUtil.fetchStagingGroup(
+				getGroupId());
 
-				_stagingGroup = GroupLocalServiceUtil.getStagingGroup(
-					getGroupId());
-
-				if (_stagingGroup instanceof GroupImpl) {
-					GroupImpl groupImpl = (GroupImpl)_stagingGroup;
-
-					groupImpl._liveGroup = this;
-				}
-				else {
-					_stagingGroup = new GroupWrapper(_stagingGroup) {
-
-						@Override
-						public Group getLiveGroup() {
-							return GroupImpl.this;
-						}
-
-					};
-				}
+			if (_stagingGroup == null) {
+				return null;
 			}
 
-			return _stagingGroup;
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					"Unable to get staging group for group " + getGroupId(),
-					exception);
-			}
+			if (_stagingGroup instanceof GroupImpl) {
+				GroupImpl groupImpl = (GroupImpl)_stagingGroup;
 
-			return null;
+				groupImpl._liveGroup = this;
+			}
+			else {
+				_stagingGroup = new GroupWrapper(_stagingGroup) {
+
+					@Override
+					public Group getLiveGroup() {
+						return GroupImpl.this;
+					}
+
+				};
+			}
 		}
+
+		return _stagingGroup;
 	}
 
 	@Override
@@ -858,6 +849,13 @@ public class GroupImpl extends GroupBaseImpl {
 	}
 
 	@Override
+	public boolean isCMS() {
+		String groupKey = getGroupKey();
+
+		return groupKey.equals(GroupConstants.CMS);
+	}
+
+	@Override
 	public boolean isCompany() {
 		if ((getClassNameId() == PortalUtil.getClassNameId(Company.class)) ||
 			isCompanyStagingGroup()) {
@@ -916,11 +914,7 @@ public class GroupImpl extends GroupBaseImpl {
 	public boolean isControlPanel() {
 		String groupKey = getGroupKey();
 
-		if (groupKey.equals(GroupConstants.CONTROL_PANEL)) {
-			return true;
-		}
-
-		return false;
+		return groupKey.equals(GroupConstants.CONTROL_PANEL);
 	}
 
 	@Override
@@ -936,11 +930,7 @@ public class GroupImpl extends GroupBaseImpl {
 	public boolean isGuest() {
 		String groupKey = getGroupKey();
 
-		if (groupKey.equals(GroupConstants.GUEST)) {
-			return true;
-		}
-
-		return false;
+		return groupKey.equals(GroupConstants.GUEST);
 	}
 
 	@Override

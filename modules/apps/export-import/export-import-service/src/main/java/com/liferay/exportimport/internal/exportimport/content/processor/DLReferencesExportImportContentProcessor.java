@@ -261,8 +261,18 @@ public class DLReferencesExportImportContentProcessor
 			long groupId = MapUtil.getLong(map, "groupId");
 
 			if (Validator.isNotNull(uuid)) {
-				fileEntry = _dlAppLocalService.getFileEntryByUuidAndGroupId(
-					uuid, groupId);
+				try {
+					fileEntry = _dlAppLocalService.getFileEntryByUuidAndGroupId(
+						uuid, groupId);
+				}
+				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug("Unable to get file entry", portalException);
+					}
+
+					return _dlAppLocalService.
+						getFileEntryByExternalReferenceCode(uuid, groupId);
+				}
 			}
 			else {
 				if (map.containsKey("friendlyURL")) {
@@ -494,7 +504,7 @@ public class DLReferencesExportImportContentProcessor
 	}
 
 	private boolean _isJSONReference(String content, int beginPos) {
-		String[] jsonAttributes = {"\"url\""};
+		String[] jsonAttributes = {"\"href\"", "\"url\""};
 
 		int position = StringUtil.lastIndexOfAny(
 			content, jsonAttributes, beginPos);
@@ -503,17 +513,21 @@ public class DLReferencesExportImportContentProcessor
 			return false;
 		}
 
-		return _jsonAttributePattern.matcher(
-			content.substring(position, beginPos)
-		).matches();
+		if (_jsonAttributePattern.matcher(
+				content.substring(position, beginPos)
+			).matches() ||
+			_jsonLocalizedPattern.matcher(
+				content.substring(position, beginPos)
+			).matches()) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private boolean _isLegacyURL(String content, int beginPos) {
-		if (content.startsWith("/documents/", beginPos)) {
-			return false;
-		}
-
-		return true;
+		return !content.startsWith("/documents/", beginPos);
 	}
 
 	private boolean _isStyleReference(String content, int beginPos) {
@@ -529,11 +543,7 @@ public class DLReferencesExportImportContentProcessor
 
 		String url = "url(";
 
-		if (content.regionMatches(true, beginPos - url.length(), url, 0, 2)) {
-			return true;
-		}
-
-		return false;
+		return content.regionMatches(true, beginPos - url.length(), url, 0, 2);
 	}
 
 	private boolean _isValidateDLReferences() {
@@ -996,6 +1006,9 @@ public class DLReferencesExportImportContentProcessor
 
 	private static final Pattern _jsonAttributePattern = Pattern.compile(
 		"\\\"[^\"\\\\\\\\]*\\\"\\s*:\\s*\\\"");
+	private static final Pattern _jsonLocalizedPattern = Pattern.compile(
+		"\\\"[^\"\\\\]*\\\"\\s*:\\s*\\{\\\"[a-zA-Z_]+" +
+			"\\\"\\s*:\\s*\\\"[^\"\\\\]*");
 	private static final Pattern _uuidPattern = Pattern.compile(
 		"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-" +
 			"[a-fA-F0-9]{12}(?=[&,?]|$)");

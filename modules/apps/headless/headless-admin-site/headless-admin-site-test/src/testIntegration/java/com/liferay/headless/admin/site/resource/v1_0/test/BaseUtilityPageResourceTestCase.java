@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -49,9 +49,13 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,10 +67,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -90,7 +90,7 @@ public abstract class BaseUtilityPageResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -104,13 +104,12 @@ public abstract class BaseUtilityPageResourceTestCase {
 
 		_utilityPageResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		UtilityPageResource.Builder builder = UtilityPageResource.builder();
-
-		utilityPageResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		utilityPageResource = UtilityPageResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -191,6 +190,34 @@ public abstract class BaseUtilityPageResourceTestCase {
 		Assert.assertEquals(regex, utilityPage.getExternalReferenceCode());
 		Assert.assertEquals(regex, utilityPage.getName());
 		Assert.assertEquals(regex, utilityPage.getUuid());
+	}
+
+	@Test
+	public void testDeleteSiteSiteByExternalReferenceCodeUtilityPage()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGetSiteSiteByExternalReferenceCodeUtilityPage()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage()
+		throws Exception {
+
+		Assert.assertTrue(true);
+	}
+
+	@Test
+	public void testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPageNotFound()
+		throws Exception {
+
+		Assert.assertTrue(true);
 	}
 
 	@Test
@@ -376,12 +403,13 @@ public abstract class BaseUtilityPageResourceTestCase {
 		String siteExternalReferenceCode =
 			testGetSiteSiteByExternalReferenceCodeUtilityPagesPage_getSiteExternalReferenceCode();
 
-		Page<UtilityPage> utilityPagePage =
+		Page<UtilityPage> utilityPagesPage =
 			utilityPageResource.
 				getSiteSiteByExternalReferenceCodeUtilityPagesPage(
 					siteExternalReferenceCode, null, null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(utilityPagePage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			utilityPagesPage.getTotalCount());
 
 		UtilityPage utilityPage1 =
 			testGetSiteSiteByExternalReferenceCodeUtilityPagesPage_addUtilityPage(
@@ -655,6 +683,34 @@ public abstract class BaseUtilityPageResourceTestCase {
 	}
 
 	@Test
+	public void testGetSiteUtilityPagePermissionsPage() throws Exception {
+		UtilityPage postUtilityPage =
+			testGetSiteUtilityPagePermissionsPage_addUtilityPage();
+
+		Page<Permission> page =
+			utilityPageResource.getSiteUtilityPagePermissionsPage(
+				testGroup.getExternalReferenceCode(),
+				postUtilityPage.getExternalReferenceCode(),
+				RoleConstants.GUEST);
+
+		Assert.assertNotNull(page);
+	}
+
+	protected UtilityPage testGetSiteUtilityPagePermissionsPage_addUtilityPage()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPatchSiteSiteByExternalReferenceCodeUtilityPage()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
 	public void testPostSiteSiteByExternalReferenceCodeUtilityPage()
 		throws Exception {
 
@@ -678,113 +734,6 @@ public abstract class BaseUtilityPageResourceTestCase {
 	}
 
 	@Test
-	public void testGetSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage()
-		throws Exception {
-
-		UtilityPage postUtilityPage =
-			testGetSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage();
-
-		Page<Permission> page =
-			utilityPageResource.
-				getSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage(
-					testGroup.getExternalReferenceCode(), RoleConstants.GUEST);
-
-		Assert.assertNotNull(page);
-	}
-
-	protected UtilityPage
-			testGetSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage()
-		throws Exception {
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		UtilityPage utilityPage =
-			testPutSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
-			RoleConstants.TYPE_REGULAR);
-
-		assertHttpResponseStatusCode(
-			200,
-			utilityPageResource.
-				putSiteSiteByExternalReferenceCodeUtilityPagePermissionsPageHttpResponse(
-					null,
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"PERMISSIONS"});
-								setRoleName(role.getName());
-							}
-						}
-					}));
-
-		assertHttpResponseStatusCode(
-			404,
-			utilityPageResource.
-				putSiteSiteByExternalReferenceCodeUtilityPagePermissionsPageHttpResponse(
-					null,
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"-"});
-								setRoleName("-");
-							}
-						}
-					}));
-	}
-
-	protected UtilityPage
-			testPutSiteSiteByExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteSiteSiteByExternalReferenceCodeUtilityPage()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGetSiteSiteByExternalReferenceCodeUtilityPage()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPage()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetSiteSiteByExternalReferenceCodeUtilityPageNotFound()
-		throws Exception {
-
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testPatchSiteSiteByExternalReferenceCodeUtilityPage()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testPutSiteSiteByExternalReferenceCodeUtilityPage()
 		throws Exception {
 
@@ -792,37 +741,10 @@ public abstract class BaseUtilityPageResourceTestCase {
 	}
 
 	@Test
-	public void testGetSiteSiteExternalReferenceCodeUtilityPagePermissionsPage()
-		throws Exception {
-
-		UtilityPage postUtilityPage =
-			testGetSiteSiteExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage();
-
-		Page<Permission> page =
-			utilityPageResource.
-				getSiteSiteExternalReferenceCodeUtilityPagePermissionsPage(
-					testGroup.getExternalReferenceCode(),
-					postUtilityPage.getExternalReferenceCode(),
-					RoleConstants.GUEST);
-
-		Assert.assertNotNull(page);
-	}
-
-	protected UtilityPage
-			testGetSiteSiteExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutSiteSiteExternalReferenceCodeUtilityPagePermissionsPage()
-		throws Exception {
-
+	public void testPutSiteUtilityPagePermissionsPage() throws Exception {
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		UtilityPage utilityPage =
-			testPutSiteSiteExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage();
+			testPutSiteUtilityPagePermissionsPage_addUtilityPage();
 
 		@SuppressWarnings("PMD.UnusedLocalVariable")
 		com.liferay.portal.kernel.model.Role role = RoleTestUtil.addRole(
@@ -830,19 +752,32 @@ public abstract class BaseUtilityPageResourceTestCase {
 
 		assertHttpResponseStatusCode(
 			200,
-			utilityPageResource.
-				putSiteSiteExternalReferenceCodeUtilityPagePermissionsPageHttpResponse(
-					null, null));
+			utilityPageResource.putSiteUtilityPagePermissionsPageHttpResponse(
+				null, null,
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"PERMISSIONS"});
+							setRoleName(role.getName());
+						}
+					}
+				}));
 
 		assertHttpResponseStatusCode(
 			404,
-			utilityPageResource.
-				putSiteSiteExternalReferenceCodeUtilityPagePermissionsPageHttpResponse(
-					null, null));
+			utilityPageResource.putSiteUtilityPagePermissionsPageHttpResponse(
+				null, null,
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"-"});
+							setRoleName("-");
+						}
+					}
+				}));
 	}
 
-	protected UtilityPage
-			testPutSiteSiteExternalReferenceCodeUtilityPagePermissionsPage_addUtilityPage()
+	protected UtilityPage testPutSiteUtilityPagePermissionsPage_addUtilityPage()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -987,6 +922,26 @@ public abstract class BaseUtilityPageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"friendlyUrlHistory", additionalAssertFieldName)) {
+
+				if (utilityPage.getFriendlyUrlHistory() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"friendlyUrlPath_i18n", additionalAssertFieldName)) {
+
+				if (utilityPage.getFriendlyUrlPath_i18n() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("markedAsDefault", additionalAssertFieldName)) {
 				if (utilityPage.getMarkedAsDefault() == null) {
 					valid = false;
@@ -1105,6 +1060,20 @@ public abstract class BaseUtilityPageResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalContentPageSpecificationAssertFieldNames()) {
+
+			if (Objects.equals(
+					"draftContentPageSpecificationExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (contentPageSpecification.
+						getDraftContentPageSpecificationExternalReferenceCode() ==
+							null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals("pageExperiences", additionalAssertFieldName)) {
 				if (contentPageSpecification.getPageExperiences() == null) {
@@ -1264,6 +1233,32 @@ public abstract class BaseUtilityPageResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"friendlyUrlHistory", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						utilityPage1.getFriendlyUrlHistory(),
+						utilityPage2.getFriendlyUrlHistory())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"friendlyUrlPath_i18n", additionalAssertFieldName)) {
+
+				if (!equals(
+						(Map)utilityPage1.getFriendlyUrlPath_i18n(),
+						(Map)utilityPage2.getFriendlyUrlPath_i18n())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("markedAsDefault", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						utilityPage1.getMarkedAsDefault(),
@@ -1386,6 +1381,22 @@ public abstract class BaseUtilityPageResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalContentPageSpecificationAssertFieldNames()) {
+
+			if (Objects.equals(
+					"draftContentPageSpecificationExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						contentPageSpecification1.
+							getDraftContentPageSpecificationExternalReferenceCode(),
+						contentPageSpecification2.
+							getDraftContentPageSpecificationExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals("pageExperiences", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
@@ -1539,13 +1550,11 @@ public abstract class BaseUtilityPageResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1555,7 +1564,7 @@ public abstract class BaseUtilityPageResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(utilityPage.getDateCreated()));
+				sb.append(_format.format(utilityPage.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -1570,13 +1579,11 @@ public abstract class BaseUtilityPageResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1586,7 +1593,7 @@ public abstract class BaseUtilityPageResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(utilityPage.getDateModified()));
+				sb.append(_format.format(utilityPage.getDateModified()));
 			}
 
 			return sb.toString();
@@ -1601,13 +1608,11 @@ public abstract class BaseUtilityPageResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1617,7 +1622,7 @@ public abstract class BaseUtilityPageResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(utilityPage.getDatePublished()));
+				sb.append(_format.format(utilityPage.getDatePublished()));
 			}
 
 			return sb.toString();
@@ -1667,6 +1672,16 @@ public abstract class BaseUtilityPageResourceTestCase {
 			}
 
 			return sb.toString();
+		}
+
+		if (entityFieldName.equals("friendlyUrlHistory")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("friendlyUrlPath_i18n")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
 		}
 
 		if (entityFieldName.equals("markedAsDefault")) {
@@ -1860,6 +1875,8 @@ public abstract class BaseUtilityPageResourceTestCase {
 
 		return new ContentPageSpecification() {
 			{
+				draftContentPageSpecificationExternalReferenceCode =
+					RandomTestUtil.randomString();
 			}
 		};
 	}
@@ -2065,7 +2082,9 @@ public abstract class BaseUtilityPageResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseUtilityPageResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.admin.site.resource.v1_0.UtilityPageResource

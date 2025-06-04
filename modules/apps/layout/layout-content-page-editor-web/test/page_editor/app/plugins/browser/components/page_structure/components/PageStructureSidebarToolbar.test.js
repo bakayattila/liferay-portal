@@ -12,7 +12,7 @@ import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../../../../src/main/resources
 import {VIEWPORT_SIZES} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
 import {
 	ClipboardContextProvider,
-	useSetCopiedItemIds,
+	useSetClipboard,
 } from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ClipboardContext';
 import {useSetMovementSources} from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/KeyboardMovementContext';
 import deleteItem from '../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/thunks/deleteItem';
@@ -24,13 +24,13 @@ import StoreMother from '../../../../../../../../src/main/resources/META-INF/res
 jest.mock(
 	'../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ClipboardContext',
 	() => {
-		const setCopiedItemIds = jest.fn();
+		const setClipboard = jest.fn();
 
 		return {
 			...jest.requireActual(
 				'../../../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ClipboardContext'
 			),
-			useSetCopiedItemIds: () => setCopiedItemIds,
+			useSetClipboard: () => setClipboard,
 		};
 	}
 );
@@ -128,16 +128,8 @@ const renderComponent = ({
 	);
 
 describe('PageStructureSidebarToolbar', () => {
-	beforeAll(() => {
-		Liferay.FeatureFlags['LPD-18221'] = true;
-	});
-
 	beforeEach(() => {
 		jest.clearAllMocks();
-	});
-
-	afterAll(() => {
-		Liferay.FeatureFlags['LPD-18221'] = false;
 	});
 
 	it('shows the number of selected items', () => {
@@ -148,12 +140,12 @@ describe('PageStructureSidebarToolbar', () => {
 		expect(screen.getByText('2-items-selected')).toBeInTheDocument();
 	});
 
-	it('calls deleteItem when Delete action is pressed', () => {
+	it('calls deleteItem when Delete action is pressed', async () => {
 		renderComponent({
 			activeItemIds: ['fragment01', 'fragment02'],
 		});
 
-		userEvent.click(screen.getByText('delete'));
+		await userEvent.click(screen.getByText('delete'));
 
 		expect(deleteItem).toBeCalledWith(
 			expect.objectContaining({
@@ -162,12 +154,12 @@ describe('PageStructureSidebarToolbar', () => {
 		);
 	});
 
-	it('calls duplicateItem when Duplicate action is pressed', () => {
+	it('calls duplicateItem when Duplicate action is pressed', async () => {
 		renderComponent({
 			activeItemIds: ['fragment01', 'fragment03'],
 		});
 
-		userEvent.click(screen.getByText('duplicate'));
+		await userEvent.click(screen.getByText('duplicate'));
 
 		expect(duplicateItem).toBeCalledWith(
 			expect.objectContaining({
@@ -176,12 +168,12 @@ describe('PageStructureSidebarToolbar', () => {
 		);
 	});
 
-	it('calls updateItemStyle when Hide Fragments action is pressed', () => {
+	it('calls updateItemStyle when Hide Fragments action is pressed', async () => {
 		renderComponent({
 			activeItemIds: ['fragment03', 'fragment02'],
 		});
 
-		userEvent.click(screen.getByText('hide-fragments'));
+		await userEvent.click(screen.getByText('hide-fragments'));
 
 		expect(updateItemStyle).toBeCalledWith(
 			expect.objectContaining({
@@ -192,12 +184,12 @@ describe('PageStructureSidebarToolbar', () => {
 		);
 	});
 
-	it('calls useSetMovementSources when Move x Items action is pressed', () => {
+	it('calls useSetMovementSources when Move x Items action is pressed', async () => {
 		renderComponent({
 			activeItemIds: ['fragment01', 'fragment02'],
 		});
 
-		userEvent.click(screen.getByText('move-2-items'));
+		await userEvent.click(screen.getByText('move-2-items'));
 
 		expect(useSetMovementSources()).toBeCalledWith([
 			{isWidget: false, itemId: 'fragment01', type: 'fragment'},
@@ -224,12 +216,12 @@ describe('PageStructureSidebarToolbar', () => {
 		expect(screen.getByText('show-fragments')).toBeInTheDocument();
 	});
 
-	it('calls deleteItem when Delete action is pressed', () => {
+	it('calls deleteItem when Delete action is pressed', async () => {
 		renderComponent({
 			activeItemIds: ['fragment01', 'fragment02'],
 		});
 
-		userEvent.click(screen.getByText('delete'));
+		await userEvent.click(screen.getByText('delete'));
 
 		expect(deleteItem).toBeCalledWith(
 			expect.objectContaining({
@@ -238,14 +230,14 @@ describe('PageStructureSidebarToolbar', () => {
 		);
 	});
 
-	it('calls setCopiedItemIds and deleteItem when Cut action is pressed', () => {
-		const setCopiedItemIds = useSetCopiedItemIds();
+	it('calls setClipboard and deleteItem when Cut action is pressed', async () => {
+		const setClipboard = useSetClipboard();
 
 		renderComponent({
 			activeItemIds: ['fragment01', 'fragment02'],
 		});
 
-		userEvent.click(screen.getByText('cut'));
+		await userEvent.click(screen.getByText('cut'));
 
 		expect(deleteItem).toBeCalledWith(
 			expect.objectContaining({
@@ -253,21 +245,21 @@ describe('PageStructureSidebarToolbar', () => {
 			})
 		);
 
-		expect(setCopiedItemIds).toBeCalledWith(
+		expect(setClipboard).toBeCalledWith(
 			expect.objectContaining(['fragment01', 'fragment02'])
 		);
 	});
 
-	it('calls setCopiedItemIds when Copy action is pressed', () => {
-		const setCopiedItemIds = useSetCopiedItemIds();
+	it('calls setClipboard when Copy action is pressed', async () => {
+		const setClipboard = useSetClipboard();
 
 		renderComponent({
 			activeItemIds: ['fragment01', 'fragment02'],
 		});
 
-		userEvent.click(screen.getByText('copy'));
+		await userEvent.click(screen.getByText('copy'));
 
-		expect(setCopiedItemIds).toBeCalledWith(
+		expect(setClipboard).toBeCalledWith(
 			expect.objectContaining(['fragment01', 'fragment02'])
 		);
 	});

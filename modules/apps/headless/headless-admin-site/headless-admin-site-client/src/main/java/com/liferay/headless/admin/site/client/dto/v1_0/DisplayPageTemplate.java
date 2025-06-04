@@ -8,13 +8,13 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.DisplayPageTemplateSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -205,6 +205,28 @@ public class DisplayPageTemplate implements Cloneable, Serializable {
 	}
 
 	protected String externalReferenceCode;
+
+	public FriendlyUrlHistory getFriendlyUrlHistory() {
+		return friendlyUrlHistory;
+	}
+
+	public void setFriendlyUrlHistory(FriendlyUrlHistory friendlyUrlHistory) {
+		this.friendlyUrlHistory = friendlyUrlHistory;
+	}
+
+	public void setFriendlyUrlHistory(
+		UnsafeSupplier<FriendlyUrlHistory, Exception>
+			friendlyUrlHistoryUnsafeSupplier) {
+
+		try {
+			friendlyUrlHistory = friendlyUrlHistoryUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FriendlyUrlHistory friendlyUrlHistory;
 
 	public Map<String, String> getFriendlyUrlPath_i18n() {
 		return friendlyUrlPath_i18n;

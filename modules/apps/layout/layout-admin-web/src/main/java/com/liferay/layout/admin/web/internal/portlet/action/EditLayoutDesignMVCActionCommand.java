@@ -14,6 +14,7 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.LayoutJavaScriptException;
 import com.liferay.portal.kernel.exception.LayoutNameException;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -43,8 +44,8 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.sites.kernel.util.Sites;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -54,7 +55,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
+		"jakarta.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
 		"mvc.command.name=/layout_admin/edit_layout_design"
 	},
 	service = MVCActionCommand.class
@@ -329,12 +330,12 @@ public class EditLayoutDesignMVCActionCommand extends BaseMVCActionCommand {
 
 			actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 		}
-		catch (LayoutNameException layoutNameException) {
+		catch (LayoutJavaScriptException | LayoutNameException exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(layoutNameException);
+				_log.debug(exception);
 			}
 
-			SessionErrors.add(actionRequest, LayoutNameException.class);
+			SessionErrors.add(actionRequest, exception.getClass());
 
 			hideDefaultSuccessMessage(actionRequest);
 

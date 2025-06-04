@@ -80,6 +80,7 @@ export interface Config {
 	>;
 
 	contentPagePersonalizationLearnURL: string;
+	copyItemsURL: string;
 	createLayoutPageTemplateEntryURL: string;
 
 	defaultEditorConfigurations: Record<
@@ -95,11 +96,11 @@ export interface Config {
 	defaultSegmentsExperienceId: string;
 	defaultStyleBookEntryImagePreviewURL: string;
 	defaultStyleBookEntryName: string;
+	deleteFormStepURL: string;
 	deleteFragmentEntryLinkCommentURL: string;
 	deleteRuleURL: string;
 	deleteSegmentsExperienceURL: string;
 	discardDraftURL: string;
-	copyItemsURL: string;
 	duplicateItemURL: string;
 	duplicateSegmentsExperienceURL: string;
 	editFragmentEntryLinkCommentURL: string;
@@ -112,6 +113,8 @@ export interface Config {
 		subtypes: Array<{label: string; value: string}>;
 		value: string;
 	}>;
+	fragmentPortletNamespace: string;
+	fragmentsImportURL: string;
 	frontendTokens: {
 		[key: string]:
 			| {
@@ -156,6 +159,7 @@ export interface Config {
 	infoFieldItemSelectorURL: string;
 	infoItemPreviewSelectorURL: string;
 	infoItemSelectorURL: string;
+	isCMS: boolean;
 	isConversionDraft: boolean;
 	isPrivateLayoutsEnabled: boolean;
 	layoutConversionWarningMessages: string[] | null;
@@ -181,6 +185,7 @@ export interface Config {
 	portletNamespace: string;
 	publishURL: string;
 	redirectURL: string;
+	regenerateDisplayPageURL: string;
 	renderFragmentEntriesURL: string;
 	restoreCollectionDisplayConfigURL: string;
 	searchContainerPageMaxDelta: number;

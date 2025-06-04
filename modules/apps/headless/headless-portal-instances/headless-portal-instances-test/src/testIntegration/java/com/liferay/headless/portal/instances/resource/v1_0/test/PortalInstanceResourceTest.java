@@ -10,14 +10,17 @@ import com.liferay.headless.portal.instances.client.dto.v1_0.Admin;
 import com.liferay.headless.portal.instances.client.dto.v1_0.PortalInstance;
 import com.liferay.headless.portal.instances.client.pagination.Page;
 import com.liferay.headless.portal.instances.client.problem.Problem;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
+import com.liferay.portal.kernel.test.util.PrefsPropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.test.rule.Inject;
@@ -89,6 +92,7 @@ public class PortalInstanceResourceTest
 	public void testPostPortalInstance() throws Exception {
 		_testPostPortalInstanceWithoutAdmin();
 		_testPostPortalInstanceWithAdmin();
+		_testPostPortalInstanceWithAdminAndCompanyStrangers();
 	}
 
 	@Override
@@ -400,6 +404,19 @@ public class PortalInstanceResourceTest
 			if (postPortalInstance != null) {
 				_deletePortalInstance(postPortalInstance);
 			}
+		}
+	}
+
+	private void _testPostPortalInstanceWithAdminAndCompanyStrangers()
+		throws Exception {
+
+		try (SafeCloseable safeCloseable =
+				PrefsPropsTestUtil.swapWithSafeCloseable(
+					TestPropsValues.getCompanyId(),
+					PropsKeys.COMPANY_SECURITY_STRANGERS,
+					Boolean.TRUE.toString())) {
+
+			_testPostPortalInstanceWithAdmin();
 		}
 	}
 

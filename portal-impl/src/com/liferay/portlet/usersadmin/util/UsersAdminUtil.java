@@ -86,10 +86,18 @@ import com.liferay.portal.kernel.util.comparator.UserFirstNameComparator;
 import com.liferay.portal.kernel.util.comparator.UserGroupDescriptionComparator;
 import com.liferay.portal.kernel.util.comparator.UserGroupNameComparator;
 import com.liferay.portal.kernel.util.comparator.UserJobTitleComparator;
+import com.liferay.portal.kernel.util.comparator.UserLastLoginDateComparator;
 import com.liferay.portal.kernel.util.comparator.UserLastNameComparator;
 import com.liferay.portal.kernel.util.comparator.UserScreenNameComparator;
 import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.portal.service.permission.UserGroupPermissionUtil;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -98,13 +106,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
@@ -1221,6 +1222,10 @@ public class UsersAdminUtil {
 		else if (orderByCol.equals("job-title")) {
 			orderByComparator = UserJobTitleComparator.getInstance(orderByAsc);
 		}
+		else if (orderByCol.equals("last-login-date")) {
+			orderByComparator = UserLastLoginDateComparator.getInstance(
+				orderByAsc);
+		}
 		else if (orderByCol.equals("last-name")) {
 			orderByComparator = UserLastNameComparator.getInstance(orderByAsc);
 		}
@@ -1420,34 +1425,30 @@ public class UsersAdminUtil {
 		for (Address address : addresses) {
 			long addressId = address.getAddressId();
 
-			String name = address.getName();
-			String description = address.getDescription();
-			String street1 = address.getStreet1();
-			String street2 = address.getStreet2();
-			String street3 = address.getStreet3();
-			String city = address.getCity();
-			String zip = address.getZip();
-			long regionId = address.getRegionId();
-			long countryId = address.getCountryId();
-			long listTypeId = address.getListTypeId();
-			boolean mailing = address.isMailing();
-			boolean primary = address.isPrimary();
-			String phoneNumber = address.getPhoneNumber();
-
 			if (addressId <= 0) {
 				address = AddressServiceUtil.addAddress(
 					address.getExternalReferenceCode(), className, classPK,
-					name, description, street1, street2, street3, city, zip,
-					regionId, countryId, listTypeId, mailing, primary,
-					phoneNumber, new ServiceContext());
+					address.getCountryId(), address.getListTypeId(),
+					address.getRegionId(), address.getCity(),
+					address.getDescription(), address.isMailing(),
+					address.getName(), address.isPrimary(),
+					address.getStreet1(), address.getStreet2(),
+					address.getStreet3(), address.getSubtype(),
+					address.getZip(), address.getPhoneNumber(),
+					new ServiceContext());
 
 				addressId = address.getAddressId();
 			}
 			else {
 				AddressServiceUtil.updateAddress(
-					addressId, name, description, street1, street2, street3,
-					city, zip, regionId, countryId, listTypeId, mailing,
-					primary, phoneNumber);
+					address.getExternalReferenceCode(), addressId,
+					address.getCountryId(), address.getListTypeId(),
+					address.getRegionId(), address.getCity(),
+					address.getDescription(), address.isMailing(),
+					address.getName(), address.isPrimary(),
+					address.getStreet1(), address.getStreet2(),
+					address.getStreet3(), address.getSubtype(),
+					address.getZip(), address.getPhoneNumber());
 			}
 
 			addressIds.add(addressId);

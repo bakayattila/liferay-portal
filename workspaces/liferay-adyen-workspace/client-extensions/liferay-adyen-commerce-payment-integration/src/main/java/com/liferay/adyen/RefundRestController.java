@@ -14,6 +14,8 @@ import com.adyen.model.notification.NotificationRequest;
 import com.adyen.model.notification.NotificationRequestItem;
 import com.adyen.service.checkout.ModificationsApi;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+
 import java.math.BigDecimal;
 
 import java.util.List;
@@ -131,7 +133,7 @@ public class RefundRestController extends BaseRestController {
 						"webhookUsername",
 						typeSettingsJSONObject.getString("webhookUsername")
 					).toString(),
-					"/o/c/n1a0adyenwebhooks");
+					createURI("/o/c/n1a0adyenwebhooks"));
 
 				payload = paymentRefundResponse.toJson();
 				paymentStatus = "18";

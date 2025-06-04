@@ -124,6 +124,12 @@ public interface PropsKeys {
 	public static final String ANALYTICS_CLOUD_CLIENT_JS_VERSION =
 		"analytics.cloud.client.js.version";
 
+	public static final String ANALYTICS_CLOUD_DOMAIN_ALLOWED =
+		"analytics.cloud.domain.allowed";
+
+	public static final String ANALYTICS_CLOUD_MOCK_ENABLED =
+		"analytics.cloud.mock.enabled";
+
 	public static final String ANNOUNCEMENTS_EMAIL_BODY =
 		"announcements.email.body";
 
@@ -251,9 +257,6 @@ public interface PropsKeys {
 
 	public static final String AUTH_VERIFIER_PIPELINE =
 		"auth.verifier.pipeline";
-
-	public static final String AUTO_DEPLOY_CUSTOM_PORTLET_XML =
-		"auto.deploy.custom.portlet.xml";
 
 	public static final String AUTO_DEPLOY_DEPLOY_DIR =
 		"auto.deploy.deploy.dir";
@@ -432,6 +435,9 @@ public interface PropsKeys {
 	public static final String COMBO_ALLOWED_FILE_EXTENSIONS =
 		"combo.allowed.file.extensions";
 
+	public static final String COMBO_ALLOWED_FILE_MAX_SIZE =
+		"combo.allowed.file.max.size";
+
 	public static final String COMBO_CHECK_TIMESTAMP = "combo.check.timestamp";
 
 	public static final String COMBO_CHECK_TIMESTAMP_INTERVAL =
@@ -478,6 +484,9 @@ public interface PropsKeys {
 
 	public static final String COMPANY_LOGIN_PREPOPULATE_DOMAIN =
 		"company.login.prepopulate.domain";
+
+	public static final String COMPANY_PREDICTABLE_COMPANY_IDS_ENABLED =
+		"company.predictable.company.ids.enabled";
 
 	public static final String COMPANY_SECURITY_AUTH_TYPE =
 		"company.security.auth.type";
@@ -1248,6 +1257,9 @@ public interface PropsKeys {
 
 	public static final String JDBC_DEFAULT_USERNAME = "jdbc.default.username";
 
+	public static final String JDBC_READ_DATA_SOURCE_UNAVAILABLE_TIMEOUT =
+		"jdbc.read.data.source.unavailable.timeout";
+
 	public static final String JNDI_ENVIRONMENT = "jndi.environment.";
 
 	public static final String JSON_DESERIALIZATION_WHITELIST_CLASS_NAMES =
@@ -1555,6 +1567,12 @@ public interface PropsKeys {
 
 	public static final String MAIL_THROWS_EXCEPTION_ON_FAILURE =
 		"mail.throws.exception.on.failure";
+
+	public static final String MARKETPLACE_CLIENT_ID = "marketplace.client.id";
+
+	public static final String MARKETPLACE_REDIRECT = "marketplace.redirect";
+
+	public static final String MARKETPLACE_URL = "marketplace.url";
 
 	public static final String MEMBERSHIP_POLICY_AUTO_VERIFY =
 		"membership.policy.auto.verify";
@@ -2561,10 +2579,6 @@ public interface PropsKeys {
 
 	public static final String SPRING_CONFIGS = "spring.configs";
 
-	public static final String
-		SPRING_HIBERNATE_CONFIGURATION_PROXY_FACTORY_PRELOAD_CLASSLOADER_CLASSES =
-			"spring.hibernate.configuration.proxy.factory.preload.classloader.classes";
-
 	public static final String SPRING_HIBERNATE_SESSION_DELEGATED =
 		"spring.hibernate.session.delegated";
 
@@ -2622,6 +2636,9 @@ public interface PropsKeys {
 
 	public static final String TEMPLATE_ENGINE_CACHE_ENABLED =
 		"template.engine.cache.enabled";
+
+	public static final String TEMPLATE_ENGINE_FREEMARKER_COMPANY_RESTRICT =
+		"template.engine.freemarker.company.restrict";
 
 	public static final String
 		TEMPLATE_ENGINE_FREEMARKER_TRANSACTION_READ_ONLY =
@@ -2955,9 +2972,6 @@ public interface PropsKeys {
 
 	public static final String WIDGET_SERVLET_MAPPING =
 		"widget.servlet.mapping";
-
-	public static final String WORK_DIR_OVERRIDE_ENABLED =
-		"work.dir.override.enabled";
 
 	public static final String WORKFLOW_EMAIL_FROM_ADDRESS =
 		"workflow.email.from.address";

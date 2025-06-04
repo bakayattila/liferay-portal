@@ -36,9 +36,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import java.util.Collections;
+import jakarta.servlet.http.HttpServletRequest;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -127,9 +127,10 @@ public abstract class BaseInputFragmentRendererTestCase {
 		FragmentRenderer fragmentRenderer = getFragmentRenderer();
 
 		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		JSONObject jsonObject = ContentLayoutTestUtil.addFormToLayout(
 			false,
@@ -213,15 +214,19 @@ public abstract class BaseInputFragmentRendererTestCase {
 			objectDefinition.isAccountEntryRestricted(),
 			objectDefinition.isActive(), objectDefinition.getClassName(), false,
 			objectDefinition.isEnableComments(),
+			objectDefinition.isEnableFriendlyURLCustomization(),
 			objectDefinition.isEnableIndexSearch(),
 			objectDefinition.isEnableLocalization(),
 			objectDefinition.isEnableObjectEntryDraft(),
 			objectDefinition.isEnableObjectEntryHistory(),
+			objectDefinition.isEnableObjectEntryVersioning(),
+			objectDefinition.getFriendlyURLSeparator(),
 			objectDefinition.getLabelMap(), objectDefinition.getName(),
 			objectDefinition.getPanelAppOrder(),
 			objectDefinition.getPanelCategoryKey(),
 			objectDefinition.isPortlet(), objectDefinition.getPluralLabelMap(),
-			objectDefinition.getScope(), objectDefinition.getStatus());
+			objectDefinition.getScope(), objectDefinition.getStatus(),
+			Collections.emptyList());
 
 		FragmentRenderer fragmentRenderer = getFragmentRenderer();
 

@@ -85,8 +85,8 @@ public class TermResourceTest extends BaseTermResourceTestCase {
 			_user.getUserId());
 
 		_accountEntry = _accountEntryLocalService.addAccountEntry(
-			_user.getUserId(), 0, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null,
+			StringPool.BLANK, _user.getUserId(), 0,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString() + "@liferay.com", null, null,
 			"business", 1, _serviceContext);
 
@@ -103,15 +103,15 @@ public class TermResourceTest extends BaseTermResourceTestCase {
 		_address = _addressLocalService.addAddress(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			AccountEntry.class.getName(), _accountEntry.getAccountEntryId(),
+			_country.getCountryId(), 0, _region.getRegionId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), false,
+			RandomTestUtil.randomString(), true, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), _region.getRegionId(),
-			_country.getCountryId(), 0, false, true,
-			RandomTestUtil.randomString(), _serviceContext);
+			_serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE,
 			RandomTestUtil.randomLocaleStringMap(), 2, 2, "HALF_EVEN", false,
@@ -148,7 +148,7 @@ public class TermResourceTest extends BaseTermResourceTestCase {
 		_commerceOrder = _commerceOrderLocalService.addCommerceOrder(
 			_user.getUserId(), _commerceChannel.getGroupId(),
 			_address.getAddressId(), _accountEntry.getAccountEntryId(),
-			_commerceCurrency.getCommerceCurrencyId(),
+			_commerceCurrency.getCode(),
 			CommerceOrderConstants.TYPE_PK_FULFILLMENT,
 			_commerceShippingMethod.getCommerceShippingMethodId(),
 			_address.getAddressId(), "money-order",

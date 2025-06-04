@@ -145,6 +145,10 @@ else if (calendar != null) {
 	}
 	else {
 		pendingCalendarsJSONArray.put(calendarJSONObject);
+
+		if (defaultCalendar.getUserId() == themeDisplay.getUserId()) {
+			acceptedCalendarsJSONArray.put(CalendarUtil.toCalendarJSONObject(themeDisplay, defaultCalendar));
+		}
 	}
 
 	hasWorkflowDefinitionLink = WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), calendarResource.getGroupId(), CalendarBooking.class.getName());
@@ -559,9 +563,11 @@ while (manageableCalendarsIterator.hasNext()) {
 					return;
 				}
 
-				const calendarId = calendarIdNode.value;
+				const index = childCalendarIds.indexOf(calendarIdNode.value);
 
-				childCalendarIds.splice(childCalendarIds.indexOf(calendarId), 1);
+				if (index > -1) {
+					childCalendarIds.splice(index, 1);
+				}
 
 				const childCalendarIdsNode = document.getElementById(
 					'<portlet:namespace />childCalendarIds'
@@ -1091,4 +1097,35 @@ while (manageableCalendarsIterator.hasNext()) {
 	};
 
 	scheduler.load();
+
+	var descriptionBoundingBox = document.getElementById(
+		'<portlet:namespace />descriptionBoundingBox'
+	);
+
+	if (descriptionBoundingBox) {
+		const observer = new MutationObserver((mutations, observer) => {
+			outer: for (const mutation of mutations) {
+				for (const node of mutation.addedNodes) {
+					if (node.tagName === 'IFRAME') {
+						node.addEventListener('load', () => {
+							const iframeBody = node.contentDocument?.body;
+
+							if (iframeBody) {
+								iframeBody.setAttribute(
+									'aria-label',
+									'<%= LanguageUtil.get(request, "description") %>'
+								);
+							}
+
+							observer.disconnect();
+						});
+
+						break outer;
+					}
+				}
+			}
+		});
+
+		observer.observe(descriptionBoundingBox, {childList: true, subtree: true});
+	}
 </aui:script>

@@ -14,8 +14,9 @@ import {
 
 import './ChoosePricingModelPage.scss';
 import {NewAppPageFooterButtons} from '../../../../../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
+import {ProductSpecificationKey} from '../../../../../../enums/Product';
 import {useAppContext} from '../AppContext/AppManageState';
-import {TYPES} from '../AppContext/actionTypes';
+import {ActionTypes} from '../AppContext/actionTypes';
 
 interface ChoosePricingModelPageProps {
 	onClickBack: () => void;
@@ -47,7 +48,7 @@ export function ChoosePricingModelPage({
 						onChange={() => {
 							dispatch({
 								payload: {id: priceModel.id, value: 'Free'},
-								type: TYPES.UPDATE_APP_PRICE_MODEL,
+								type: ActionTypes.UPDATE_APP_PRICE_MODEL,
 							});
 						}}
 						selected={priceModel.value === 'Free'}
@@ -61,7 +62,7 @@ export function ChoosePricingModelPage({
 						onChange={() => {
 							dispatch({
 								payload: {id: priceModel.id, value: 'Paid'},
-								type: TYPES.UPDATE_APP_PRICE_MODEL,
+								type: ActionTypes.UPDATE_APP_PRICE_MODEL,
 							});
 						}}
 						selected={priceModel.value === 'Paid'}
@@ -78,7 +79,8 @@ export function ChoosePricingModelPage({
 						if (priceModel.id) {
 							updateProductSpecification({
 								body: {
-									specificationKey: 'price-model',
+									specificationKey:
+										ProductSpecificationKey.APP_PRICING_MODEL,
 									value:
 										priceModel.value === 'Free'
 											? {en_US: 'Free'}
@@ -93,17 +95,17 @@ export function ChoosePricingModelPage({
 										id: appLicense?.id,
 										value: 'Perpetual',
 									},
-									type: TYPES.UPDATE_APP_LICENSE,
+									type: ActionTypes.UPDATE_APP_LICENSE,
 								});
 
 								dispatch({
 									payload: {value: 'no'},
-									type: TYPES.UPDATE_APP_TRIAL_INFO,
+									type: ActionTypes.UPDATE_APP_TRIAL_INFO,
 								});
 
 								dispatch({
 									payload: {value: 0},
-									type: TYPES.UPDATE_APP_LICENSE_PRICES,
+									type: ActionTypes.UPDATE_APP_LICENSE_PRICES,
 								});
 							}
 						}
@@ -125,7 +127,7 @@ export function ChoosePricingModelPage({
 
 							dispatch({
 								payload: {id, value: priceModel.value},
-								type: TYPES.UPDATE_APP_PRICE_MODEL,
+								type: ActionTypes.UPDATE_APP_PRICE_MODEL,
 							});
 						}
 					};

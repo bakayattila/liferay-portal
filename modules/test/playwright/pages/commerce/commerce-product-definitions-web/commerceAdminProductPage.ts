@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Locator, Page} from '@playwright/test';
+import {Locator, Page, expect} from '@playwright/test';
 
 import {ApplicationsMenuPage} from '../../product-navigation-applications-menu/ApplicationsMenuPage';
 
@@ -43,7 +43,9 @@ export class CommerceAdminProductPage {
 			.getByRole('button', {exact: true, name: 'Add File Entry'})
 			.first();
 		this.applicationsMenuPage = new ApplicationsMenuPage(page);
-		this.creationMenuNewButton = page.getByRole('button', {name: 'New'});
+		this.creationMenuNewButton = page.locator(
+			'[data-testid="fdsCreationActionButton"]'
+		);
 		this.generateSkusMenuItem = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Generate All SKU Combinations',
@@ -131,9 +133,11 @@ export class CommerceAdminProductPage {
 	}
 
 	async gotoProduct(productName: string, checkTabVisibility = true) {
-		await this.goto(checkTabVisibility);
-		await this.managementToolbarSearchInput.fill(productName);
-		await this.managementToolbarSearchInput.press('Enter');
-		await this.productsTableRowLink(productName).click();
+		await expect(async () => {
+			await this.goto(checkTabVisibility);
+			await this.managementToolbarSearchInput.fill(productName);
+			await this.managementToolbarSearchInput.press('Enter');
+			await this.productsTableRowLink(productName).click();
+		}).toPass();
 	}
 }

@@ -127,7 +127,6 @@ import com.liferay.portal.security.permission.SimplePermissionChecker;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.util.PortalInstances;
 import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
-import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
 import java.util.ArrayList;
@@ -841,9 +840,9 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 			RandomTestUtil.randomString(), null, _serviceContext);
 
 		AccountEntry accountEntry = _accountEntryLocalService.addAccountEntry(
-			_adminUser.getUserId(), 0L, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), null, null, null,
-			RandomTestUtil.randomString(),
+			StringPool.BLANK, _adminUser.getUserId(), 0L,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
+			null, null, RandomTestUtil.randomString(),
 			AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
@@ -986,6 +985,32 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 			_company.getCompanyId(), RoleConstants.ADMINISTRATOR);
 
 		_userLocalService.addRoleUser(role.getRoleId(), user.getUserId());
+
+		Assert.assertTrue(
+			_workflowTaskManager.isNotifiableUser(
+				user.getUserId(), workflowTask.getWorkflowTaskId()));
+
+		PermissionChecker originalPermissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try {
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
+
+			_workflowTaskManager.assignWorkflowTaskToUser(
+				_company.getCompanyId(), user.getUserId(),
+				workflowTask.getWorkflowTaskId(), user.getUserId(),
+				StringPool.BLANK, null, null);
+
+			_workflowTaskManager.completeWorkflowTask(
+				_company.getCompanyId(), user.getUserId(),
+				workflowTask.getWorkflowTaskId(), Constants.APPROVE,
+				StringPool.BLANK, null);
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(
+				originalPermissionChecker);
+		}
 
 		Assert.assertTrue(
 			_workflowTaskManager.isNotifiableUser(
@@ -1819,8 +1844,7 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 				_log.debug(noSuchModelException);
 			}
 
-			String content = _readFileToJSON(
-				"join-xor-workflow-definition.xml");
+			String content = readFileToJSON("join-xor-workflow-definition.xml");
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
 				null, _adminUser.getCompanyId(), _adminUser.getUserId(),
@@ -1854,7 +1878,7 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 				_log.debug(noSuchModelException);
 			}
 
-			String content = _readFileToJSON(fileName);
+			String content = readFileToJSON(fileName);
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
 				null, _adminUser.getCompanyId(), _adminUser.getUserId(), name,
@@ -1872,7 +1896,7 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 				_log.debug(noSuchModelException);
 			}
 
-			String content = _readFileToJSON(
+			String content = readFileToJSON(
 				"single-approver-site-member-workflow-definition.xml");
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
@@ -1940,10 +1964,6 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 		return workflowInstanceLinkLocalService.fetchWorkflowInstanceLink(
 			_adminUser.getCompanyId(), _adminUser.getGroupId(), className,
 			classPK);
-	}
-
-	private String _getBasePath() {
-		return "com/liferay/portal/workflow/kaleo/dependencies/";
 	}
 
 	private DLFileEntryType _getBasicFileEntryType() throws Exception {
@@ -2047,13 +2067,6 @@ public class WorkflowTaskManagerImplTest extends BaseWorkflowManagerTestCase {
 
 		return _workflowTaskManager.hasAssignableUsers(
 			workflowTask.getWorkflowTaskId());
-	}
-
-	private String _readFileToJSON(String fileName) throws Exception {
-		Class<?> clazz = getClass();
-
-		return WorkflowDefinitionContentUtil.toJSON(
-			StringUtil.read(clazz.getClassLoader(), _getBasePath() + fileName));
 	}
 
 	private List<WorkflowTask> _searchByAssetTypesAndAssetPrimaryKeys(

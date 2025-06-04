@@ -9,7 +9,11 @@ import {Header} from '../../../../../../components/Header/Header';
 import {NewAppPageFooterButtons} from '../../../../../../components/NewAppPageFooterButtons/NewAppPageFooterButtons';
 import {RadioCard} from '../../../../../../components/RadioCard/RadioCard';
 import {Section} from '../../../../../../components/Section/Section';
-import HeadlessCommerceAdminCatalogImpl from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
+import {
+	ProductSpecificationKey,
+	ProductType,
+} from '../../../../../../enums/Product';
+import HeadlessCommerceAdminCatalog from '../../../../../../services/rest/HeadlessCommerceAdminCatalog';
 import {
 	createAppSKU,
 	createProductSpecification,
@@ -21,7 +25,7 @@ import {
 } from '../../../../../../utils/api';
 import {createSkuName, getSkuPrice} from '../../../../../../utils/util';
 import {useAppContext} from '../AppContext/AppManageState';
-import {TYPES} from '../AppContext/actionTypes';
+import {ActionTypes} from '../AppContext/actionTypes';
 
 import './InformLicensingTermsPage.scss';
 
@@ -64,14 +68,17 @@ export function InformLicensingTermsPage({
 		if (appLicense.id) {
 			return updateProductSpecification({
 				body: {
-					specificationKey: 'license-type',
+					specificationKey:
+						ProductSpecificationKey.APP_LICENSING_TYPE,
 					value,
 				},
 				id: appLicense.id,
 			});
 		}
 
-		const dataSpecification = await getSpecification('license-type');
+		const dataSpecification = await getSpecification(
+			ProductSpecificationKey.APP_LICENSING_TYPE
+		);
 
 		const {id} = await createProductSpecification({
 			body: {
@@ -84,13 +91,13 @@ export function InformLicensingTermsPage({
 
 		dispatch({
 			payload: {id, value: appLicense.value},
-			type: TYPES.UPDATE_APP_LICENSE,
+			type: ActionTypes.UPDATE_APP_LICENSE,
 		});
 	};
 
 	const submitLicenseTermsPage = async () => {
 		const {items: skus} =
-			await HeadlessCommerceAdminCatalogImpl.getProductSkus(appProductId);
+			await HeadlessCommerceAdminCatalog.getProductSkus(appProductId);
 
 		for (const sku of skus) {
 			await patchSKUById(sku.id, {
@@ -164,7 +171,7 @@ export function InformLicensingTermsPage({
 			payload: {
 				value: _skuTrialId,
 			},
-			type: TYPES.UPDATE_SKU_TRIAL_ID,
+			type: ActionTypes.UPDATE_SKU_TRIAL_ID,
 		});
 	};
 
@@ -191,7 +198,7 @@ export function InformLicensingTermsPage({
 									id: appLicense.id,
 									value: 'Perpetual',
 								},
-								type: TYPES.UPDATE_APP_LICENSE,
+								type: ActionTypes.UPDATE_APP_LICENSE,
 							});
 						}}
 						selected={appLicense.value === 'Perpetual'}
@@ -201,7 +208,10 @@ export function InformLicensingTermsPage({
 
 					<RadioCard
 						description="App License must be renewed annually."
-						disabled={priceModel.value === 'Free'}
+						disabled={
+							priceModel.value === 'Free' ||
+							appType.value === ProductType.LOW_CODE_CONFIGURATION
+						}
 						icon="document-pending"
 						onChange={() => {
 							dispatch({
@@ -209,7 +219,7 @@ export function InformLicensingTermsPage({
 									id: appLicense.id,
 									value: 'non-perpetual',
 								},
-								type: TYPES.UPDATE_APP_LICENSE,
+								type: ActionTypes.UPDATE_APP_LICENSE,
 							});
 						}}
 						selected={appLicense.value === 'non-perpetual'}
@@ -228,12 +238,15 @@ export function InformLicensingTermsPage({
 				<div className="informing-licensing-terms-page-day-trial-container">
 					<RadioCard
 						description="Offer a 30-day free trial for this app."
-						disabled={priceModel.value === 'Free'}
+						disabled={
+							priceModel.value === 'Free' ||
+							appType.value === ProductType.LOW_CODE_CONFIGURATION
+						}
 						icon="check-circle"
 						onChange={() =>
 							dispatch({
 								payload: {value: 'yes'},
-								type: TYPES.UPDATE_APP_TRIAL_INFO,
+								type: ActionTypes.UPDATE_APP_TRIAL_INFO,
 							})
 						}
 						selected={dayTrial === 'yes'}
@@ -247,7 +260,7 @@ export function InformLicensingTermsPage({
 						onChange={() => {
 							dispatch({
 								payload: {value: 'no'},
-								type: TYPES.UPDATE_APP_TRIAL_INFO,
+								type: ActionTypes.UPDATE_APP_TRIAL_INFO,
 							});
 						}}
 						selected={dayTrial === 'no'}

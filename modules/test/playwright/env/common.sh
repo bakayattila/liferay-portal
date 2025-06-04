@@ -1,5 +1,47 @@
 #!/bin/bash
 
+function cluster_set_up {
+	default_set_up
+
+	prepare_additional_bundles ${1}
+
+	local slave_home="${LIFERAY_HOME}-${1}"
+
+	cp "${CURRENT_DIR_NAME}/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config" "${slave_home}/osgi/configs"
+
+	sed -i "s/%LIFERAY_DOCKER_NETWORK_NAME%/${LIFERAY_DOCKER_NETWORK_NAME}/g" "${slave_home}/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config"
+
+	rm -fr "${slave_home}/data"
+
+	mkdir -p "${slave_home}/data"
+
+	ln -s "${LIFERAY_HOME}/data/document_library" "${slave_home}/data"
+
+	local domain
+
+	for domain in "${slave_home}/routes/default/dxp/"*
+	do
+		sed -i 's/8080/9080/g' "${domain}"
+	done
+
+	rm -fr "${slave_home}/elasticsearch-sidecar"
+	rm -fr "${slave_home}/osgi/state"
+	rm -fr "${slave_home}/osgi/tomcat/work"
+	rm -fr "${slave_home}/osgi/work"
+
+	local node_home
+
+	for node_home in "${LIFERAY_HOME}" "${slave_home}"
+	do
+		delete_property "${node_home}" "web.server.http.port"
+		delete_property "${node_home}" "web.server.https.port"
+	done
+
+	update_property "${slave_home}" "module.framework.properties.osgi.console" "localhost:11313"
+
+	start_additional_bundles ${1}
+}
+
 function combine_properties_files {
 	local temp_properties_file=temp.properties
 
@@ -51,7 +93,7 @@ function combine_properties_files {
 function default_set_up {
 	update_portal_ext_properties
 
-	start_app_server
+	start_default_app_server
 
 	deploy_parent_project_osgi_modules
 
@@ -71,7 +113,18 @@ function default_set_up {
 }
 
 function default_tear_down {
-	stop_app_server
+	stop_default_app_server
+}
+
+function delete_property {
+	local liferay_home=${1}
+	local properties_file
+	local property_name=${2}
+
+	for properties_file in ${liferay_home}/tomcat-*/webapps/ROOT/WEB-INF/classes/*.properties
+	do
+		sed -i "s/${property_name}=.*//g" "${properties_file}"
+	done
 }
 
 function deploy_client_extensions {
@@ -93,7 +146,7 @@ function deploy_client_extensions {
 
 			${gradlew} deploy -Pliferay.workspace.home.dir=${LIFERAY_HOME}
 
-			wait_for_portal_log_inactivity
+			wait_for_portal_log_inactivity ${LIFERAY_HOME}
 		else
 			echo "Unable to find client extension in ${client_extension_dir}."
 		fi
@@ -161,7 +214,7 @@ function deploy_osgi_modules {
 
 				${gradlew} deploy
 
-				wait_for_portal_log_inactivity
+				wait_for_portal_log_inactivity ${LIFERAY_HOME}
 			else
 				echo "Unable to find OSGi module in ${osgi_module_dir}."
 			fi
@@ -356,7 +409,7 @@ function get_playwright_project_dir {
 }
 
 function get_portal_log_file_size {
-	wc --lines --total=always ${LIFERAY_HOME}/logs/liferay.*.log | grep total | awk '{print $1}'
+	wc --lines --total=always ${1}/logs/liferay.*.log | grep total | awk '{print $1}'
 }
 
 function get_portal_project_dir {
@@ -373,7 +426,7 @@ function get_project_client_extension_workspace_portal_ext_properties_files {
 }
 
 function get_tomcat_dir {
-	find ${LIFERAY_HOME} -type d -name "tomcat*"
+	find ${1} -type d -name "tomcat*"
 }
 
 function get_tomcat_portal_ext_properties_file {
@@ -417,11 +470,59 @@ function reverse {
 	done
 }
 
+function prepare_additional_bundles {
+	for ((i = 0 ; i < ${1} ; i++))
+	do
+		local app_server_bundles_size=$((1 + ${i}))
+
+		local leading_port_number=$((8 + ${app_server_bundles_size}))
+
+		local liferay_home="${LIFERAY_HOME}-${app_server_bundles_size}"
+
+		if [[ -d ${liferay_home} ]]
+		then
+			rm -fr ${liferay_home}
+		fi
+
+		cp -r ${LIFERAY_HOME} ${liferay_home}
+
+		local tomcat_dir=$(get_tomcat_dir ${liferay_home})
+
+		echo ${tomcat_dir}
+
+		sed -i "s/=\"8\([0-9]\{3\}\)\"/=\"${leading_port_number}\1\"/g" "${tomcat_dir}/conf/server.xml"
+
+		local osgi_console_port=$((11312 + ${app_server_bundles_size}))
+
+		sed -i "s/11312/${osgi_console_port}/g" "${tomcat_dir}/webapps/ROOT/WEB-INF/classes/portal-ext.properties"
+
+		sed -i "s/channel-logic-name/channel-logic-name-${app_server_bundles_size}/g" "${tomcat_dir}/webapps/ROOT/WEB-INF/classes/portal-ext.properties"
+		sed -i "s|liferay.home=${LIFERAY_HOME}|liferay.home=${liferay_home}|g" "${tomcat_dir}/webapps/ROOT/WEB-INF/classes/portal-ext.properties"
+
+		chmod a+x ${tomcat_dir}
+	done
+}
+
 function set_variables {
 	local playwright_env_dir=$(dirname ${BASH_SOURCE[0]})
 
 	_PLAYWRIGHT_BASE_DIR=$(get_absolute_dir ${playwright_env_dir}/../..)
 	_PORTAL_PROJECT_DIR=$(get_absolute_dir ${playwright_env_dir}/../../../../..)
+}
+
+function start_additional_bundles {
+	for ((i = 0 ; i < ${1} ; i++ ))
+	do
+		local app_server_bundles_size=$((1 + ${i}))
+
+		local liferay_home="${LIFERAY_HOME}-${app_server_bundles_size}"
+
+		local leading_port_number=$((8 + ${app_server_bundles_size}))
+
+		local liferay_portal_url="${LIFERAY_PORTAL_URL/\:8/\:"${leading_port_number}"}"
+
+		start_app_server ${liferay_home} ${liferay_portal_url}
+	done
 }
 
 function start_analytics_cloud {
@@ -431,18 +532,24 @@ function start_analytics_cloud {
 }
 
 function start_app_server {
-	cd $(get_tomcat_dir)/bin
+	local liferay_home=${1}
+
+	local tomcat_dir=$(get_tomcat_dir ${liferay_home})
+
+	cd ${tomcat_dir}/bin
 
 	/bin/bash catalina.sh run &
 
-	while ! curl --output /dev/null --silent --head --fail ${LIFERAY_PORTAL_URL}
+	local liferay_portal_url=${2}
+
+	while ! curl --output /dev/null --silent --head --fail ${liferay_portal_url}
 	do
 		sleep 5
 	done
 
-	wait_for_portal_log_inactivity
+	wait_for_portal_log_inactivity ${liferay_home}
 
-	echo "${LIFERAY_PORTAL_URL} is now available."
+	echo "${liferay_portal_url} is now available."
 }
 
 function start_client_extension_spring_boot_application {
@@ -493,6 +600,27 @@ function start_client_extension_spring_boot_application {
 	fi
 }
 
+function start_default_app_server {
+	start_app_server ${LIFERAY_HOME} ${LIFERAY_PORTAL_URL}
+}
+
+function stop_additional_bundles {
+	default_tear_down
+
+	for ((i = 0 ; i < ${1} ; i++))
+	do
+		local app_server_bundles_size=$((1 + ${i}))
+
+		local liferay_home=${LIFERAY_HOME}-${app_server_bundles_size}
+
+		local leading_port_number=$((8 + ${app_server_bundles_size}))
+
+		local liferay_portal_url="${LIFERAY_PORTAL_URL/\:8/\:"${leading_port_number}"}"
+
+		stop_app_server ${liferay_home} ${liferay_portal_url}
+	done
+}
+
 function stop_analytics_cloud {
 	cd ${_PORTAL_PROJECT_DIR}
 
@@ -500,16 +628,20 @@ function stop_analytics_cloud {
 }
 
 function stop_app_server {
-	cd $(get_tomcat_dir)/bin
+	local liferay_home=${1}
+
+	cd $(get_tomcat_dir ${liferay_home})/bin
 
 	/bin/bash shutdown.sh &
 
-	while curl --output /dev/null --silent --head --fail ${LIFERAY_PORTAL_URL}
+	local portal_url=${2}
+
+	while curl --output /dev/null --silent --head --fail ${portal_url}
 	do
 		sleep 5
 	done
 
-	echo "${LIFERAY_PORTAL_URL} is no longer available."
+	echo "${portal_url} is no longer available."
 }
 
 function stop_client_extension_spring_boot_application {
@@ -548,6 +680,10 @@ function stop_client_extension_spring_boot_application {
 	fi
 }
 
+function stop_default_app_server {
+	stop_app_server ${LIFERAY_HOME} ${LIFERAY_PORTAL_URL}
+}
+
 function update_portal_ext_properties {
 	combine_properties_files \
 		$(get_tomcat_portal_ext_properties_file) \
@@ -559,6 +695,18 @@ function update_portal_ext_properties {
 		$(get_parent_portal_ext_properties_files) \
 		\
 		$(get_playwright_project_dir)/env/portal-ext.properties
+}
+
+function update_property {
+	local liferay_home=${1}
+	local properties_file
+	local property_name=${2}
+	local property_value=${3}
+
+	for properties_file in ${liferay_home}/tomcat-*/webapps/ROOT/WEB-INF/classes/*.properties
+	do
+		sed -i "s/${property_name}=.*/${property_name}=${property_value}/g" "${properties_file}"
+	done
 }
 
 function validate_environment_variables {
@@ -585,7 +733,7 @@ function validate_environment_variables {
 }
 
 function wait_for_portal_log_inactivity {
-	local portal_log_file_size=$(get_portal_log_file_size)
+	local portal_log_file_size=$(get_portal_log_file_size ${1})
 
 	local sleep_interval=15
 	local sleep_duration=180
@@ -593,9 +741,9 @@ function wait_for_portal_log_inactivity {
 
 	sleep ${sleep_interval}
 
-	while [[ ${portal_log_file_size} != $(get_portal_log_file_size) ]]
+	while [[ ${portal_log_file_size} != $(get_portal_log_file_size ${1}) ]]
 	do
-		portal_log_file_size=$(get_portal_log_file_size)
+		portal_log_file_size=$(get_portal_log_file_size ${1})
 
 		if [[ ${total_duration} -ge ${sleep_duration} ]]
 		then
@@ -606,10 +754,10 @@ function wait_for_portal_log_inactivity {
 
 		total_duration=$((total_duration + sleep_interval))
 
-		echo "Waiting for portal log inactivity"
+		echo "Waiting for portal log inactivity..."
 	done
 
-	echo "No portal activity in ${sleep_interval}s"
+	echo "No portal activity detected in ${sleep_interval}s."
 }
 
 main "${@}"

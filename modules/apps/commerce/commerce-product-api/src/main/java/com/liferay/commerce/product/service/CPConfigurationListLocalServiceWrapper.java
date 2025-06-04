@@ -50,6 +50,46 @@ public class CPConfigurationListLocalServiceWrapper
 			cpConfigurationList);
 	}
 
+	@Override
+	public CPConfigurationList addCPConfigurationList(
+			String externalReferenceCode, long userId, long groupId,
+			long parentCPConfigurationListId, boolean master, String name,
+			double priority, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpConfigurationListLocalService.addCPConfigurationList(
+			externalReferenceCode, userId, groupId, parentCPConfigurationListId,
+			master, name, priority, displayDateMonth, displayDateDay,
+			displayDateYear, displayDateHour, displayDateMinute,
+			expirationDateMonth, expirationDateDay, expirationDateYear,
+			expirationDateHour, expirationDateMinute, neverExpire);
+	}
+
+	@Override
+	public CPConfigurationList addOrUpdateCPConfigurationList(
+			String externalReferenceCode, long companyId, long userId,
+			long groupId, long parentCPConfigurationListId, boolean master,
+			String name, double priority, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpConfigurationListLocalService.addOrUpdateCPConfigurationList(
+			externalReferenceCode, companyId, userId, groupId,
+			parentCPConfigurationListId, master, name, priority,
+			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
+			displayDateMinute, expirationDateMonth, expirationDateDay,
+			expirationDateYear, expirationDateHour, expirationDateMinute,
+			neverExpire);
+	}
+
 	/**
 	 * Creates a new cp configuration list with the primary key. Does not add the cp configuration list to the database.
 	 *
@@ -85,10 +125,12 @@ public class CPConfigurationListLocalServiceWrapper
 	 *
 	 * @param cpConfigurationList the cp configuration list
 	 * @return the cp configuration list that was removed
+	 * @throws PortalException
 	 */
 	@Override
 	public CPConfigurationList deleteCPConfigurationList(
-		CPConfigurationList cpConfigurationList) {
+			CPConfigurationList cpConfigurationList)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpConfigurationListLocalService.deleteCPConfigurationList(
 			cpConfigurationList);
@@ -112,6 +154,13 @@ public class CPConfigurationListLocalServiceWrapper
 
 		return _cpConfigurationListLocalService.deleteCPConfigurationList(
 			CPConfigurationListId);
+	}
+
+	@Override
+	public void deleteCPConfigurationLists(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_cpConfigurationListLocalService.deleteCPConfigurationLists(companyId);
 	}
 
 	/**
@@ -262,6 +311,14 @@ public class CPConfigurationListLocalServiceWrapper
 	}
 
 	@Override
+	public CPConfigurationList forceDeleteCPConfigurationList(
+		CPConfigurationList cpConfigurationList) {
+
+		return _cpConfigurationListLocalService.forceDeleteCPConfigurationList(
+			cpConfigurationList);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -330,6 +387,25 @@ public class CPConfigurationListLocalServiceWrapper
 			start, end);
 	}
 
+	@Override
+	public java.util.List<CPConfigurationList> getCPConfigurationLists(
+		long groupId, long companyId) {
+
+		return _cpConfigurationListLocalService.getCPConfigurationLists(
+			groupId, companyId);
+	}
+
+	@Override
+	public java.util.List<CPConfigurationList> getCPConfigurationLists(
+		long companyId, long groupId, long accountEntryId,
+		long[] accountGroupIds, long commerceChannelId,
+		long commerceOrderTypeId) {
+
+		return _cpConfigurationListLocalService.getCPConfigurationLists(
+			companyId, groupId, accountEntryId, accountGroupIds,
+			commerceChannelId, commerceOrderTypeId);
+	}
+
 	/**
 	 * Returns all the cp configuration lists matching the UUID and company.
 	 *
@@ -395,6 +471,15 @@ public class CPConfigurationListLocalServiceWrapper
 			getIndexableActionableDynamicQuery();
 	}
 
+	@Override
+	public CPConfigurationList getMasterCPConfigurationList(long groupId)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationListException {
+
+		return _cpConfigurationListLocalService.getMasterCPConfigurationList(
+			groupId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -433,6 +518,27 @@ public class CPConfigurationListLocalServiceWrapper
 
 		return _cpConfigurationListLocalService.updateCPConfigurationList(
 			cpConfigurationList);
+	}
+
+	@Override
+	public CPConfigurationList updateCPConfigurationList(
+			String externalReferenceCode, long cpConfigurationListId,
+			long userId, long groupId, long parentCPConfigurationListId,
+			boolean master, String name, double priority, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpConfigurationListLocalService.updateCPConfigurationList(
+			externalReferenceCode, cpConfigurationListId, userId, groupId,
+			parentCPConfigurationListId, master, name, priority,
+			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
+			displayDateMinute, expirationDateMonth, expirationDateDay,
+			expirationDateYear, expirationDateHour, expirationDateMinute,
+			neverExpire);
 	}
 
 	@Override

@@ -24,11 +24,8 @@ import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Michael Hashimoto
@@ -141,26 +138,12 @@ public abstract class BaseEntityDALO<T extends Entity>
 					}
 				},
 				() -> {
-					String response;
+					String responseJSON;
 
 					try {
-						response = WebClient.create(
-							StringUtil.combine(
-								_liferayPortalURL, _getEntityURLPath())
-						).post(
-						).accept(
-							MediaType.APPLICATION_JSON
-						).contentType(
-							MediaType.APPLICATION_JSON
-						).header(
-							"Authorization", getAuthorization()
-						).body(
-							BodyInserters.fromValue(
-								requestJSONObject.toString())
-						).retrieve(
-						).bodyToMono(
-							String.class
-						).block();
+						responseJSON = post(
+							getAuthorization(), requestJSONObject.toString(),
+							createURI(_getEntityURLPath()));
 					}
 					catch (Exception exception) {
 						refresh();
@@ -168,8 +151,8 @@ public abstract class BaseEntityDALO<T extends Entity>
 						throw new RuntimeException(exception);
 					}
 
-					if (response == null) {
-						throw new RuntimeException("No response");
+					if (responseJSON == null) {
+						throw new RuntimeException("No response JSON");
 					}
 
 					JSONObject jsonObject = new JSONObject();
@@ -178,7 +161,8 @@ public abstract class BaseEntityDALO<T extends Entity>
 						jsonObject.put(key, requestJSONObject.get(key));
 					}
 
-					JSONObject responseJSONObject = new JSONObject(response);
+					JSONObject responseJSONObject = new JSONObject(
+						responseJSON);
 
 					for (String key : responseJSONObject.keySet()) {
 						jsonObject.put(key, responseJSONObject.get(key));
@@ -216,19 +200,9 @@ public abstract class BaseEntityDALO<T extends Entity>
 				},
 				() -> {
 					try {
-						WebClient.create(
-							StringUtil.combine(
-								_liferayPortalURL,
-								_getEntityURLPath(objectEntryId))
-						).delete(
-						).accept(
-							MediaType.APPLICATION_JSON
-						).header(
-							"Authorization", getAuthorization()
-						).retrieve(
-						).bodyToMono(
-							Void.class
-						).block();
+						delete(
+							getAuthorization(), "",
+							createURI(_getEntityURLPath(objectEntryId)));
 					}
 					catch (Exception exception) {
 						refresh();
@@ -262,21 +236,12 @@ public abstract class BaseEntityDALO<T extends Entity>
 					}
 				},
 				() -> {
-					String response = null;
+					String responseJSON = null;
 
 					try {
-						response = WebClient.create(
-							StringUtil.combine(
-								_liferayPortalURL, _getEntityURLPath(), "/", id)
-						).get(
-						).accept(
-							MediaType.APPLICATION_JSON
-						).header(
-							"Authorization", getAuthorization()
-						).retrieve(
-						).bodyToMono(
-							String.class
-						).block();
+						responseJSON = get(
+							getAuthorization(),
+							createURI(_getEntityURLPath(), "/", id));
 					}
 					catch (Exception exception) {
 						refresh();
@@ -284,11 +249,11 @@ public abstract class BaseEntityDALO<T extends Entity>
 						throw new RuntimeException(exception);
 					}
 
-					if (response == null) {
-						throw new RuntimeException("No response");
+					if (responseJSON == null) {
+						throw new RuntimeException("No response JSON");
 					}
 
-					return new JSONObject(response);
+					return new JSONObject(responseJSON);
 				});
 
 		if (_log.isDebugEnabled()) {
@@ -323,42 +288,34 @@ public abstract class BaseEntityDALO<T extends Entity>
 						}
 					},
 					() -> {
-						String response;
+						String responseJSON;
 
 						try {
-							response = WebClient.create(
-								StringUtil.combine(
-									_liferayPortalURL, _getEntityURLPath())
-							).get(
-							).uri(
-								uriBuilder -> {
-									uriBuilder = uriBuilder.queryParam(
-										"page",
-										String.valueOf(finalCurrentPage));
+							UriComponentsBuilder uriComponentsBuilder =
+								UriComponentsBuilder.fromPath(
+									_getEntityURLPath()
+								).queryParam(
+									"page", String.valueOf(finalCurrentPage)
+								);
 
-									if (filterString != null) {
-										uriBuilder.queryParam(
-											"filter", filterString);
-									}
+							if (filterString != null) {
+								uriComponentsBuilder.queryParam(
+									"filter", filterString);
+							}
 
-									if (search != null) {
-										uriBuilder.queryParam("search", search);
-									}
+							if (search != null) {
+								uriComponentsBuilder.queryParam(
+									"search", search);
+							}
 
-									if (sort != null) {
-										uriBuilder.queryParam("sort", sort);
-									}
+							if (sort != null) {
+								uriComponentsBuilder.queryParam("sort", sort);
+							}
 
-									return uriBuilder.build();
-								}
-							).accept(
-								MediaType.APPLICATION_JSON
-							).header(
-								"Authorization", getAuthorization()
-							).retrieve(
-							).bodyToMono(
-								String.class
-							).block();
+							responseJSON = get(
+								getAuthorization(),
+								uriComponentsBuilder.build(
+								).toUri());
 						}
 						catch (Exception exception) {
 							refresh();
@@ -366,14 +323,14 @@ public abstract class BaseEntityDALO<T extends Entity>
 							throw new RuntimeException(exception);
 						}
 
-						if (response == null) {
-							throw new RuntimeException("No response");
+						if (responseJSON == null) {
+							throw new RuntimeException("No response JSON");
 						}
 
 						Set<JSONObject> localJsonObjects = new HashSet<>();
 
 						JSONObject responseJSONObject = new JSONObject(
-							response);
+							responseJSON);
 
 						Integer localLastPage = responseJSONObject.getInt(
 							"lastPage");
@@ -463,27 +420,12 @@ public abstract class BaseEntityDALO<T extends Entity>
 					}
 				},
 				() -> {
-					String response;
+					String responseJSON;
 
 					try {
-						response = WebClient.create(
-							StringUtil.combine(
-								_liferayPortalURL,
-								_getEntityURLPath(requestObjectEntryId))
-						).put(
-						).accept(
-							MediaType.APPLICATION_JSON
-						).contentType(
-							MediaType.APPLICATION_JSON
-						).header(
-							"Authorization", getAuthorization()
-						).body(
-							BodyInserters.fromValue(
-								requestJSONObject.toString())
-						).retrieve(
-						).bodyToMono(
-							String.class
-						).block();
+						responseJSON = put(
+							getAuthorization(), requestJSONObject.toString(),
+							createURI(_getEntityURLPath(requestObjectEntryId)));
 					}
 					catch (Exception exception) {
 						refresh();
@@ -491,11 +433,12 @@ public abstract class BaseEntityDALO<T extends Entity>
 						throw new RuntimeException(exception);
 					}
 
-					if (response == null) {
-						throw new RuntimeException("No response");
+					if (responseJSON == null) {
+						throw new RuntimeException("No response JSON");
 					}
 
-					JSONObject responseJSONObject = new JSONObject(response);
+					JSONObject responseJSONObject = new JSONObject(
+						responseJSON);
 
 					long responseObjectEntryId = responseJSONObject.getLong(
 						"id");
@@ -523,10 +466,5 @@ public abstract class BaseEntityDALO<T extends Entity>
 	}
 
 	private static final Log _log = LogFactory.getLog(BaseDALO.class);
-
-	@Value(
-		"${com.liferay.lxc.dxp.server.protocol}://${com.liferay.lxc.dxp.main.domain}"
-	)
-	private String _liferayPortalURL;
 
 }

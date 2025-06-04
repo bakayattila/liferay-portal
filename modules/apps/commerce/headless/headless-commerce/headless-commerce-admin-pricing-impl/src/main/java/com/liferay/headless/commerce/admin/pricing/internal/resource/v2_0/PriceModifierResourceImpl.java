@@ -32,11 +32,10 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
+import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -99,12 +98,12 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierService.getCommercePriceModifiersCount(
 				commercePriceList.getCommercePriceListId());
 
 		return Page.of(
-			_toPriceModifiers(commercePriceModifiers), pagination, totalItems);
+			_toPriceModifiers(commercePriceModifiers), pagination, totalCount);
 	}
 
 	@Override
@@ -118,11 +117,11 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 				id, pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierService.getCommercePriceModifiersCount(id);
 
 		return Page.of(
-			_toPriceModifiers(commercePriceModifiers), pagination, totalItems);
+			_toPriceModifiers(commercePriceModifiers), pagination, totalCount);
 	}
 
 	@Override
@@ -311,17 +310,10 @@ public class PriceModifierResourceImpl extends BasePriceModifierResourceImpl {
 			List<CommercePriceModifier> commercePriceModifiers)
 		throws Exception {
 
-		List<PriceModifier> priceModifiers = new ArrayList<>();
-
-		for (CommercePriceModifier commercePriceModifier :
-				commercePriceModifiers) {
-
-			priceModifiers.add(
-				_toPriceModifier(
-					commercePriceModifier.getCommercePriceModifierId()));
-		}
-
-		return priceModifiers;
+		return transform(
+			commercePriceModifiers,
+			commercePriceModifier -> _toPriceModifier(
+				commercePriceModifier.getCommercePriceModifierId()));
 	}
 
 	private void _updateNestedResources(

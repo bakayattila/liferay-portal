@@ -57,11 +57,17 @@ public class ObjectDefinitionWrapper
 		attributes.put("dbTableName", getDBTableName());
 		attributes.put("enableCategorization", isEnableCategorization());
 		attributes.put("enableComments", isEnableComments());
+		attributes.put(
+			"enableFriendlyURLCustomization",
+			isEnableFriendlyURLCustomization());
 		attributes.put("enableIndexSearch", isEnableIndexSearch());
 		attributes.put("enableLocalization", isEnableLocalization());
 		attributes.put("enableObjectEntryDraft", isEnableObjectEntryDraft());
 		attributes.put(
 			"enableObjectEntryHistory", isEnableObjectEntryHistory());
+		attributes.put(
+			"enableObjectEntryVersioning", isEnableObjectEntryVersioning());
+		attributes.put("friendlyURLSeparator", getFriendlyURLSeparator());
 		attributes.put("label", getLabel());
 		attributes.put("modifiable", isModifiable());
 		attributes.put("name", getName());
@@ -210,6 +216,13 @@ public class ObjectDefinitionWrapper
 			setEnableComments(enableComments);
 		}
 
+		Boolean enableFriendlyURLCustomization = (Boolean)attributes.get(
+			"enableFriendlyURLCustomization");
+
+		if (enableFriendlyURLCustomization != null) {
+			setEnableFriendlyURLCustomization(enableFriendlyURLCustomization);
+		}
+
 		Boolean enableIndexSearch = (Boolean)attributes.get(
 			"enableIndexSearch");
 
@@ -236,6 +249,20 @@ public class ObjectDefinitionWrapper
 
 		if (enableObjectEntryHistory != null) {
 			setEnableObjectEntryHistory(enableObjectEntryHistory);
+		}
+
+		Boolean enableObjectEntryVersioning = (Boolean)attributes.get(
+			"enableObjectEntryVersioning");
+
+		if (enableObjectEntryVersioning != null) {
+			setEnableObjectEntryVersioning(enableObjectEntryVersioning);
+		}
+
+		String friendlyURLSeparator = (String)attributes.get(
+			"friendlyURLSeparator");
+
+		if (friendlyURLSeparator != null) {
+			setFriendlyURLSeparator(friendlyURLSeparator);
 		}
 
 		String label = (String)attributes.get("label");
@@ -409,6 +436,11 @@ public class ObjectDefinitionWrapper
 		return model.getDefaultLanguageId();
 	}
 
+	@Override
+	public java.util.Locale getDefaultLocale() {
+		return model.getDefaultLocale();
+	}
+
 	/**
 	 * Returns the description object field ID of this object definition.
 	 *
@@ -442,6 +474,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean getEnableComments() {
 		return model.getEnableComments();
+	}
+
+	/**
+	 * Returns the enable friendly url customization of this object definition.
+	 *
+	 * @return the enable friendly url customization of this object definition
+	 */
+	@Override
+	public boolean getEnableFriendlyURLCustomization() {
+		return model.getEnableFriendlyURLCustomization();
 	}
 
 	/**
@@ -484,6 +526,16 @@ public class ObjectDefinitionWrapper
 		return model.getEnableObjectEntryHistory();
 	}
 
+	/**
+	 * Returns the enable object entry versioning of this object definition.
+	 *
+	 * @return the enable object entry versioning of this object definition
+	 */
+	@Override
+	public boolean getEnableObjectEntryVersioning() {
+		return model.getEnableObjectEntryVersioning();
+	}
+
 	@Override
 	public String getExtensionDBTableName() {
 		return model.getExtensionDBTableName();
@@ -497,6 +549,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public String getExternalReferenceCode() {
 		return model.getExternalReferenceCode();
+	}
+
+	/**
+	 * Returns the friendly url separator of this object definition.
+	 *
+	 * @return the friendly url separator of this object definition
+	 */
+	@Override
+	public String getFriendlyURLSeparator() {
+		return model.getFriendlyURLSeparator();
 	}
 
 	/**
@@ -628,6 +690,13 @@ public class ObjectDefinitionWrapper
 	@Override
 	public long getObjectDefinitionId() {
 		return model.getObjectDefinitionId();
+	}
+
+	@Override
+	public java.util.List<ObjectDefinitionSetting>
+		getObjectDefinitionSettings() {
+
+		return model.getObjectDefinitionSettings();
 	}
 
 	@Override
@@ -982,6 +1051,16 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this object definition is enable friendly url customization.
+	 *
+	 * @return <code>true</code> if this object definition is enable friendly url customization; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableFriendlyURLCustomization() {
+		return model.isEnableFriendlyURLCustomization();
+	}
+
+	/**
 	 * Returns <code>true</code> if this object definition is enable index search.
 	 *
 	 * @return <code>true</code> if this object definition is enable index search; <code>false</code> otherwise
@@ -1019,6 +1098,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean isEnableObjectEntryHistory() {
 		return model.isEnableObjectEntryHistory();
+	}
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable object entry versioning.
+	 *
+	 * @return <code>true</code> if this object definition is enable object entry versioning; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableObjectEntryVersioning() {
+		return model.isEnableObjectEntryVersioning();
 	}
 
 	@Override
@@ -1205,6 +1294,18 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Sets whether this object definition is enable friendly url customization.
+	 *
+	 * @param enableFriendlyURLCustomization the enable friendly url customization of this object definition
+	 */
+	@Override
+	public void setEnableFriendlyURLCustomization(
+		boolean enableFriendlyURLCustomization) {
+
+		model.setEnableFriendlyURLCustomization(enableFriendlyURLCustomization);
+	}
+
+	/**
 	 * Sets whether this object definition is enable index search.
 	 *
 	 * @param enableIndexSearch the enable index search of this object definition
@@ -1245,6 +1346,18 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Sets whether this object definition is enable object entry versioning.
+	 *
+	 * @param enableObjectEntryVersioning the enable object entry versioning of this object definition
+	 */
+	@Override
+	public void setEnableObjectEntryVersioning(
+		boolean enableObjectEntryVersioning) {
+
+		model.setEnableObjectEntryVersioning(enableObjectEntryVersioning);
+	}
+
+	/**
 	 * Sets the external reference code of this object definition.
 	 *
 	 * @param externalReferenceCode the external reference code of this object definition
@@ -1252,6 +1365,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setExternalReferenceCode(String externalReferenceCode) {
 		model.setExternalReferenceCode(externalReferenceCode);
+	}
+
+	/**
+	 * Sets the friendly url separator of this object definition.
+	 *
+	 * @param friendlyURLSeparator the friendly url separator of this object definition
+	 */
+	@Override
+	public void setFriendlyURLSeparator(String friendlyURLSeparator) {
+		model.setFriendlyURLSeparator(friendlyURLSeparator);
 	}
 
 	/**
@@ -1366,6 +1489,13 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setObjectDefinitionId(long objectDefinitionId) {
 		model.setObjectDefinitionId(objectDefinitionId);
+	}
+
+	@Override
+	public void setObjectDefinitionSettings(
+		java.util.List<ObjectDefinitionSetting> objectDefinitionSettings) {
+
+		model.setObjectDefinitionSettings(objectDefinitionSettings);
 	}
 
 	/**

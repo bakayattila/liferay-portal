@@ -17,7 +17,7 @@ import com.liferay.object.tree.constants.TreeConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -34,7 +34,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Feliphe Marinho
  */
-@FeatureFlags("LPS-187142")
+@FeatureFlag("LPD-34594")
 @RunWith(Arquillian.class)
 public class TreeTest {
 
@@ -64,8 +64,8 @@ public class TreeTest {
 
 		TreeTestUtil.deleteObjectDefinitionHierarchy(
 			_objectDefinitionLocalService,
-			new String[] {"C_AAA", "C_AAB", "C_AA", "C_AB", "C_A"},
-			_objectEntryLocalService);
+			new String[] {"C_A", "C_AB", "C_AA", "C_AAB", "C_AAA"},
+			_objectEntryLocalService, _objectRelationshipLocalService);
 	}
 
 	@Test
@@ -115,8 +115,8 @@ public class TreeTest {
 
 		TreeTestUtil.deleteObjectDefinitionHierarchy(
 			_objectDefinitionLocalService,
-			new String[] {"C_AAA", "C_AAB", "C_AA", "C_AB", "C_A"},
-			_objectEntryLocalService);
+			new String[] {"C_A", "C_AB", "C_AA", "C_AAB", "C_AAA"},
+			_objectEntryLocalService, _objectRelationshipLocalService);
 	}
 
 	private void _testIterator(

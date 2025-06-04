@@ -26,11 +26,9 @@
 			context='<%=
 				HashMapBuilder.<String, Object>put(
 					"additionalProps", additionalProps
-				).put(
-					"orderTypes", orderTypesJSONArray
 				).build()
 			%>'
-			module="{createCommerceCart} from commerce-order-content-web"
+			module="{createCommerceCart} from commerce-frontend-js"
 		/>
 	</c:when>
 	<c:otherwise>

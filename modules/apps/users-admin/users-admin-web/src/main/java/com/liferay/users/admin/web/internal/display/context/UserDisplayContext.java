@@ -42,8 +42,12 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.membershippolicy.RoleMembershipPolicyUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
+import com.liferay.site.item.selector.SiteItemSelectorCriterion;
 import com.liferay.user.groups.admin.item.selector.UserGroupItemSelectorCriterion;
+
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,10 +55,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Pei-Jung Lan
@@ -129,8 +129,13 @@ public class UserDisplayContext {
 		SortedSet<Group> inheritedSiteGroupsSet = new TreeSet<>();
 
 		inheritedSiteGroupsSet.addAll(
-			GroupLocalServiceUtil.getUserGroupsRelatedGroups(getUserGroups()));
-		inheritedSiteGroupsSet.addAll(_getOrganizationRelatedGroups());
+			ListUtil.filter(
+				GroupLocalServiceUtil.getUserGroupsRelatedGroups(
+					getUserGroups()),
+				group -> !group.isDepot()));
+		inheritedSiteGroupsSet.addAll(
+			ListUtil.filter(
+				_getOrganizationRelatedGroups(), group -> !group.isDepot()));
 
 		return ListUtil.fromCollection(inheritedSiteGroupsSet);
 	}
@@ -339,7 +344,8 @@ public class UserDisplayContext {
 				organization.getParentOrganization();
 
 			if ((parentOrganization != null) &&
-				!organizations.contains(parentOrganization)) {
+				!organizations.contains(parentOrganization) &&
+				!parentOrganizations.contains(parentOrganization)) {
 
 				parentOrganizations.add(parentOrganization);
 			}

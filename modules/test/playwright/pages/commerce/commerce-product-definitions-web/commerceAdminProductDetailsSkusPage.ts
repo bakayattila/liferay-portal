@@ -14,6 +14,11 @@ export class CommerceAdminProductDetailsSkusPage extends CommerceDNDTablePage {
 	readonly page: Page;
 	readonly pricinQuantity: Locator;
 	readonly skusLink: Locator;
+	readonly skuPriceAddButton: Locator;
+	readonly skuPriceAddModal: FrameLocator;
+	readonly skuPriceFrame: FrameLocator;
+	readonly skuPriceListSelect: Locator;
+	readonly skuPriceTab: Locator;
 	readonly skusTable: Locator;
 	readonly skusTableRowBasePrice: (price: string) => Promise<Locator>;
 	readonly skusTableRow: (
@@ -31,7 +36,7 @@ export class CommerceAdminProductDetailsSkusPage extends CommerceDNDTablePage {
 	constructor(page: Page) {
 		super(
 			page,
-			'#_com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet_fm .dnd-table'
+			'#_com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet_fm .fds table'
 		);
 
 		this.page = page;
@@ -44,8 +49,18 @@ export class CommerceAdminProductDetailsSkusPage extends CommerceDNDTablePage {
 			exact: true,
 			name: 'Skus',
 		});
+		this.skuPriceFrame = page.frameLocator('iframe').first();
+		this.skuPriceAddButton = this.skuPriceFrame.locator(
+			'[data-testid="fdsCreationActionButton"]'
+		);
+		this.skuPriceAddModal = page.frameLocator('iframe[title="Add Price"]');
+		this.skuPriceListSelect =
+			this.skuPriceAddModal.getByLabel('Price List');
+		this.skuPriceTab = this.skuPriceFrame.getByRole('link', {
+			name: 'Price',
+		});
 		this.skusTable = page.locator(
-			'#_com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet_fm .dnd-table'
+			'#_com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet_fm .fds table'
 		);
 		this.skusTableRow = async (
 			colPosition: number,
@@ -86,5 +101,9 @@ export class CommerceAdminProductDetailsSkusPage extends CommerceDNDTablePage {
 
 	async goToSkuUOM() {
 		await this.skuUOMTab.click();
+	}
+
+	async goToSkuPrice() {
+		await this.skuPriceTab.click();
 	}
 }

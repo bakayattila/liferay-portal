@@ -380,6 +380,10 @@ public interface ObjectRelationshipLocalService
 	public List<ObjectRelationship> getObjectRelationshipsByObjectDefinitionId2(
 		long objectDefinitionId2);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectRelationship> getObjectRelationshipsByObjectDefinitionId2(
+		long objectDefinitionId2, String type);
+
 	/**
 	 * Returns the number of object relationships.
 	 *
@@ -387,6 +391,10 @@ public interface ObjectRelationshipLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getObjectRelationshipsCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Map<Long, List<ObjectRelationship>> getObjectRelationshipsMap(
+		long companyId);
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -405,7 +413,8 @@ public interface ObjectRelationshipLocalService
 
 	public void registerObjectRelationshipsRelatedInfoCollectionProviders(
 		ObjectDefinition objectDefinition1,
-		ObjectDefinitionLocalService objectDefinitionLocalService);
+		ObjectDefinitionLocalService objectDefinitionLocalService,
+		List<ObjectRelationship> objectRelationships);
 
 	/**
 	 * Updates the object relationship in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
@@ -426,6 +435,9 @@ public interface ObjectRelationshipLocalService
 			String externalReferenceCode, long objectRelationshipId,
 			long parameterObjectFieldId, String deletionType, boolean edge,
 			Map<Locale, String> labelMap, ObjectField objectField)
+		throws PortalException;
+
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
 		throws PortalException;
 
 }

@@ -20,9 +20,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
-import java.util.Objects;
+import jakarta.portlet.RenderRequest;
 
-import javax.portlet.RenderRequest;
+import java.util.Objects;
 
 /**
  * @author Eudaldo Alonso
@@ -65,11 +65,7 @@ public class AssetPublisherViewContentDisplayContext {
 	}
 
 	public boolean getPrint() {
-		if (Objects.equals(_getViewMode(), Constants.PRINT)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_getViewMode(), Constants.PRINT);
 	}
 
 	public String getReturnToFullPageURL() {

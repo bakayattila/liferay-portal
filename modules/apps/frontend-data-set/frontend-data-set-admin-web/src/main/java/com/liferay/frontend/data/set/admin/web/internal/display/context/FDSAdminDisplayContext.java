@@ -7,10 +7,14 @@ package com.liferay.frontend.data.set.admin.web.internal.display.context;
 
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.frontend.data.set.SystemFDSEntry;
+import com.liferay.frontend.data.set.SystemFDSEntryRegistry;
 import com.liferay.frontend.data.set.admin.web.internal.constants.FDSAdminPortletKeys;
 import com.liferay.frontend.data.set.admin.web.internal.portlet.FDSAdminPortlet;
-import com.liferay.frontend.data.set.resolver.FDSAPIURLResolver;
-import com.liferay.frontend.data.set.resolver.FDSAPIURLResolverRegistry;
+import com.liferay.frontend.data.set.url.FDSAPIURLResolver;
+import com.liferay.frontend.data.set.url.FDSAPIURLResolverRegistry;
+import com.liferay.object.constants.ObjectActionKeys;
+import com.liferay.object.definition.security.permission.resource.ObjectDefinitionPortletResourcePermissionRegistryUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
@@ -22,20 +26,22 @@ import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
+import java.util.Set;
 
 /**
  * @author Marko Cikos
@@ -48,13 +54,15 @@ public class FDSAdminDisplayContext {
 		ObjectDefinitionLocalService objectDefinitionLocalService,
 		RenderRequest renderRequest, RenderResponse renderResponse,
 		ServiceTrackerList<FDSAdminPortlet.CompanyScopedOpenAPIResource>
-			serviceTrackerList) {
+			serviceTrackerList,
+		SystemFDSEntryRegistry systemFDSEntryRegistry) {
 
 		_cetManager = cetManager;
 		_fdsAPIURLResolverRegistry = fdsAPIURLResolverRegistry;
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_serviceTrackerList = serviceTrackerList;
+		_systemFDSEntryRegistry = systemFDSEntryRegistry;
 
 		_themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -111,20 +119,10 @@ public class FDSAdminDisplayContext {
 			PortletURLFactoryUtil.create(
 				_renderRequest, FDSAdminPortletKeys.FDS_ADMIN,
 				RenderRequest.RENDER_PHASE)
-		).setMVCPath(
-			"/data_set.jsp"
+		).setMVCRenderCommandName(
+			"/frontend_data_set_admin/edit_data_set"
 		).setBackURL(
 			_themeDisplay.getURLCurrent()
-		).buildString();
-	}
-
-	public String getFDSEntriesURL() {
-		return PortletURLBuilder.create(
-			PortletURLFactoryUtil.create(
-				_renderRequest, FDSAdminPortletKeys.FDS_ADMIN,
-				RenderRequest.RENDER_PHASE)
-		).setMVCPath(
-			"/data_sets.jsp"
 		).buildString();
 	}
 
@@ -142,6 +140,19 @@ public class FDSAdminDisplayContext {
 			).put(
 				"name", fdsFilterCET.getName(themeDisplay.getLocale())
 			));
+	}
+
+	public String getImportSystemDataSetURL() {
+		ResourceURL resourceURL =
+			(ResourceURL)PortalUtil.getControlPanelPortletURL(
+				_renderRequest, _themeDisplay.getScopeGroup(),
+				FDSAdminPortletKeys.FDS_ADMIN, 0, 0,
+				RenderRequest.RESOURCE_PHASE);
+
+		resourceURL.setResourceID(
+			"/frontend_data_set_admin/import_system_data_set");
+
+		return resourceURL.toString();
 	}
 
 	public JSONArray getRESTApplicationResolvedSchemasJSONArray() {
@@ -215,6 +226,67 @@ public class FDSAdminDisplayContext {
 		return resourceURL.toString();
 	}
 
+	public String getSystemDataSetsURL() {
+		ResourceURL resourceURL =
+			(ResourceURL)PortalUtil.getControlPanelPortletURL(
+				_renderRequest, _themeDisplay.getScopeGroup(),
+				FDSAdminPortletKeys.FDS_ADMIN, 0, 0,
+				RenderRequest.RESOURCE_PHASE);
+
+		resourceURL.setResourceID(
+			"/frontend_data_set_admin/get_system_data_sets");
+
+		return resourceURL.toString();
+	}
+
+	public JSONArray getSystemFDSEntryJSONArray() throws Exception {
+		Set<String> systemFDSNames =
+			_systemFDSEntryRegistry.getSystemFDSNames();
+
+		if (systemFDSNames == null) {
+			return JSONFactoryUtil.createJSONArray();
+		}
+
+		return JSONUtil.toJSONArray(
+			systemFDSNames,
+			systemFDSName -> {
+				SystemFDSEntry systemFDSEntry =
+					_systemFDSEntryRegistry.getSystemFDSEntry(systemFDSName);
+
+				return JSONUtil.put(
+					"additionalAPIURLParameters",
+					systemFDSEntry.getAdditionalAPIURLParameters()
+				).put(
+					"defaultItemsPerPage",
+					systemFDSEntry.getDefaultItemsPerPage()
+				).put(
+					"description", systemFDSEntry.getDescription()
+				).put(
+					"name", systemFDSEntry.getName()
+				).put(
+					"restApplication", systemFDSEntry.getRESTApplication()
+				).put(
+					"restEndpoint", systemFDSEntry.getRESTEndpoint()
+				).put(
+					"restSchema", systemFDSEntry.getRESTSchema()
+				).put(
+					"symbol", systemFDSEntry.getSymbol()
+				).put(
+					"title", systemFDSEntry.getTitle()
+				);
+			});
+	}
+
+	public boolean hasAddDataSetObjectEntryPermission() {
+		PortletResourcePermission portletResourcePermission =
+			ObjectDefinitionPortletResourcePermissionRegistryUtil.getService(
+				_dataSetObjectDefinition.getResourceName());
+
+		return portletResourcePermission.contains(
+			_themeDisplay.getPermissionChecker(), 0,
+			ObjectActionKeys.ADD_OBJECT_ENTRY);
+	}
+
 	private final CETManager _cetManager;
 	private final ObjectDefinition _dataSetObjectDefinition;
 	private final FDSAPIURLResolverRegistry _fdsAPIURLResolverRegistry;
@@ -222,6 +294,7 @@ public class FDSAdminDisplayContext {
 	private final RenderResponse _renderResponse;
 	private final ServiceTrackerList
 		<FDSAdminPortlet.CompanyScopedOpenAPIResource> _serviceTrackerList;
+	private final SystemFDSEntryRegistry _systemFDSEntryRegistry;
 	private final ThemeDisplay _themeDisplay;
 
 }

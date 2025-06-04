@@ -498,6 +498,14 @@ public class ObjectRelationshipLocalServiceUtil {
 			objectDefinitionId2);
 	}
 
+	public static List<ObjectRelationship>
+		getObjectRelationshipsByObjectDefinitionId2(
+			long objectDefinitionId2, String type) {
+
+		return getService().getObjectRelationshipsByObjectDefinitionId2(
+			objectDefinitionId2, type);
+	}
+
 	/**
 	 * Returns the number of object relationships.
 	 *
@@ -505,6 +513,12 @@ public class ObjectRelationshipLocalServiceUtil {
 	 */
 	public static int getObjectRelationshipsCount() {
 		return getService().getObjectRelationshipsCount();
+	}
+
+	public static Map<Long, List<ObjectRelationship>> getObjectRelationshipsMap(
+		long companyId) {
+
+		return getService().getObjectRelationshipsMap(companyId);
 	}
 
 	/**
@@ -528,10 +542,12 @@ public class ObjectRelationshipLocalServiceUtil {
 	public static void
 		registerObjectRelationshipsRelatedInfoCollectionProviders(
 			com.liferay.object.model.ObjectDefinition objectDefinition1,
-			ObjectDefinitionLocalService objectDefinitionLocalService) {
+			ObjectDefinitionLocalService objectDefinitionLocalService,
+			List<ObjectRelationship> objectRelationships) {
 
 		getService().registerObjectRelationshipsRelatedInfoCollectionProviders(
-			objectDefinition1, objectDefinitionLocalService);
+			objectDefinition1, objectDefinitionLocalService,
+			objectRelationships);
 	}
 
 	/**
@@ -560,6 +576,13 @@ public class ObjectRelationshipLocalServiceUtil {
 		return getService().updateObjectRelationship(
 			externalReferenceCode, objectRelationshipId, parameterObjectFieldId,
 			deletionType, edge, labelMap, objectField);
+	}
+
+	public static void updateUserId(
+			long companyId, long oldUserId, long newUserId)
+		throws PortalException {
+
+		getService().updateUserId(companyId, oldUserId, newUserId);
 	}
 
 	public static ObjectRelationshipLocalService getService() {

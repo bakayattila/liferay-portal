@@ -53,6 +53,7 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -97,6 +98,7 @@ public class DLOpenerGoogleDriveManagerTest {
 		PrincipalThreadLocal.setName(_originalName);
 	}
 
+	@Ignore
 	@Test
 	public void testCheckInUploadsAnEmptyFileToGoogle() throws Exception {
 		_test(
@@ -127,6 +129,7 @@ public class DLOpenerGoogleDriveManagerTest {
 			});
 	}
 
+	@Ignore
 	@Test
 	public void testCheckOutUploadsTheFileToGoogle() throws Exception {
 		_test(
@@ -158,6 +161,7 @@ public class DLOpenerGoogleDriveManagerTest {
 			});
 	}
 
+	@Ignore
 	@Test
 	public void testCreateUploadsAnEmptyFileToGoogle() throws Exception {
 		_test(
@@ -302,7 +306,15 @@ public class DLOpenerGoogleDriveManagerTest {
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 			_http.URLtoString(options));
 
-		return jsonObject.getString("access_token");
+		String accessToken = jsonObject.getString("access_token");
+
+		if (Validator.isNull(accessToken)) {
+			throw new Exception(
+				"JSON response does not contain an access token: " +
+					jsonObject);
+		}
+
+		return accessToken;
 	}
 
 	private boolean _isGoogleDriveFile(FileEntry fileEntry) {

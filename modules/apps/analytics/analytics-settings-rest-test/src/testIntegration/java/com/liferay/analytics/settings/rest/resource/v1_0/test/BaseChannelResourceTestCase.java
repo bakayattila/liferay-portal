@@ -33,7 +33,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -45,9 +45,13 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,10 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -86,7 +86,7 @@ public abstract class BaseChannelResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -100,13 +100,12 @@ public abstract class BaseChannelResourceTestCase {
 
 		_channelResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		ChannelResource.Builder builder = ChannelResource.builder();
-
-		channelResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		channelResource = ChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -187,7 +186,7 @@ public abstract class BaseChannelResourceTestCase {
 	@Test
 	public void testGetChannelsPage() throws Exception {
 		Page<Channel> page = channelResource.getChannelsPage(
-			RandomTestUtil.randomString(), Pagination.of(1, 10), null);
+			null, Pagination.of(1, 10), null);
 
 		long totalCount = page.getTotalCount();
 
@@ -216,10 +215,10 @@ public abstract class BaseChannelResourceTestCase {
 
 	@Test
 	public void testGetChannelsPageWithPagination() throws Exception {
-		Page<Channel> channelPage = channelResource.getChannelsPage(
+		Page<Channel> channelsPage = channelResource.getChannelsPage(
 			null, null, null);
 
-		int totalCount = GetterUtil.getInteger(channelPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(channelsPage.getTotalCount());
 
 		Channel channel1 = testGetChannelsPage_addChannel(randomChannel());
 
@@ -892,13 +891,11 @@ public abstract class BaseChannelResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -908,7 +905,7 @@ public abstract class BaseChannelResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(_dateFormat.format(channel.getCreateDate()));
+				sb.append(_format.format(channel.getCreateDate()));
 			}
 
 			return sb.toString();
@@ -1230,7 +1227,9 @@ public abstract class BaseChannelResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseChannelResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.analytics.settings.rest.resource.v1_0.ChannelResource

@@ -5,6 +5,7 @@
 
 package com.liferay.object.test.util;
 
+import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -65,17 +66,6 @@ public class TreeTestUtil {
 		_assertTree(
 			expectedMap, actualTree,
 			node -> _getExternalReferenceCode(node, objectEntryLocalService));
-	}
-
-	public static void bind(
-			ObjectDefinitionLocalService objectDefinitionLocalService,
-			List<ObjectRelationship> objectRelationships)
-		throws PortalException {
-
-		objectDefinitionLocalService.bindObjectDefinitions(
-			TransformUtil.transformToLongArray(
-				objectRelationships,
-				ObjectRelationship::getObjectRelationshipId));
 	}
 
 	public static void bind(
@@ -177,6 +167,8 @@ public class TreeTestUtil {
 
 		ObjectEntry rootObjectEntry = objectEntryLocalService.addObjectEntry(
 			TestPropsValues.getUserId(), 0, rootNode.getPrimaryKey(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
 			HashMapBuilder.<String, Serializable>put(
 				"externalReferenceCode",
 				externalReferenceCodes.poll() + externalReferenceCodeSuffix
@@ -192,6 +184,9 @@ public class TreeTestUtil {
 
 			ObjectEntry objectEntry = objectEntryLocalService.addObjectEntry(
 				TestPropsValues.getUserId(), 0, node.getPrimaryKey(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null,
 				HashMapBuilder.<String, Serializable>put(
 					"externalReferenceCode",
 					externalReferenceCodes.poll() + externalReferenceCodeSuffix
@@ -232,7 +227,8 @@ public class TreeTestUtil {
 	public static void deleteObjectDefinitionHierarchy(
 			ObjectDefinitionLocalService objectDefinitionLocalService,
 			String[] objectDefinitionNames,
-			ObjectEntryLocalService objectEntryLocalService)
+			ObjectEntryLocalService objectEntryLocalService,
+			ObjectRelationshipLocalService objectRelationshipLocalService)
 		throws Exception {
 
 		for (String objectDefinitionName : objectDefinitionNames) {
@@ -254,7 +250,9 @@ public class TreeTestUtil {
 			}
 
 			if (objectDefinition.getRootObjectDefinitionId() != 0) {
-				unbind(objectDefinitionLocalService, objectDefinitionName);
+				unbind(
+					objectDefinition.getObjectDefinitionId(),
+					objectRelationshipLocalService);
 			}
 
 			objectDefinitionLocalService.deleteObjectDefinition(
@@ -306,16 +304,22 @@ public class TreeTestUtil {
 	}
 
 	public static void unbind(
-			ObjectDefinitionLocalService objectDefinitionLocalService,
-			String objectDefinitionName)
+			Long objectDefinitionId,
+			ObjectRelationshipLocalService objectRelationshipLocalService)
 		throws PortalException {
 
-		ObjectDefinition objectDefinition =
-			objectDefinitionLocalService.fetchObjectDefinition(
-				TestPropsValues.getCompanyId(), objectDefinitionName);
+		List<ObjectRelationship> objectRelationships =
+			objectRelationshipLocalService.getObjectRelationships(
+				objectDefinitionId, true);
 
-		objectDefinitionLocalService.unbindObjectDefinition(
-			objectDefinition.getObjectDefinitionId());
+		for (ObjectRelationship objectRelationship : objectRelationships) {
+			objectRelationshipLocalService.updateObjectRelationship(
+				objectRelationship.getExternalReferenceCode(),
+				objectRelationship.getObjectRelationshipId(),
+				objectRelationship.getParameterObjectFieldId(),
+				objectRelationship.getDeletionType(), false,
+				objectRelationship.getLabelMap(), null);
+		}
 	}
 
 	private static void _assertTree(

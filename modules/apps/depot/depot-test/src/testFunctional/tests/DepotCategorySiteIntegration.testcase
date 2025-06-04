@@ -5,7 +5,7 @@ definition {
 	property osgi.modules.includes = "wiki";
 	property portal.release = "false";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Depot";
+	property testray.main.component.name = "Asset Libraries";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -375,7 +375,7 @@ definition {
 
 		BlogsNavigator.openToAddEntry(siteURLKey = "site-name");
 
-		AssetCategorization.viewNoVocabularyField(vocabularyName = "Vocabulary Name");
+		AssetCategorization.viewBlogsNoVocabularyField(vocabularyName = "Vocabulary Name");
 
 		DMNavigator.openToAddEntry(
 			groupName = "Site Name",

@@ -56,6 +56,17 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
@@ -63,17 +74,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -104,10 +104,10 @@ public class CommerceCartResource {
 					commerceOrder.getGroupId());
 
 			CommerceContext commerceContext = _commerceContextFactory.create(
-				commerceOrder.getCompanyId(), commerceChannel.getGroupId(),
-				_portal.getUserId(httpServletRequest),
+				commerceOrder.getCommerceAccountId(),
+				commerceChannel.getGroupId(), null,
 				commerceOrder.getCommerceOrderId(),
-				commerceOrder.getCommerceAccountId());
+				commerceOrder.getCompanyId());
 
 			_commerceOrderService.applyCouponCode(
 				commerceOrder.getCommerceOrderId(), couponCode,
@@ -143,10 +143,10 @@ public class CommerceCartResource {
 					commerceOrder.getGroupId());
 
 			CommerceContext commerceContext = _commerceContextFactory.create(
-				commerceOrder.getCompanyId(), commerceChannel.getGroupId(),
-				_portal.getUserId(httpServletRequest),
+				commerceOrder.getCommerceAccountId(),
+				commerceChannel.getGroupId(), null,
 				commerceOrder.getCommerceOrderId(),
-				commerceOrder.getCommerceAccountId());
+				commerceOrder.getCompanyId());
 
 			_commerceOrderService.applyCouponCode(
 				commerceOrder.getCommerceOrderId(), null, commerceContext);
@@ -181,11 +181,10 @@ public class CommerceCartResource {
 
 		try {
 			CommerceContext commerceContext = _commerceContextFactory.create(
-				_portal.getCompanyId(httpServletRequest),
+				commerceAccountId,
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
-				_portal.getUserId(httpServletRequest), orderId,
-				commerceAccountId);
+				null, orderId, _portal.getCompanyId(httpServletRequest));
 
 			httpServletRequest.setAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
@@ -205,10 +204,9 @@ public class CommerceCartResource {
 			}
 
 			commerceContext = _commerceContextFactory.create(
-				_portal.getCompanyId(httpServletRequest),
-				commerceOrder.getGroupId(),
-				_portal.getUserId(httpServletRequest),
-				commerceOrder.getCommerceOrderId(), commerceAccountId);
+				commerceAccountId, commerceOrder.getGroupId(), null,
+				commerceOrder.getCommerceOrderId(),
+				_portal.getCompanyId(httpServletRequest));
 
 			httpServletRequest.setAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
@@ -220,7 +218,8 @@ public class CommerceCartResource {
 				_commerceOrderItemService.addOrUpdateCommerceOrderItem(
 					commerceOrder.getCommerceOrderId(), cpInstanceId, options,
 					_commerceOrderItemQuantityFormatter.parse(
-						quantity, LocaleUtil.fromLanguageId(languageId)),
+						CommerceOrderItem.class.getName(), quantity,
+						LocaleUtil.fromLanguageId(languageId)),
 					0, BigDecimal.ZERO, unitOfMeasureKey, commerceContext,
 					serviceContext);
 
@@ -447,7 +446,7 @@ public class CommerceCartResource {
 
 			ProductSettingsModel productSettingsModel =
 				_productHelper.getProductSettingsModel(
-					commerceOrderItem.getCPDefinitionId());
+					commerceOrderItem.getCPDefinitionId(), commerceContext);
 
 			BigDecimal quantity = commerceOrderItem.getQuantity();
 

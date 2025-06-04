@@ -5,7 +5,7 @@
 
 package com.liferay.journal.web.internal.display.context;
 
-import com.liferay.change.tracking.spi.constants.CTTimelineKeys;
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
@@ -41,15 +41,15 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.engine.TemplateContextHelper;
 
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -190,10 +190,8 @@ public class JournalEditDDMTemplateDisplayContext {
 		_ddmTemplateId = ParamUtil.getLong(
 			_httpServletRequest, "ddmTemplateId");
 
-		_httpServletRequest.setAttribute(
-			CTTimelineKeys.CLASS_NAME, DDMTemplate.class.getName());
-		_httpServletRequest.setAttribute(
-			CTTimelineKeys.CLASS_PK, _ddmTemplateId);
+		CTTimelineUtil.setCTTimelineKeys(
+			_httpServletRequest, DDMTemplate.class, _ddmTemplateId);
 
 		return _ddmTemplateId;
 	}

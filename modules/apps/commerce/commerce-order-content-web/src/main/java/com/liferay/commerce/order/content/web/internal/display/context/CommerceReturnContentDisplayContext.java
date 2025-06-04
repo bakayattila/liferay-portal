@@ -71,6 +71,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.math.BigDecimal;
@@ -84,10 +88,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Gianmarco Brunialti Masera
@@ -160,17 +160,19 @@ public class CommerceReturnContentDisplayContext {
 				accountEntryId, StringPool.APOSTROPHE),
 			true);
 
-		return "/o/commerce-returns?filter=" + encodedFilter;
+		return "/o/commerce/returns?filter=" + encodedFilter;
 	}
 
 	public long getCommerceAccountEntryId() {
 		try {
 			AccountEntry accountEntry = _commerceContext.getAccountEntry();
 
-			return accountEntry.getAccountEntryId();
+			if (accountEntry != null) {
+				return accountEntry.getAccountEntryId();
+			}
 		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
+		catch (Exception exception) {
+			_log.error(exception);
 		}
 
 		return 0;
@@ -178,10 +180,12 @@ public class CommerceReturnContentDisplayContext {
 
 	public long getCommerceChannelId() {
 		try {
-			return _commerceContext.getCommerceChannelId();
+			if (_commerceContext != null) {
+				return _commerceContext.getCommerceChannelId();
+			}
 		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
+		catch (Exception exception) {
+			_log.error(exception);
 		}
 
 		return 0;
@@ -646,7 +650,7 @@ public class CommerceReturnContentDisplayContext {
 				"eq '", commerceReturnId, StringPool.APOSTROPHE),
 			true);
 
-		return "/o/commerce-return-items" +
+		return "/o/commerce/return-items" +
 			"?nestedFields=commerceOrderItemToCommerceReturnItems&filter=" +
 				encodedFilter;
 	}

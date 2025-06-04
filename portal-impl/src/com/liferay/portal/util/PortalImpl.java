@@ -210,6 +210,28 @@ import com.liferay.sites.kernel.util.Sites;
 import com.liferay.social.kernel.model.SocialRelationConstants;
 import com.liferay.util.JS;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.PreferencesValidator;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.StateAwareResponse;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.awt.image.RenderedImage;
 
 import java.io.IOException;
@@ -252,28 +274,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletException;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-import javax.portlet.PreferencesValidator;
-import javax.portlet.RenderRequest;
-import javax.portlet.StateAwareResponse;
-import javax.portlet.WindowState;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.framework.BundleContext;
 
@@ -895,6 +895,17 @@ public class PortalImpl implements Portal {
 			return url;
 		}
 
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		String[] allowedProtocols = RedirectURLSettingsUtil.getAllowedProtocols(
+			companyId);
+
+		if ((allowedProtocols.length != 0) &&
+			!ArrayUtil.contains(allowedProtocols, uri.getScheme(), true)) {
+
+			return null;
+		}
+
 		String domain = uri.getHost();
 
 		if (Validator.isNull(domain)) {
@@ -907,8 +918,6 @@ public class PortalImpl implements Portal {
 		if (!_validPortalDomainCheckDisabled && isValidPortalDomain(domain)) {
 			return url;
 		}
-
-		long companyId = CompanyThreadLocal.getCompanyId();
 
 		String securityMode = RedirectURLSettingsUtil.getSecurityMode(
 			companyId);
@@ -1002,6 +1011,18 @@ public class PortalImpl implements Portal {
 		}
 
 		return url;
+	}
+
+	@Override
+	public String fetchClassName(long classNameId) {
+		ClassName className = ClassNameLocalServiceUtil.fetchClassName(
+			classNameId);
+
+		if (className == null) {
+			return StringPool.BLANK;
+		}
+
+		return className.getValue();
 	}
 
 	@Override
@@ -1278,7 +1299,9 @@ public class PortalImpl implements Portal {
 		String siteDefaultLocaleI18nPath = _buildI18NPath(
 			siteDefaultLocale, layout.getGroup());
 
-		if (currentURL.startsWith(siteDefaultLocaleI18nPath)) {
+		if (currentURL.startsWith(
+				siteDefaultLocaleI18nPath + StringPool.SLASH)) {
+
 			currentURL = currentURL.substring(
 				siteDefaultLocaleI18nPath.length());
 		}
@@ -1321,7 +1344,9 @@ public class PortalImpl implements Portal {
 
 		String canonicalURLSuffix = canonicalURL.substring(pos);
 
-		if (canonicalURLSuffix.startsWith(siteDefaultLocaleI18nPath)) {
+		if (canonicalURLSuffix.startsWith(
+				siteDefaultLocaleI18nPath + StringPool.SLASH)) {
+
 			canonicalURLSuffix = canonicalURLSuffix.substring(
 				siteDefaultLocaleI18nPath.length());
 		}
@@ -1421,7 +1446,7 @@ public class PortalImpl implements Portal {
 			String i18NPath = _buildI18NPath(
 				languageId, locale, themeDisplay.getSiteGroup());
 
-			if (!alternateURLSuffix.startsWith(i18NPath) &&
+			if (!alternateURLSuffix.startsWith(i18NPath + StringPool.SLASH) &&
 				((localePrependFriendlyURLStyle == 2) ||
 				 ((localePrependFriendlyURLStyle != 0) &&
 				  !siteDefaultLocale.equals(locale)))) {
@@ -5170,7 +5195,7 @@ public class PortalImpl implements Portal {
 				long companyId = getCompanyId(httpServletRequest);
 
 				try {
-					userId = JAASHelper.getJaasUserId(companyId, remoteUser);
+					userId = JAASHelper.getJAASUserId(companyId, remoteUser);
 				}
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
@@ -5670,11 +5695,8 @@ public class PortalImpl implements Portal {
 	public boolean isLoginRedirectRequired(
 		HttpServletRequest httpServletRequest) {
 
-		if (SSOUtil.isLoginRedirectRequired(getCompanyId(httpServletRequest))) {
-			return true;
-		}
-
-		return false;
+		return SSOUtil.isLoginRedirectRequired(
+			getCompanyId(httpServletRequest));
 	}
 
 	@Override
@@ -6682,7 +6704,6 @@ public class PortalImpl implements Portal {
 					groupId, privateLayout,
 					new String[] {
 						LayoutConstants.TYPE_CONTENT,
-						LayoutConstants.TYPE_COLLECTION,
 						LayoutConstants.TYPE_FULL_PAGE_APPLICATION,
 						LayoutConstants.TYPE_PANEL,
 						LayoutConstants.TYPE_PORTLET,
@@ -7374,26 +7395,6 @@ public class PortalImpl implements Portal {
 		String languageId = LocaleUtil.toLanguageId(locale);
 
 		return _buildI18NPath(languageId, locale, group);
-	}
-
-	private String _buildI18NPath(String languageId, Locale locale) {
-		if (Validator.isNull(languageId)) {
-			return null;
-		}
-
-		if (LanguageUtil.isDuplicateLanguageCode(locale.getLanguage())) {
-			Locale priorityLocale = LanguageUtil.getLocale(
-				locale.getLanguage());
-
-			if (locale.equals(priorityLocale)) {
-				languageId = locale.getLanguage();
-			}
-		}
-		else {
-			languageId = locale.getLanguage();
-		}
-
-		return StringPool.SLASH.concat(languageId);
 	}
 
 	private String _buildI18NPath(

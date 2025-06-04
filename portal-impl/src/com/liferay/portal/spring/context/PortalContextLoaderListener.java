@@ -55,6 +55,9 @@ import com.liferay.portal.util.PortalClassPathUtil;
 import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+
 import java.beans.PropertyDescriptor;
 
 import java.io.Closeable;
@@ -83,9 +86,6 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
 
 import javax.sql.DataSource;
 
@@ -359,7 +359,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 		ExecutorService executorService =
 			SystemExecutorServiceUtil.getExecutorService();
 
-		Future<?> future = executorService.submit(
+		Future<Future<?>> future1 = executorService.submit(
 			() -> {
 				DBInitUtil.init();
 
@@ -367,7 +367,7 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 				InfrastructureUtil.setDataSource(dataSource);
 
-				executorService.submit(
+				return executorService.submit(
 					() -> {
 						PortalHibernateConfiguration
 							portalHibernateConfiguration =
@@ -388,13 +388,13 @@ public class PortalContextLoaderListener extends ContextLoaderListener {
 
 						return null;
 					});
-
-				return null;
 			});
 
 		ModuleFrameworkUtil.initFramework();
 
-		future.get();
+		Future<?> future2 = future1.get();
+
+		future2.get();
 
 		ClassLoader portalClassLoader = PortalClassLoaderUtil.getClassLoader();
 

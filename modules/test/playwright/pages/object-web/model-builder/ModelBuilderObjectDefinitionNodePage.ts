@@ -1,21 +1,27 @@
 /**
- * SPDX-FileCopyrightText: (c)2024 Liferay, Inc. https://liferay.com
+ * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {expect} from '@playwright/test';
+import {ObjectRelationship} from '@liferay/object-admin-rest-client-js';
+
+import {CreateObjectField} from '../../../helpers/ObjectAdminApiHelper';
+import {AddNewObjectRelationshipModalPage} from '../object-relationship/AddObjectRelationshipModalPage';
 
 import type {Locator, Page} from '@playwright/test';
 
 export class ModelBuilderObjectDefinitionNodePage {
+	readonly addNewObjectRelationshipModalPage: AddNewObjectRelationshipModalPage;
 	readonly addObjectFieldButton: Locator;
 	readonly addObjectFieldOrRelationshipButton: Locator;
 	readonly addObjectRelationshipButton: Locator;
 	readonly deleteObjectDefinitionOption: Locator;
+	readonly editObjectDefinitionExternalReferenceCodeButton: Locator;
+	readonly modalDeleteObjectDefinitionConfirmationButton: Locator;
+	readonly modalDeleteObjectDefinitionTextField: Locator;
+	readonly modalEditObjectDefinitionExternalReferenceCodeInput: Locator;
 	readonly newObjectFieldSaveButton: Locator;
 	readonly newObjectRelationshipSaveButton: Locator;
-	readonly modalDeleteObjectDefinitionTextField: Locator;
-	readonly modalDeleteObjectDefinitionConfirmationButton: Locator;
 	readonly objectFieldBusinessTypeSelect: Locator;
 	readonly objectFieldLabelInput: Locator;
 	readonly objectFieldPicklistSelect: Locator;
@@ -26,6 +32,8 @@ export class ModelBuilderObjectDefinitionNodePage {
 	readonly page: Page;
 
 	constructor(page: Page) {
+		this.addNewObjectRelationshipModalPage =
+			new AddNewObjectRelationshipModalPage(page);
 		this.addObjectFieldButton = page.getByRole('menuitem', {
 			exact: true,
 			name: 'Add Field',
@@ -41,9 +49,14 @@ export class ModelBuilderObjectDefinitionNodePage {
 		this.deleteObjectDefinitionOption = page.getByRole('menuitem', {
 			name: 'Delete Object',
 		});
+		this.editObjectDefinitionExternalReferenceCodeButton = page
+			.getByText('Edit ERC')
+			.last();
 		this.modalDeleteObjectDefinitionConfirmationButton = page
 			.getByRole('dialog')
 			.getByRole('button', {exact: true, name: 'Delete'});
+		this.modalEditObjectDefinitionExternalReferenceCodeInput =
+			page.getByLabel('External Reference Code' + 'Mandatory');
 		this.modalDeleteObjectDefinitionTextField = page.getByPlaceholder(
 			'Confirm Object Definition Name'
 		);
@@ -155,49 +168,27 @@ export class ModelBuilderObjectDefinitionNodePage {
 		objectDefinitionNodes,
 		objectRelationshipLabel,
 		objectRelationshipType,
-	}: CreateObjectRelationship): Promise<ObjectRelationship> {
+	}: {
+		manyRecordsOf: string;
+		objectDefinitionLabel: string;
+		objectDefinitionNodes: unknown;
+		objectRelationshipLabel: string;
+		objectRelationshipType: ObjectRelationshipType;
+	}): Promise<ObjectRelationship> {
 		await this.openAddNewObjectFieldOrRelationshipModal(
 			objectDefinitionLabel,
 			objectDefinitionNodes,
 			this.addObjectRelationshipButton
 		);
 
-		const objectRelationship = await this.handleObjectRelationshipModal({
-			manyRecordsOf,
-			objectRelationshipLabel,
-			type: objectRelationshipType,
-		});
+		const objectRelationship =
+			await this.addNewObjectRelationshipModalPage.handleForm({
+				manyRecordsOf,
+				objectRelationshipLabel,
+				type: objectRelationshipType,
+			});
 
 		return objectRelationship;
-	}
-
-	async handleObjectRelationshipModal({
-		manyRecordsOf,
-		objectRelationshipLabel,
-		type,
-	}: {
-		manyRecordsOf?: string;
-		objectRelationshipLabel: string;
-		type: string;
-	}): Promise<ObjectRelationship> {
-		await expect(this.objectRelationshipTitle).toBeVisible();
-
-		await this.objectRelationshipLabelInput.fill(objectRelationshipLabel);
-		await this.objectRelationshipTypeButton.click();
-		await this.page.getByRole('option', {name: type}).click();
-
-		if (manyRecordsOf) {
-			await this.objectRelationshipManyRecordsOf.click();
-			await this.page.getByRole('option', {name: manyRecordsOf}).click();
-		}
-
-		const responsePromise = this.page.waitForResponse(
-			'**/object-relationships'
-		);
-		await this.newObjectRelationshipSaveButton.click();
-		const response = await responsePromise;
-
-		return response.json();
 	}
 
 	async deleteObjectDefinition(objectDefinitionName: string) {
@@ -242,7 +233,10 @@ export class ModelBuilderObjectDefinitionNodePage {
 	) {
 		await this.objectFieldBusinessTypeSelect.click();
 		await this.page
-			.getByRole('option', {exact: true, name: objectFieldBusinessType})
+			.getByRole('option', {
+				exact: true,
+				name: String(objectFieldBusinessType),
+			})
 			.click();
 	}
 }

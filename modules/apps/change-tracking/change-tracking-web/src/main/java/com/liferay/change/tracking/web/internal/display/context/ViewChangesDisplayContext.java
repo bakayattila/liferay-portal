@@ -35,6 +35,7 @@ import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.frontend.data.set.model.FDSSortItemBuilder;
 import com.liferay.frontend.data.set.model.FDSSortItemList;
 import com.liferay.frontend.data.set.model.FDSSortItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.knowledge.base.model.KBArticleModel;
@@ -49,6 +50,7 @@ import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -104,10 +106,19 @@ import com.liferay.portal.search.sort.SortOrder;
 import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.util.PropsValues;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Serializable;
 
 import java.text.Format;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -121,14 +132,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Samuel Trong Tran
@@ -225,6 +228,51 @@ public class ViewChangesDisplayContext {
 		}
 
 		return portletURL.toString();
+	}
+
+	public List<DropdownItem> getBulkActionDropdownItems() {
+		List<DropdownItem> bulkActionDropdownItems = new ArrayList<>();
+
+		if (FeatureFlagManagerUtil.isEnabled("LPD-20183")) {
+			if ((_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) ||
+				(_ctCollection.getStatus() ==
+					WorkflowConstants.STATUS_EXPIRED)) {
+
+				bulkActionDropdownItems.add(
+					new FDSActionDropdownItem(
+						PortletURLBuilder.createRenderURL(
+							_renderResponse
+						).setMVCRenderCommandName(
+							"/change_tracking/view_move_changes"
+						).setRedirect(
+							_themeDisplay.getURLCurrent()
+						).setParameter(
+							"ctCollectionId", _ctCollection.getCtCollectionId()
+						).buildString(),
+						"move-folder", "move-changes",
+						_language.get(_httpServletRequest, "move-changes"),
+						"post", "move-changes", null));
+			}
+
+			if (_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) {
+				bulkActionDropdownItems.add(
+					new FDSActionDropdownItem(
+						PortletURLBuilder.createRenderURL(
+							_renderResponse
+						).setMVCRenderCommandName(
+							"/change_tracking/view_discard"
+						).setRedirect(
+							_themeDisplay.getURLCurrent()
+						).setParameter(
+							"ctCollectionId", _ctCollection.getCtCollectionId()
+						).buildString(),
+						"trash", "view-discard",
+						_language.get(_httpServletRequest, "discard-changes"),
+						"delete", "view-discard", null));
+			}
+		}
+
+		return bulkActionDropdownItems;
 	}
 
 	public long getCtCollectionId() {
@@ -403,6 +451,9 @@ public class ViewChangesDisplayContext {
 
 		return HashMapBuilder.<String, Object>put(
 			"itemsOverview", itemsOverviewJSONArray
+		).put(
+			"publicationSizeClassification",
+			_ctCollection.getScoreSizeClassification()
 		).build();
 	}
 
@@ -582,8 +633,11 @@ public class ViewChangesDisplayContext {
 		).put(
 			"discardURL",
 			() -> {
-				if (_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_DRAFT) {
+				if ((_ctCollection.getStatus() !=
+						WorkflowConstants.STATUS_DRAFT) ||
+					!CTCollectionPermission.contains(
+						_themeDisplay.getPermissionChecker(), _ctCollection,
+						ActionKeys.DELETE)) {
 
 					return null;
 				}
@@ -627,8 +681,11 @@ public class ViewChangesDisplayContext {
 		).put(
 			"moveChangesURL",
 			() -> {
-				if (_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_DRAFT) {
+				if ((_ctCollection.getStatus() !=
+						WorkflowConstants.STATUS_DRAFT) ||
+					!CTCollectionPermission.contains(
+						_themeDisplay.getPermissionChecker(), _ctCollection,
+						ActionKeys.UPDATE)) {
 
 					return null;
 				}
@@ -1294,6 +1351,27 @@ public class ViewChangesDisplayContext {
 				));
 		}
 
+		if ((_ctCollection.getStatus() == WorkflowConstants.STATUS_EXPIRED) &&
+			CTCollectionPermission.contains(
+				_themeDisplay.getPermissionChecker(), _ctCollection,
+				CTActionKeys.PUBLISH)) {
+
+			jsonArray.put(
+				JSONUtil.put(
+					"href",
+					PublicationsPortletURLUtil.getHref(
+						_renderResponse.createActionURL(),
+						ActionRequest.ACTION_NAME,
+						"/change_tracking/reactivate_ct_collection", "redirect",
+						_themeDisplay.getURLCurrent(), "ctCollectionId",
+						String.valueOf(_ctCollection.getCtCollectionId()))
+				).put(
+					"label", _language.get(_httpServletRequest, "reactivate")
+				).put(
+					"symbolLeft", "reset"
+				));
+		}
+
 		if (CTCollectionPermission.contains(
 				permissionChecker, _ctCollection, ActionKeys.DELETE)) {
 
@@ -1582,10 +1660,6 @@ public class ViewChangesDisplayContext {
 				).put(
 					"modelKey", modelInfo._modelKey
 				).put(
-					"movable",
-					_ctDisplayRendererRegistry.isMovable(
-						model, modelClassNameId)
-				).put(
 					"title",
 					_getTitle(
 						CTConstants.CT_COLLECTION_ID_PRODUCTION,
@@ -1687,10 +1761,6 @@ public class ViewChangesDisplayContext {
 					"modelKey", modelInfo._modelKey
 				).put(
 					"modifiedTime", modifiedDate.getTime()
-				).put(
-					"movable",
-					_ctDisplayRendererRegistry.isMovable(
-						model, modelClassNameId)
 				).put(
 					"timeDescription",
 					_language.getTimeDescription(

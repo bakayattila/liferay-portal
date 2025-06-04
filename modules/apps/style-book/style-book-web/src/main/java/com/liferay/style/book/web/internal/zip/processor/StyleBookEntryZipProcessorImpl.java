@@ -8,14 +8,17 @@ package com.liferay.style.book.web.internal.zip.processor;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -26,11 +29,14 @@ import com.liferay.portal.kernel.zip.ZipWriter;
 import com.liferay.portal.kernel.zip.ZipWriterFactory;
 import com.liferay.style.book.constants.StyleBookPortletKeys;
 import com.liferay.style.book.exception.DuplicateStyleBookEntryKeyException;
+import com.liferay.style.book.exception.StyleBookEntryThemeIdException;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 import com.liferay.style.book.service.StyleBookEntryService;
 import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessor;
 import com.liferay.style.book.zip.processor.StyleBookEntryZipProcessorImportResultEntry;
+
+import jakarta.portlet.PortletException;
 
 import java.io.File;
 import java.io.InputStream;
@@ -41,8 +47,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import javax.portlet.PortletException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -108,6 +112,15 @@ public class StyleBookEntryZipProcessorImpl
 			long groupId, String frontendTokensValues, String name,
 			boolean overwrite, String styleBookEntryKey, String themeId)
 		throws Exception {
+
+		Group group = _groupLocalService.getGroup(groupId);
+
+		if (FeatureFlagManagerUtil.isEnabled(
+				group.getCompanyId(), "LPD-30204") &&
+			Validator.isBlank(themeId)) {
+
+			throw new StyleBookEntryThemeIdException.MustNotBeNull();
+		}
 
 		StyleBookEntry styleBookEntry =
 			_styleBookEntryEntryLocalService.fetchStyleBookEntry(
@@ -356,15 +369,14 @@ public class StyleBookEntryZipProcessorImpl
 	}
 
 	private boolean _isStyleBookEntry(String fileName) {
-		if (Objects.equals(_getFileName(fileName), "style-book.json")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(_getFileName(fileName), "style-book.json");
 	}
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 	private List<StyleBookEntryZipProcessorImportResultEntry>
 		_importResultEntries;

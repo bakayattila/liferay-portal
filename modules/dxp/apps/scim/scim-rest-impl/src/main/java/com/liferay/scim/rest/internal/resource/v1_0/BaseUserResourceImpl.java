@@ -8,7 +8,6 @@ package com.liferay.scim.rest.internal.resource.v1_0;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -19,108 +18,33 @@ import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
+import com.liferay.scim.rest.dto.v1_0.Filter;
+import com.liferay.scim.rest.dto.v1_0.Operation;
+import com.liferay.scim.rest.dto.v1_0.PatchOp;
 import com.liferay.scim.rest.dto.v1_0.QueryAttributes;
 import com.liferay.scim.rest.dto.v1_0.User;
 import com.liferay.scim.rest.resource.v1_0.UserResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Olivér Kecskeméty
  * @generated
  */
 @Generated("")
-@javax.ws.rs.Path("/v1.0")
+@jakarta.ws.rs.Path("/v1.0")
 public abstract class BaseUserResourceImpl implements UserResource {
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'GET' 'http://localhost:8080/o/scim/v1.0/v2/Users'  -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(description = "Lists users.")
-	@io.swagger.v3.oas.annotations.Parameters(
-		value = {
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "count"
-			),
-			@io.swagger.v3.oas.annotations.Parameter(
-				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
-				name = "startIndex"
-			)
-		}
-	)
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
-	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/v2/Users")
-	@javax.ws.rs.Produces("application/scim+json")
-	@Override
-	public Object getV2Users(
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("count")
-			Integer count,
-			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.ws.rs.QueryParam("startIndex")
-			Integer startIndex)
-		throws Exception {
-
-		return null;
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/scim/v1.0/v2/Users' -d $'{"active": ___, "addresses": ___, "displayName": ___, "emails": ___, "entitlements": ___, "externalId": ___, "groups": ___, "ims": ___, "locale": ___, "meta": ___, "name": ___, "nickName": ___, "password": ___, "phoneNumbers": ___, "photos": ___, "preferredLanguage": ___, "profileUrl": ___, "roles": ___, "schemas": ___, "timezone": ___, "title": ___, "urn:ietf:params:scim:schemas:extension:liferay:2.0:User": ___, "userName": ___, "userType": ___, "x509Certificates": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(description = "Creates a user.")
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
-	)
-	@javax.ws.rs.Consumes("application/scim+json")
-	@javax.ws.rs.Path("/v2/Users")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/scim+json")
-	@Override
-	public Response postV2User(User user) throws Exception {
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
-	}
-
-	/**
-	 * Invoke this method with the command line:
-	 *
-	 * curl -X 'POST' 'http://localhost:8080/o/scim/v1.0/v2/Users/.search' -d $'{"attributes": ___, "count": ___, "excludedAttributes": ___, "filter": ___, "sortBy": ___, "sortOrder": ___, "startIndex": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
-	 */
-	@io.swagger.v3.oas.annotations.Operation(description = "Query users.")
-	@io.swagger.v3.oas.annotations.tags.Tags(
-		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
-	)
-	@javax.ws.rs.Consumes("application/scim+json")
-	@javax.ws.rs.Path("/v2/Users/.search")
-	@javax.ws.rs.POST
-	@javax.ws.rs.Produces("application/scim+json")
-	@Override
-	public Response postV2UserSearch(QueryAttributes queryAttributes)
-		throws Exception {
-
-		Response.ResponseBuilder responseBuilder = Response.ok();
-
-		return responseBuilder.build();
-	}
 
 	/**
 	 * Invoke this method with the command line:
@@ -139,12 +63,13 @@ public abstract class BaseUserResourceImpl implements UserResource {
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
 	)
-	@javax.ws.rs.DELETE
-	@javax.ws.rs.Path("/v2/Users/{id}")
+	@jakarta.ws.rs.DELETE
+	@jakarta.ws.rs.Path("/v2/Users/{id}")
 	@Override
 	public Response deleteV2User(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("id")
 			String id)
 		throws Exception {
 
@@ -170,17 +95,138 @@ public abstract class BaseUserResourceImpl implements UserResource {
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/v2/Users/{id}")
-	@javax.ws.rs.Produces("application/scim+json")
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/v2/Users/{id}")
+	@jakarta.ws.rs.Produces("application/scim+json")
 	@Override
 	public Object getV2UserById(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("id")
 			String id)
 		throws Exception {
 
 		return null;
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/scim/v1.0/v2/Users'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(description = "Lists users.")
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "count"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "filter"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "startIndex"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
+	)
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/v2/Users")
+	@jakarta.ws.rs.Produces("application/scim+json")
+	@Override
+	public Object getV2Users(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("count")
+			Integer count,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.ws.rs.QueryParam("startIndex")
+			Integer startIndex,
+			@jakarta.ws.rs.core.Context
+				com.liferay.portal.kernel.search.filter.Filter filter)
+		throws Exception {
+
+		return null;
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PATCH' 'http://localhost:8080/o/scim/v1.0/v2/Users/{id}' -d $'{"Operations": ___, "schemas": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(description = "Updates a user.")
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "id"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
+	)
+	@jakarta.ws.rs.Consumes("application/scim+json")
+	@jakarta.ws.rs.PATCH
+	@jakarta.ws.rs.Path("/v2/Users/{id}")
+	@jakarta.ws.rs.Produces("application/scim+json")
+	@Override
+	public Response patchV2User(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("id")
+			String id,
+			PatchOp patchOp)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/scim/v1.0/v2/Users' -d $'{"active": ___, "addresses": ___, "displayName": ___, "emails": ___, "entitlements": ___, "externalId": ___, "groups": ___, "ims": ___, "locale": ___, "meta": ___, "name": ___, "nickName": ___, "password": ___, "phoneNumbers": ___, "photos": ___, "preferredLanguage": ___, "profileUrl": ___, "roles": ___, "schemas": ___, "timezone": ___, "title": ___, "urn:ietf:params:scim:schemas:extension:liferay:2.0:User": ___, "userName": ___, "userType": ___, "x509Certificates": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(description = "Creates a user.")
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
+	)
+	@jakarta.ws.rs.Consumes("application/scim+json")
+	@jakarta.ws.rs.Path("/v2/Users")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/scim+json")
+	@Override
+	public Response postV2User(User user) throws Exception {
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'POST' 'http://localhost:8080/o/scim/v1.0/v2/Users/.search' -d $'{"attributes": ___, "count": ___, "excludedAttributes": ___, "filter": ___, "sortBy": ___, "sortOrder": ___, "startIndex": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(description = "Query users.")
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
+	)
+	@jakarta.ws.rs.Consumes("application/scim+json")
+	@jakarta.ws.rs.Path("/v2/Users/.search")
+	@jakarta.ws.rs.POST
+	@jakarta.ws.rs.Produces("application/scim+json")
+	@Override
+	public Response postV2UserSearch(QueryAttributes queryAttributes)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
 	}
 
 	/**
@@ -200,14 +246,15 @@ public abstract class BaseUserResourceImpl implements UserResource {
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "User")}
 	)
-	@javax.ws.rs.Consumes("application/scim+json")
-	@javax.ws.rs.Path("/v2/Users/{id}")
-	@javax.ws.rs.Produces("application/scim+json")
-	@javax.ws.rs.PUT
+	@jakarta.ws.rs.Consumes("application/scim+json")
+	@jakarta.ws.rs.Path("/v2/Users/{id}")
+	@jakarta.ws.rs.Produces("application/scim+json")
+	@jakarta.ws.rs.PUT
 	@Override
 	public Response putV2User(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull @javax.ws.rs.PathParam("id")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("id")
 			String id,
 			User user)
 		throws Exception {
@@ -240,7 +287,8 @@ public abstract class BaseUserResourceImpl implements UserResource {
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -250,7 +298,8 @@ public abstract class BaseUserResourceImpl implements UserResource {
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -283,6 +332,10 @@ public abstract class BaseUserResourceImpl implements UserResource {
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider) {
 		this.sortParserProvider = sortParserProvider;
+	}
+
+	protected String getApplicationPath() {
+		return "scim";
 	}
 
 	protected Map<String, String> addAction(
@@ -400,7 +453,8 @@ public abstract class BaseUserResourceImpl implements UserResource {
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

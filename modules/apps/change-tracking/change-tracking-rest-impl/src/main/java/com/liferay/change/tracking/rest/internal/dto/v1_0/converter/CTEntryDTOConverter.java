@@ -23,10 +23,10 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Date;
 import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -162,12 +162,11 @@ public class CTEntryDTOConverter
 				setOwnerName(ctEntry::getUserName);
 				setSiteId(
 					() -> {
-						if (document.hasField(Field.GROUP_ID)) {
-							return GetterUtil.getLong(
-								document.get(Field.GROUP_ID));
+						if (!document.hasField(Field.GROUP_ID)) {
+							return null;
 						}
 
-						return null;
+						return GetterUtil.getLong(document.get(Field.GROUP_ID));
 					});
 				setSiteName(
 					() -> {

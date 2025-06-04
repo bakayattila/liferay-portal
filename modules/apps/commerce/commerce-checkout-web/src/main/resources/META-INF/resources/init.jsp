@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -16,12 +16,14 @@ taglib uri="http://liferay.com/tld/commerce-ui" prefix="commerce-ui" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/frontend-data-set" prefix="frontend-data-set" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.account.constants.AccountActionKeys" %><%@
 page import="com.liferay.account.model.AccountEntry" %><%@
 page import="com.liferay.commerce.checkout.web.internal.constants.CommerceCheckoutFDSNames" %><%@
+page import="com.liferay.commerce.checkout.web.internal.constants.CommerceCheckoutScreenNavigationConstants" %><%@
 page import="com.liferay.commerce.checkout.web.internal.display.context.BaseAddressCheckoutStepDisplayContext" %><%@
 page import="com.liferay.commerce.checkout.web.internal.display.context.CheckoutDisplayContext" %><%@
 page import="com.liferay.commerce.checkout.web.internal.display.context.DeliveryGroupDisplayContext" %><%@
@@ -31,6 +33,7 @@ page import="com.liferay.commerce.checkout.web.internal.display.context.PaymentM
 page import="com.liferay.commerce.checkout.web.internal.display.context.PaymentProcessCheckoutStepDisplayContext" %><%@
 page import="com.liferay.commerce.checkout.web.internal.display.context.ShippingMethodCheckoutStepDisplayContext" %><%@
 page import="com.liferay.commerce.checkout.web.internal.display.context.TermCommerceCheckoutStepDisplayContext" %><%@
+page import="com.liferay.commerce.constants.CommerceAddressConstants" %><%@
 page import="com.liferay.commerce.constants.CommerceCheckoutWebKeys" %><%@
 page import="com.liferay.commerce.constants.CommerceOrderPaymentConstants" %><%@
 page import="com.liferay.commerce.constants.CommerceWebKeys" %><%@
@@ -67,6 +70,7 @@ page import="com.liferay.commerce.term.model.CommerceTermEntry" %><%@
 page import="com.liferay.commerce.util.CommerceCheckoutStep" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
+page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Country" %><%@
 page import="com.liferay.portal.kernel.model.Region" %><%@

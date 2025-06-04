@@ -26,13 +26,13 @@ import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletPreferences;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -106,33 +106,21 @@ public class CPPublisherWebHelper {
 		String selectionStyle = GetterUtil.getString(
 			portletPreferences.getValue("selectionStyle", null), "dynamic");
 
-		if (Objects.equals(selectionStyle, "dataSource")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(selectionStyle, "dataSource");
 	}
 
 	public boolean isDynamicSelection(PortletPreferences portletPreferences) {
 		String selectionStyle = GetterUtil.getString(
 			portletPreferences.getValue("selectionStyle", null), "dynamic");
 
-		if (Objects.equals(selectionStyle, "dynamic")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(selectionStyle, "dynamic");
 	}
 
 	public boolean isManualSelection(PortletPreferences portletPreferences) {
 		String selectionStyle = GetterUtil.getString(
 			portletPreferences.getValue("selectionStyle", null), "dynamic");
 
-		if (Objects.equals(selectionStyle, "manual")) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(selectionStyle, "manual");
 	}
 
 	public void removeAndStoreSelection(

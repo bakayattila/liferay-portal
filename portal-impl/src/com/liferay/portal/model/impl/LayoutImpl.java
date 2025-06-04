@@ -78,6 +78,15 @@ import com.liferay.portal.util.LayoutTypeControllerTracker;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.sites.kernel.util.Sites;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -91,15 +100,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletRequest;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import java.util.TreeSet;
 
 /**
  * Represents a portal layout, providing access to the layout's URLs, parent
@@ -119,11 +120,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 	public static boolean hasFriendlyURLKeyword(String friendlyURL) {
 		String keyword = _getFriendlyURLKeyword(friendlyURL);
 
-		if (Validator.isNotNull(keyword)) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(keyword);
 	}
 
 	public static int validateFriendlyURL(String friendlyURL) {
@@ -198,8 +195,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public Layout fetchDraftLayout() {
-		return LayoutLocalServiceUtil.fetchLayout(
-			PortalUtil.getClassNameId(Layout.class), getPlid());
+		return LayoutLocalServiceUtil.fetchDraftLayout(getPlid());
 	}
 
 	/**
@@ -303,6 +299,28 @@ public class LayoutImpl extends LayoutBaseImpl {
 		}
 
 		return layouts;
+	}
+
+	@Override
+	public String[] getAvailableLanguageIds() {
+		Set<String> availableLanguageIds = new TreeSet<>();
+
+		Collections.addAll(
+			availableLanguageIds, super.getAvailableLanguageIds());
+
+		for (LayoutFriendlyURL layoutFriendlyURL :
+				LayoutFriendlyURLLocalServiceUtil.getLayoutFriendlyURLs(
+					getPlid())) {
+
+			if (LanguageUtil.isAvailableLocale(
+					layoutFriendlyURL.getGroupId(),
+					layoutFriendlyURL.getLanguageId())) {
+
+				availableLanguageIds.add(layoutFriendlyURL.getLanguageId());
+			}
+		}
+
+		return availableLanguageIds.toArray(new String[0]);
 	}
 
 	@Override
@@ -710,10 +728,6 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public String getIcon() {
-		if (isTypeCollection()) {
-			return "list";
-		}
-
 		if (isTypeContent()) {
 			return "page";
 		}
@@ -1066,11 +1080,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 			typeSettingsUnicodeProperties.getProperty(
 				LayoutTypePortletConstants.DEFAULT_ASSET_PUBLISHER_PORTLET_ID);
 
-		if (Validator.isNotNull(defaultAssetPublisherPortletId)) {
-			return true;
-		}
-
-		return false;
+		return Validator.isNotNull(defaultAssetPublisherPortletId);
 	}
 
 	@Override
@@ -1088,11 +1098,7 @@ public class LayoutImpl extends LayoutBaseImpl {
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)getLayoutType();
 
-		if (layoutTypePortlet.isCustomizable()) {
-			return true;
-		}
-
-		return false;
+		return layoutTypePortlet.isCustomizable();
 	}
 
 	@Override
@@ -1433,18 +1439,8 @@ public class LayoutImpl extends LayoutBaseImpl {
 	}
 
 	@Override
-	public boolean isTypeCollection() {
-		if (Objects.equals(getType(), LayoutConstants.TYPE_COLLECTION)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
 	public boolean isTypeContent() {
-		if (Objects.equals(getType(), LayoutConstants.TYPE_COLLECTION) ||
-			Objects.equals(getType(), LayoutConstants.TYPE_CONTENT) ||
+		if (Objects.equals(getType(), LayoutConstants.TYPE_CONTENT) ||
 			Objects.equals(getType(), LayoutConstants.TYPE_UTILITY) ||
 			Objects.equals(
 				_getLayoutTypeControllerType(), LayoutConstants.TYPE_CONTENT)) {
@@ -1520,20 +1516,12 @@ public class LayoutImpl extends LayoutBaseImpl {
 
 	@Override
 	public boolean isTypeURL() {
-		if (Objects.equals(getType(), LayoutConstants.TYPE_URL)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getType(), LayoutConstants.TYPE_URL);
 	}
 
 	@Override
 	public boolean isTypeUtility() {
-		if (Objects.equals(getType(), LayoutConstants.TYPE_UTILITY)) {
-			return true;
-		}
-
-		return false;
+		return Objects.equals(getType(), LayoutConstants.TYPE_UTILITY);
 	}
 
 	@Override

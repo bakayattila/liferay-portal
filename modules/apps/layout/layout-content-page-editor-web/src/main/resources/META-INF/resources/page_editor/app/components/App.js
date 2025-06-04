@@ -42,9 +42,9 @@ import MultiSelectManager from './MultiSelectManager';
 import ShortcutManager from './ShortcutManager';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
+import ExperienceCustomizerModal from './cms/ExperienceCustomizerModal';
 import KeyboardMovementManager from './keyboard_movement/KeyboardMovementManager';
 import KeyboardMovementPreview from './keyboard_movement/KeyboardMovementPreview';
-import KeyboardMovementText from './keyboard_movement/KeyboardMovementText';
 
 export default function App({state}) {
 	const initialState = reducer(state, {type: INIT});
@@ -53,6 +53,8 @@ export default function App({state}) {
 		<ClayIconSpriteContext.Provider value={getControlPanelSpritemap()}>
 			<StoreContextProvider initialState={initialState} reducer={reducer}>
 				<ConvertToPageTemplateModal />
+
+				<ExperienceCustomizerModal />
 
 				<ControlsProvider>
 					<CollectionActiveItemContextProvider>
@@ -77,8 +79,6 @@ export default function App({state}) {
 														<KeyboardManager />
 
 														<KeyboardMovementPreview />
-
-														<KeyboardMovementText />
 
 														<PortletContentContextProvider>
 															<LocalConfigContextProvider>
@@ -126,7 +126,7 @@ function KeyboardManager() {
 	) : (
 		<>
 			<ShortcutManager />
-			{Liferay.FeatureFlags['LPD-18221'] ? <MultiSelectManager /> : null}
+			<MultiSelectManager />
 		</>
 	);
 }

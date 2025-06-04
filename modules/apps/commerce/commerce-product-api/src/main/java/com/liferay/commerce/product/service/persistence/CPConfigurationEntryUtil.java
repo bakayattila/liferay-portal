@@ -285,6 +285,73 @@ public class CPConfigurationEntryUtil {
 	}
 
 	/**
+	 * Returns the cp configuration entry where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchCPConfigurationEntryException</code> if it could not be found.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching cp configuration entry
+	 * @throws NoSuchCPConfigurationEntryException if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry findByUUID_G(String uuid, long groupId)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().findByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the cp configuration entry where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching cp configuration entry, or <code>null</code> if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry fetchByUUID_G(
+		String uuid, long groupId) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the cp configuration entry where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching cp configuration entry, or <code>null</code> if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry fetchByUUID_G(
+		String uuid, long groupId, boolean useFinderCache) {
+
+		return getPersistence().fetchByUUID_G(uuid, groupId, useFinderCache);
+	}
+
+	/**
+	 * Removes the cp configuration entry where uuid = &#63; and groupId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the cp configuration entry that was removed
+	 */
+	public static CPConfigurationEntry removeByUUID_G(String uuid, long groupId)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().removeByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the number of cp configuration entries where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the number of matching cp configuration entries
+	 */
+	public static int countByUUID_G(String uuid, long groupId) {
+		return getPersistence().countByUUID_G(uuid, groupId);
+	}
+
+	/**
 	 * Returns all the cp configuration entries where uuid = &#63; and companyId = &#63;.
 	 *
 	 * @param uuid the uuid
@@ -832,6 +899,486 @@ public class CPConfigurationEntryUtil {
 	public static int countByCPConfigurationListId(long CPConfigurationListId) {
 		return getPersistence().countByCPConfigurationListId(
 			CPConfigurationListId);
+	}
+
+	/**
+	 * Returns all the cp configuration entries where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the matching cp configuration entries
+	 */
+	public static List<CPConfigurationEntry> findByC_C(
+		long classNameId, long classPK) {
+
+		return getPersistence().findByC_C(classNameId, classPK);
+	}
+
+	/**
+	 * Returns a range of all the cp configuration entries where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPConfigurationEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param start the lower bound of the range of cp configuration entries
+	 * @param end the upper bound of the range of cp configuration entries (not inclusive)
+	 * @return the range of matching cp configuration entries
+	 */
+	public static List<CPConfigurationEntry> findByC_C(
+		long classNameId, long classPK, int start, int end) {
+
+		return getPersistence().findByC_C(classNameId, classPK, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp configuration entries where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPConfigurationEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param start the lower bound of the range of cp configuration entries
+	 * @param end the upper bound of the range of cp configuration entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp configuration entries
+	 */
+	public static List<CPConfigurationEntry> findByC_C(
+		long classNameId, long classPK, int start, int end,
+		OrderByComparator<CPConfigurationEntry> orderByComparator) {
+
+		return getPersistence().findByC_C(
+			classNameId, classPK, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp configuration entries where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPConfigurationEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param start the lower bound of the range of cp configuration entries
+	 * @param end the upper bound of the range of cp configuration entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching cp configuration entries
+	 */
+	public static List<CPConfigurationEntry> findByC_C(
+		long classNameId, long classPK, int start, int end,
+		OrderByComparator<CPConfigurationEntry> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByC_C(
+			classNameId, classPK, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp configuration entry
+	 * @throws NoSuchCPConfigurationEntryException if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry findByC_C_First(
+			long classNameId, long classPK,
+			OrderByComparator<CPConfigurationEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().findByC_C_First(
+			classNameId, classPK, orderByComparator);
+	}
+
+	/**
+	 * Returns the first cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp configuration entry, or <code>null</code> if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry fetchByC_C_First(
+		long classNameId, long classPK,
+		OrderByComparator<CPConfigurationEntry> orderByComparator) {
+
+		return getPersistence().fetchByC_C_First(
+			classNameId, classPK, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp configuration entry
+	 * @throws NoSuchCPConfigurationEntryException if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry findByC_C_Last(
+			long classNameId, long classPK,
+			OrderByComparator<CPConfigurationEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().findByC_C_Last(
+			classNameId, classPK, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp configuration entry, or <code>null</code> if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry fetchByC_C_Last(
+		long classNameId, long classPK,
+		OrderByComparator<CPConfigurationEntry> orderByComparator) {
+
+		return getPersistence().fetchByC_C_Last(
+			classNameId, classPK, orderByComparator);
+	}
+
+	/**
+	 * Returns the cp configuration entries before and after the current cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param CPConfigurationEntryId the primary key of the current cp configuration entry
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next cp configuration entry
+	 * @throws NoSuchCPConfigurationEntryException if a cp configuration entry with the primary key could not be found
+	 */
+	public static CPConfigurationEntry[] findByC_C_PrevAndNext(
+			long CPConfigurationEntryId, long classNameId, long classPK,
+			OrderByComparator<CPConfigurationEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().findByC_C_PrevAndNext(
+			CPConfigurationEntryId, classNameId, classPK, orderByComparator);
+	}
+
+	/**
+	 * Removes all the cp configuration entries where classNameId = &#63; and classPK = &#63; from the database.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 */
+	public static void removeByC_C(long classNameId, long classPK) {
+		getPersistence().removeByC_C(classNameId, classPK);
+	}
+
+	/**
+	 * Returns the number of cp configuration entries where classNameId = &#63; and classPK = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @return the number of matching cp configuration entries
+	 */
+	public static int countByC_C(long classNameId, long classPK) {
+		return getPersistence().countByC_C(classNameId, classPK);
+	}
+
+	/**
+	 * Returns the cp configuration entry where classNameId = &#63; and classPK = &#63; and CPConfigurationListId = &#63; or throws a <code>NoSuchCPConfigurationEntryException</code> if it could not be found.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param CPConfigurationListId the cp configuration list ID
+	 * @return the matching cp configuration entry
+	 * @throws NoSuchCPConfigurationEntryException if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry findByC_C_C(
+			long classNameId, long classPK, long CPConfigurationListId)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().findByC_C_C(
+			classNameId, classPK, CPConfigurationListId);
+	}
+
+	/**
+	 * Returns the cp configuration entry where classNameId = &#63; and classPK = &#63; and CPConfigurationListId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param CPConfigurationListId the cp configuration list ID
+	 * @return the matching cp configuration entry, or <code>null</code> if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry fetchByC_C_C(
+		long classNameId, long classPK, long CPConfigurationListId) {
+
+		return getPersistence().fetchByC_C_C(
+			classNameId, classPK, CPConfigurationListId);
+	}
+
+	/**
+	 * Returns the cp configuration entry where classNameId = &#63; and classPK = &#63; and CPConfigurationListId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param CPConfigurationListId the cp configuration list ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching cp configuration entry, or <code>null</code> if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry fetchByC_C_C(
+		long classNameId, long classPK, long CPConfigurationListId,
+		boolean useFinderCache) {
+
+		return getPersistence().fetchByC_C_C(
+			classNameId, classPK, CPConfigurationListId, useFinderCache);
+	}
+
+	/**
+	 * Removes the cp configuration entry where classNameId = &#63; and classPK = &#63; and CPConfigurationListId = &#63; from the database.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param CPConfigurationListId the cp configuration list ID
+	 * @return the cp configuration entry that was removed
+	 */
+	public static CPConfigurationEntry removeByC_C_C(
+			long classNameId, long classPK, long CPConfigurationListId)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().removeByC_C_C(
+			classNameId, classPK, CPConfigurationListId);
+	}
+
+	/**
+	 * Returns the number of cp configuration entries where classNameId = &#63; and classPK = &#63; and CPConfigurationListId = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param CPConfigurationListId the cp configuration list ID
+	 * @return the number of matching cp configuration entries
+	 */
+	public static int countByC_C_C(
+		long classNameId, long classPK, long CPConfigurationListId) {
+
+		return getPersistence().countByC_C_C(
+			classNameId, classPK, CPConfigurationListId);
+	}
+
+	/**
+	 * Returns all the cp configuration entries where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @return the matching cp configuration entries
+	 */
+	public static List<CPConfigurationEntry> findByC_C_V(
+		long classNameId, long classPK, boolean visible) {
+
+		return getPersistence().findByC_C_V(classNameId, classPK, visible);
+	}
+
+	/**
+	 * Returns a range of all the cp configuration entries where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPConfigurationEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @param start the lower bound of the range of cp configuration entries
+	 * @param end the upper bound of the range of cp configuration entries (not inclusive)
+	 * @return the range of matching cp configuration entries
+	 */
+	public static List<CPConfigurationEntry> findByC_C_V(
+		long classNameId, long classPK, boolean visible, int start, int end) {
+
+		return getPersistence().findByC_C_V(
+			classNameId, classPK, visible, start, end);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp configuration entries where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPConfigurationEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @param start the lower bound of the range of cp configuration entries
+	 * @param end the upper bound of the range of cp configuration entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching cp configuration entries
+	 */
+	public static List<CPConfigurationEntry> findByC_C_V(
+		long classNameId, long classPK, boolean visible, int start, int end,
+		OrderByComparator<CPConfigurationEntry> orderByComparator) {
+
+		return getPersistence().findByC_C_V(
+			classNameId, classPK, visible, start, end, orderByComparator);
+	}
+
+	/**
+	 * Returns an ordered range of all the cp configuration entries where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>CPConfigurationEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @param start the lower bound of the range of cp configuration entries
+	 * @param end the upper bound of the range of cp configuration entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching cp configuration entries
+	 */
+	public static List<CPConfigurationEntry> findByC_C_V(
+		long classNameId, long classPK, boolean visible, int start, int end,
+		OrderByComparator<CPConfigurationEntry> orderByComparator,
+		boolean useFinderCache) {
+
+		return getPersistence().findByC_C_V(
+			classNameId, classPK, visible, start, end, orderByComparator,
+			useFinderCache);
+	}
+
+	/**
+	 * Returns the first cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp configuration entry
+	 * @throws NoSuchCPConfigurationEntryException if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry findByC_C_V_First(
+			long classNameId, long classPK, boolean visible,
+			OrderByComparator<CPConfigurationEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().findByC_C_V_First(
+			classNameId, classPK, visible, orderByComparator);
+	}
+
+	/**
+	 * Returns the first cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching cp configuration entry, or <code>null</code> if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry fetchByC_C_V_First(
+		long classNameId, long classPK, boolean visible,
+		OrderByComparator<CPConfigurationEntry> orderByComparator) {
+
+		return getPersistence().fetchByC_C_V_First(
+			classNameId, classPK, visible, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp configuration entry
+	 * @throws NoSuchCPConfigurationEntryException if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry findByC_C_V_Last(
+			long classNameId, long classPK, boolean visible,
+			OrderByComparator<CPConfigurationEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().findByC_C_V_Last(
+			classNameId, classPK, visible, orderByComparator);
+	}
+
+	/**
+	 * Returns the last cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching cp configuration entry, or <code>null</code> if a matching cp configuration entry could not be found
+	 */
+	public static CPConfigurationEntry fetchByC_C_V_Last(
+		long classNameId, long classPK, boolean visible,
+		OrderByComparator<CPConfigurationEntry> orderByComparator) {
+
+		return getPersistence().fetchByC_C_V_Last(
+			classNameId, classPK, visible, orderByComparator);
+	}
+
+	/**
+	 * Returns the cp configuration entries before and after the current cp configuration entry in the ordered set where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * @param CPConfigurationEntryId the primary key of the current cp configuration entry
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next cp configuration entry
+	 * @throws NoSuchCPConfigurationEntryException if a cp configuration entry with the primary key could not be found
+	 */
+	public static CPConfigurationEntry[] findByC_C_V_PrevAndNext(
+			long CPConfigurationEntryId, long classNameId, long classPK,
+			boolean visible,
+			OrderByComparator<CPConfigurationEntry> orderByComparator)
+		throws com.liferay.commerce.product.exception.
+			NoSuchCPConfigurationEntryException {
+
+		return getPersistence().findByC_C_V_PrevAndNext(
+			CPConfigurationEntryId, classNameId, classPK, visible,
+			orderByComparator);
+	}
+
+	/**
+	 * Removes all the cp configuration entries where classNameId = &#63; and classPK = &#63; and visible = &#63; from the database.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 */
+	public static void removeByC_C_V(
+		long classNameId, long classPK, boolean visible) {
+
+		getPersistence().removeByC_C_V(classNameId, classPK, visible);
+	}
+
+	/**
+	 * Returns the number of cp configuration entries where classNameId = &#63; and classPK = &#63; and visible = &#63;.
+	 *
+	 * @param classNameId the class name ID
+	 * @param classPK the class pk
+	 * @param visible the visible
+	 * @return the number of matching cp configuration entries
+	 */
+	public static int countByC_C_V(
+		long classNameId, long classPK, boolean visible) {
+
+		return getPersistence().countByC_C_V(classNameId, classPK, visible);
 	}
 
 	/**

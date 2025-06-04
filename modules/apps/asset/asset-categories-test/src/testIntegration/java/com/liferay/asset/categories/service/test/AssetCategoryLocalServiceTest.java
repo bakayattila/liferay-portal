@@ -13,6 +13,7 @@ import com.liferay.asset.kernel.exception.AssetCategoryLimitException;
 import com.liferay.asset.kernel.exception.AssetCategoryNameException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryExternalReferenceCodeException;
+import com.liferay.asset.kernel.exception.NoSuchCategoryException;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetVocabulary;
@@ -23,10 +24,12 @@ import com.liferay.asset.test.util.AssetTestUtil;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
@@ -54,8 +57,8 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -139,7 +142,7 @@ public class AssetCategoryLocalServiceTest {
 			_group.getGroupId());
 
 		String externalReferenceCode = StringUtil.randomString();
-		Locale locale = PortalUtil.getSiteDefaultLocale(_group.getGroupId());
+		Locale locale = _portal.getSiteDefaultLocale(_group.getGroupId());
 
 		AssetCategoryLocalServiceUtil.addCategory(
 			externalReferenceCode, TestPropsValues.getUserId(),
@@ -233,7 +236,7 @@ public class AssetCategoryLocalServiceTest {
 			_group.getGroupId());
 
 		String externalReferenceCode = StringUtil.randomString();
-		Locale locale = PortalUtil.getSiteDefaultLocale(_group.getGroupId());
+		Locale locale = _portal.getSiteDefaultLocale(_group.getGroupId());
 
 		AssetCategory assetCategory = AssetCategoryLocalServiceUtil.addCategory(
 			externalReferenceCode, TestPropsValues.getUserId(),
@@ -431,6 +434,54 @@ public class AssetCategoryLocalServiceTest {
 	}
 
 	@Test
+	public void testCategoryWithLongTitlesAreTrimmed() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId());
+
+		AssetVocabulary assetVocabulary =
+			_assetVocabularyLocalService.addVocabulary(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(), serviceContext);
+
+		int nameMaxLength = ModelHintsUtil.getMaxLength(
+			AssetCategory.class.getName(), "name");
+
+		String assetCategoryTitle = RandomTestUtil.randomString(nameMaxLength);
+
+		Map<Locale, String> titleMap = HashMapBuilder.put(
+			LocaleUtil.SPAIN,
+			assetCategoryTitle + RandomTestUtil.randomString(10)
+		).put(
+			LocaleUtil.US, assetCategoryTitle + RandomTestUtil.randomString(10)
+		).build();
+
+		AssetCategory assetCategory = _assetCategoryLocalService.addCategory(
+			TestPropsValues.getUserId(), _group.getGroupId(),
+			titleMap.get(_portal.getSiteDefaultLocale(_group.getGroupId())),
+			assetVocabulary.getVocabularyId(), serviceContext);
+
+		_testAssetCategoryLongTitlesAreTrimmed(
+			assetCategory, assetCategoryTitle);
+
+		assetCategory = _assetCategoryLocalService.updateCategory(
+			assetCategory.getUserId(), assetCategory.getCategoryId(),
+			assetCategory.getParentCategoryId(),
+			HashMapBuilder.put(
+				LocaleUtil.SPAIN,
+				assetCategoryTitle + RandomTestUtil.randomString(10)
+			).put(
+				LocaleUtil.US,
+				assetCategoryTitle + RandomTestUtil.randomString(10)
+			).build(),
+			assetCategory.getDescriptionMap(), assetCategory.getVocabularyId(),
+			null, serviceContext);
+
+		_testAssetCategoryLongTitlesAreTrimmed(
+			assetCategory, assetCategoryTitle);
+	}
+
+	@Test
 	public void testDeleteCategory() throws Exception {
 		Map<Locale, String> titleMap = HashMapBuilder.put(
 			LocaleUtil.US, RandomTestUtil.randomString()
@@ -579,6 +630,37 @@ public class AssetCategoryLocalServiceTest {
 		}
 		finally {
 			UserLocalServiceUtil.deleteUser(user);
+		}
+	}
+
+	@Test
+	public void testGetOrAddIncompleteCategory() throws Exception {
+
+		// Lazy referencing disabled
+
+		try {
+			_assetCategoryLocalService.getOrAddIncompleteCategory(
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				_group.getGroupId());
+
+			Assert.fail();
+		}
+		catch (NoSuchCategoryException noSuchCategoryException) {
+			Assert.assertNotNull(noSuchCategoryException);
+		}
+
+		// Lazy referencing enabled
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			AssetCategory assetCategory =
+				_assetCategoryLocalService.getOrAddIncompleteCategory(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId());
+
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_INCOMPLETE, assetCategory.getStatus());
 		}
 	}
 
@@ -805,6 +887,42 @@ public class AssetCategoryLocalServiceTest {
 	}
 
 	@Test
+	public void testUpdateAssetCategoryWithLazyReferencingEnabled()
+		throws Exception {
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setEnabledWithSafeCloseable(true)) {
+
+			AssetCategory assetCategory =
+				_assetCategoryLocalService.getOrAddIncompleteCategory(
+					RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+					_group.getGroupId());
+
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_INCOMPLETE, assetCategory.getStatus());
+
+			String name = RandomTestUtil.randomString();
+
+			assetCategory = _assetCategoryLocalService.updateCategory(
+				TestPropsValues.getUserId(), assetCategory.getCategoryId(),
+				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				Collections.singletonMap(LocaleUtil.getSiteDefault(), name),
+				assetCategory.getDescriptionMap(),
+				_assetVocabulary.getVocabularyId(), null, new ServiceContext());
+
+			Assert.assertEquals(
+				AssetCategoryConstants.DEFAULT_PARENT_CATEGORY_ID,
+				assetCategory.getParentCategoryId());
+			Assert.assertEquals(name, assetCategory.getName());
+			Assert.assertEquals(
+				_assetVocabulary.getVocabularyId(),
+				assetCategory.getVocabularyId());
+			Assert.assertEquals(
+				WorkflowConstants.STATUS_APPROVED, assetCategory.getStatus());
+		}
+	}
+
+	@Test
 	public void testUpdateAssetCategoryWithMissingTranslationInSiteDefaultLocale()
 		throws Exception {
 
@@ -896,6 +1014,18 @@ public class AssetCategoryLocalServiceTest {
 		return JournalTestUtil.addArticle(
 			_group.getGroupId(),
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, serviceContext);
+	}
+
+	private void _testAssetCategoryLongTitlesAreTrimmed(
+		AssetCategory assetCategory, String title) {
+
+		Assert.assertEquals(title, assetCategory.getName());
+
+		Map<Locale, String> titleMap = assetCategory.getTitleMap();
+
+		for (Map.Entry<Locale, String> entry : titleMap.entrySet()) {
+			Assert.assertEquals(title, entry.getValue());
+		}
 	}
 
 	@Inject

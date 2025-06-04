@@ -8,15 +8,21 @@ package com.liferay.layout.admin.web.internal.portlet.action.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
+import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.LayoutNameException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
@@ -26,6 +32,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.portlet.MockActionRequest;
+import com.liferay.portal.kernel.test.portlet.MockActionResponse;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -40,6 +48,7 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.log.LogCapture;
@@ -49,17 +58,15 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.upload.test.util.UploadTestUtil;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionRequest;
-import com.liferay.portletmvc4spring.test.mock.web.portlet.MockActionResponse;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
+
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -86,6 +93,84 @@ public class EditLayoutDesignMVCActionCommandTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
+	}
+
+	@Test
+	@TestInfo("LPS-183218")
+	public void testEditDisplayPageLayoutPageTemplateEntryDesignInLayoutSetPrototypeGroup()
+		throws Exception {
+
+		LayoutSetPrototype layoutSetPrototype =
+			LayoutTestUtil.addLayoutSetPrototype(RandomTestUtil.randomString());
+
+		Group group = layoutSetPrototype.getGroup();
+
+		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
+			group.getGroupId(), _portal.getClassNameId(JournalArticle.class),
+			"BASIC-WEB-CONTENT", true);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(),
+				_portal.getClassNameId(JournalArticle.class.getName()),
+				ddmStructure.getStructureId(), false,
+				WorkflowConstants.STATUS_DRAFT);
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		draftLayout = _layoutLocalService.getLayout(draftLayout.getPlid());
+
+		Assert.assertTrue(Validator.isNull(draftLayout.getThemeId()));
+
+		layout = _layoutLocalService.getLayout(layout.getPlid());
+
+		Assert.assertTrue(Validator.isNull(layout.getThemeId()));
+
+		MockMultipartHttpServletRequest mockMultipartHttpServletRequest =
+			new MockMultipartHttpServletRequest();
+
+		mockMultipartHttpServletRequest.setContentType(
+			"multipart/form-data;boundary=" + System.currentTimeMillis());
+
+		MockActionRequest mockActionRequest = _getMockActionRequest(
+			draftLayout);
+
+		mockActionRequest.setParameter(
+			"regularThemeId", "dialect_WAR_dialecttheme");
+
+		ReflectionTestUtil.invoke(
+			_mvcActionCommand, "_updateLayout",
+			new Class<?>[] {
+				ActionRequest.class, ActionResponse.class,
+				UploadPortletRequest.class
+			},
+			mockActionRequest, new MockActionResponse(),
+			UploadTestUtil.createUploadPortletRequest(
+				UploadTestUtil.createUploadServletRequest(
+					mockMultipartHttpServletRequest, null, null),
+				null, RandomTestUtil.randomString()));
+
+		Assert.assertTrue(SessionErrors.isEmpty(mockActionRequest));
+
+		draftLayout = _layoutLocalService.getLayout(draftLayout.getPlid());
+
+		Assert.assertEquals(
+			"dialect_WAR_dialecttheme", draftLayout.getThemeId());
+
+		layout = _layoutLocalService.getLayout(layout.getPlid());
+
+		Assert.assertTrue(Validator.isNull(layout.getThemeId()));
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		layout = _layoutLocalService.getLayout(layout.getPlid());
+
+		Assert.assertEquals("dialect_WAR_dialecttheme", layout.getThemeId());
 	}
 
 	@Test
@@ -116,7 +201,7 @@ public class EditLayoutDesignMVCActionCommandTest {
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
@@ -234,7 +319,7 @@ public class EditLayoutDesignMVCActionCommandTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -326,6 +411,9 @@ public class EditLayoutDesignMVCActionCommandTest {
 
 	@Inject
 	private CompanyLocalService _companyLocalService;
+
+	@Inject
+	private DDMStructureLocalService _ddmStructureLocalService;
 
 	@Inject
 	private DLAppLocalService _dlAppLocalService;

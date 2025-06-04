@@ -17,7 +17,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -26,12 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -54,7 +52,9 @@ public class Settings implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(Settings.class, json);
 	}
 
-	@Schema(description = "The page specification's color scheme name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page specification's color scheme name."
+	)
 	public String getColorSchemeName() {
 		if (_colorSchemeNameSupplier != null) {
 			colorSchemeName = _colorSchemeNameSupplier.get();
@@ -95,7 +95,9 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _colorSchemeNameSupplier;
 
-	@Schema(description = "The page specification's CSS.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page specification's CSS."
+	)
 	public String getCss() {
 		if (_cssSupplier != null) {
 			css = _cssSupplier.get();
@@ -134,7 +136,9 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _cssSupplier;
 
-	@Schema(description = "The FavIcon of the page specification.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The FavIcon of the page specification."
+	)
 	@Valid
 	public Object getFavIcon() {
 		if (_favIconSupplier != null) {
@@ -176,7 +180,7 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _favIconSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The client extensions for global CSS associated to the page."
 	)
 	@Valid
@@ -226,7 +230,7 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<ClientExtension[]> _globalCSSClientExtensionsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The client extensions for global JS associated to the page."
 	)
 	@Valid
@@ -275,7 +279,9 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<ClientExtension[]> _globalJSClientExtensionsSupplier;
 
-	@Schema(description = "The page specification's JavaScript.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page specification's JavaScript."
+	)
 	public String getJavascript() {
 		if (_javascriptSupplier != null) {
 			javascript = _javascriptSupplier.get();
@@ -316,33 +322,37 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _javascriptSupplier;
 
-	@Schema(
-		description = "The page specification's master page. This property is not applied if the page specification belongs to a master page."
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A reference to the page specification's master page. This property is not applied if the page specification belongs to a master page."
 	)
 	@Valid
-	public MasterPage getMasterPage() {
-		if (_masterPageSupplier != null) {
-			masterPage = _masterPageSupplier.get();
+	public ItemExternalReference getMasterPageItemExternalReference() {
+		if (_masterPageItemExternalReferenceSupplier != null) {
+			masterPageItemExternalReference =
+				_masterPageItemExternalReferenceSupplier.get();
 
-			_masterPageSupplier = null;
+			_masterPageItemExternalReferenceSupplier = null;
 		}
 
-		return masterPage;
+		return masterPageItemExternalReference;
 	}
 
-	public void setMasterPage(MasterPage masterPage) {
-		this.masterPage = masterPage;
+	public void setMasterPageItemExternalReference(
+		ItemExternalReference masterPageItemExternalReference) {
 
-		_masterPageSupplier = null;
+		this.masterPageItemExternalReference = masterPageItemExternalReference;
+
+		_masterPageItemExternalReferenceSupplier = null;
 	}
 
 	@JsonIgnore
-	public void setMasterPage(
-		UnsafeSupplier<MasterPage, Exception> masterPageUnsafeSupplier) {
+	public void setMasterPageItemExternalReference(
+		UnsafeSupplier<ItemExternalReference, Exception>
+			masterPageItemExternalReferenceUnsafeSupplier) {
 
-		_masterPageSupplier = () -> {
+		_masterPageItemExternalReferenceSupplier = () -> {
 			try {
-				return masterPageUnsafeSupplier.get();
+				return masterPageItemExternalReferenceUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -354,41 +364,46 @@ public class Settings implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "The page specification's master page. This property is not applied if the page specification belongs to a master page."
+		description = "A reference to the page specification's master page. This property is not applied if the page specification belongs to a master page."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected MasterPage masterPage;
+	protected ItemExternalReference masterPageItemExternalReference;
 
 	@JsonIgnore
-	private Supplier<MasterPage> _masterPageSupplier;
+	private Supplier<ItemExternalReference>
+		_masterPageItemExternalReferenceSupplier;
 
-	@Schema(
-		description = "The style book that is applied to the page specification."
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "A reference to the style book that is applied to the page specification."
 	)
 	@Valid
-	public StyleBook getStyleBook() {
-		if (_styleBookSupplier != null) {
-			styleBook = _styleBookSupplier.get();
+	public ItemExternalReference getStyleBookItemExternalReference() {
+		if (_styleBookItemExternalReferenceSupplier != null) {
+			styleBookItemExternalReference =
+				_styleBookItemExternalReferenceSupplier.get();
 
-			_styleBookSupplier = null;
+			_styleBookItemExternalReferenceSupplier = null;
 		}
 
-		return styleBook;
+		return styleBookItemExternalReference;
 	}
 
-	public void setStyleBook(StyleBook styleBook) {
-		this.styleBook = styleBook;
+	public void setStyleBookItemExternalReference(
+		ItemExternalReference styleBookItemExternalReference) {
 
-		_styleBookSupplier = null;
+		this.styleBookItemExternalReference = styleBookItemExternalReference;
+
+		_styleBookItemExternalReferenceSupplier = null;
 	}
 
 	@JsonIgnore
-	public void setStyleBook(
-		UnsafeSupplier<StyleBook, Exception> styleBookUnsafeSupplier) {
+	public void setStyleBookItemExternalReference(
+		UnsafeSupplier<ItemExternalReference, Exception>
+			styleBookItemExternalReferenceUnsafeSupplier) {
 
-		_styleBookSupplier = () -> {
+		_styleBookItemExternalReferenceSupplier = () -> {
 			try {
-				return styleBookUnsafeSupplier.get();
+				return styleBookItemExternalReferenceUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -400,15 +415,16 @@ public class Settings implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "The style book that is applied to the page specification."
+		description = "A reference to the style book that is applied to the page specification."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected StyleBook styleBook;
+	protected ItemExternalReference styleBookItemExternalReference;
 
 	@JsonIgnore
-	private Supplier<StyleBook> _styleBookSupplier;
+	private Supplier<ItemExternalReference>
+		_styleBookItemExternalReferenceSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The client extension for the theme CSS of a page specification."
 	)
 	@Valid
@@ -457,7 +473,9 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<ClientExtension> _themeCSSClientExtensionSupplier;
 
-	@Schema(description = "The page specification's theme name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page specification's theme name."
+	)
 	public String getThemeName() {
 		if (_themeNameSupplier != null) {
 			themeName = _themeNameSupplier.get();
@@ -498,9 +516,11 @@ public class Settings implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _themeNameSupplier;
 
-	@Schema(description = "The page specification's theme settings.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page specification's theme settings."
+	)
 	@Valid
-	public Object getThemeSettings() {
+	public Map<String, String> getThemeSettings() {
 		if (_themeSettingsSupplier != null) {
 			themeSettings = _themeSettingsSupplier.get();
 
@@ -510,7 +530,7 @@ public class Settings implements Serializable {
 		return themeSettings;
 	}
 
-	public void setThemeSettings(Object themeSettings) {
+	public void setThemeSettings(Map<String, String> themeSettings) {
 		this.themeSettings = themeSettings;
 
 		_themeSettingsSupplier = null;
@@ -518,7 +538,8 @@ public class Settings implements Serializable {
 
 	@JsonIgnore
 	public void setThemeSettings(
-		UnsafeSupplier<Object, Exception> themeSettingsUnsafeSupplier) {
+		UnsafeSupplier<Map<String, String>, Exception>
+			themeSettingsUnsafeSupplier) {
 
 		_themeSettingsSupplier = () -> {
 			try {
@@ -535,12 +556,12 @@ public class Settings implements Serializable {
 
 	@GraphQLField(description = "The page specification's theme settings.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Object themeSettings;
+	protected Map<String, String> themeSettings;
 
 	@JsonIgnore
-	private Supplier<Object> _themeSettingsSupplier;
+	private Supplier<Map<String, String>> _themeSettingsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The client extension for the theme spritemap of a page specification."
 	)
 	@Valid
@@ -733,28 +754,30 @@ public class Settings implements Serializable {
 			sb.append("\"");
 		}
 
-		MasterPage masterPage = getMasterPage();
+		ItemExternalReference masterPageItemExternalReference =
+			getMasterPageItemExternalReference();
 
-		if (masterPage != null) {
+		if (masterPageItemExternalReference != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"masterPage\": ");
+			sb.append("\"masterPageItemExternalReference\": ");
 
-			sb.append(String.valueOf(masterPage));
+			sb.append(String.valueOf(masterPageItemExternalReference));
 		}
 
-		StyleBook styleBook = getStyleBook();
+		ItemExternalReference styleBookItemExternalReference =
+			getStyleBookItemExternalReference();
 
-		if (styleBook != null) {
+		if (styleBookItemExternalReference != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"styleBook\": ");
+			sb.append("\"styleBookItemExternalReference\": ");
 
-			sb.append(String.valueOf(styleBook));
+			sb.append(String.valueOf(styleBookItemExternalReference));
 		}
 
 		ClientExtension themeCSSClientExtension = getThemeCSSClientExtension();
@@ -785,7 +808,7 @@ public class Settings implements Serializable {
 			sb.append("\"");
 		}
 
-		Object themeSettings = getThemeSettings();
+		Map<String, String> themeSettings = getThemeSettings();
 
 		if (themeSettings != null) {
 			if (sb.length() > 1) {
@@ -794,18 +817,7 @@ public class Settings implements Serializable {
 
 			sb.append("\"themeSettings\": ");
 
-			if (themeSettings instanceof Map) {
-				sb.append(
-					JSONFactoryUtil.createJSONObject((Map<?, ?>)themeSettings));
-			}
-			else if (themeSettings instanceof String) {
-				sb.append("\"");
-				sb.append(_escape((String)themeSettings));
-				sb.append("\"");
-			}
-			else {
-				sb.append(themeSettings);
-			}
+			sb.append(_toJSON(themeSettings));
 		}
 
 		ClientExtension themeSpritemapClientExtension =
@@ -826,8 +838,8 @@ public class Settings implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.Settings",
 		name = "x-class-name"
 	)

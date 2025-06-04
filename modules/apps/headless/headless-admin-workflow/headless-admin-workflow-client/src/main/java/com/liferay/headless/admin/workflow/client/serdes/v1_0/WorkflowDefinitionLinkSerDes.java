@@ -8,13 +8,13 @@ package com.liferay.headless.admin.workflow.client.serdes.v1_0;
 import com.liferay.headless.admin.workflow.client.dto.v1_0.WorkflowDefinitionLink;
 import com.liferay.headless.admin.workflow.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -71,6 +71,22 @@ public class WorkflowDefinitionLinkSerDes {
 
 			sb.append(
 				_escape(workflowDefinitionLink.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
+		if (workflowDefinitionLink.getGroupExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"groupExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					workflowDefinitionLink.getGroupExternalReferenceCode()));
 
 			sb.append("\"");
 		}
@@ -160,6 +176,16 @@ public class WorkflowDefinitionLinkSerDes {
 					workflowDefinitionLink.getExternalReferenceCode()));
 		}
 
+		if (workflowDefinitionLink.getGroupExternalReferenceCode() == null) {
+			map.put("groupExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"groupExternalReferenceCode",
+				String.valueOf(
+					workflowDefinitionLink.getGroupExternalReferenceCode()));
+		}
+
 		if (workflowDefinitionLink.getGroupId() == null) {
 			map.put("groupId", null);
 		}
@@ -221,6 +247,11 @@ public class WorkflowDefinitionLinkSerDes {
 
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "groupExternalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "groupId")) {
 				return false;
 			}
@@ -257,6 +288,14 @@ public class WorkflowDefinitionLinkSerDes {
 
 				if (jsonParserFieldValue != null) {
 					workflowDefinitionLink.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "groupExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					workflowDefinitionLink.setGroupExternalReferenceCode(
 						(String)jsonParserFieldValue);
 				}
 			}
@@ -333,6 +372,10 @@ public class WorkflowDefinitionLinkSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

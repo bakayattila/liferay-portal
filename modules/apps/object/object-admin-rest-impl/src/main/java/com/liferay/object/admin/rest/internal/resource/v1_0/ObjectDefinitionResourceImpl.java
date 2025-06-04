@@ -18,6 +18,7 @@ import com.liferay.object.admin.rest.dto.v1_0.ObjectValidationRule;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectView;
 import com.liferay.object.admin.rest.dto.v1_0.Status;
 import com.liferay.object.admin.rest.internal.dto.v1_0.converter.constants.DTOConverterConstants;
+import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectDefinitionSettingUtil;
 import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldSettingUtil;
 import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.admin.rest.internal.odata.entity.v1_0.ObjectDefinitionEntityModel;
@@ -29,6 +30,7 @@ import com.liferay.object.admin.rest.resource.v1_0.ObjectValidationRuleResource;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectViewResource;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectConstants;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
@@ -43,6 +45,7 @@ import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectActionService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectDefinitionService;
+import com.liferay.object.service.ObjectDefinitionSettingLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
@@ -56,7 +59,6 @@ import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
-import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
@@ -66,6 +68,7 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
@@ -81,21 +84,21 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
+import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -248,28 +251,40 @@ public class ObjectDefinitionResourceImpl
 					_getObjectFolderId(
 						objectDefinition.
 							getObjectFolderExternalReferenceCode()),
+					objectDefinition.getClassName(),
 					GetterUtil.getBoolean(objectDefinition.getEnableComments()),
+					GetterUtil.getBoolean(
+						objectDefinition.getEnableFriendlyURLCustomization()),
 					GetterUtil.getBoolean(
 						objectDefinition.getEnableIndexSearch()),
 					GetterUtil.getBoolean(
-						objectDefinition.getEnableLocalization()),
-					_getLocalizedMap(
+						objectDefinition.getEnableLocalization(),
+						FeatureFlagManagerUtil.isEnabled(
+							contextUser.getCompanyId(), "LPD-32050")),
+					GetterUtil.getBoolean(
+						objectDefinition.getEnableObjectEntryDraft()),
+					GetterUtil.getBoolean(
+						objectDefinition.getEnableObjectEntryVersioning()),
+					objectDefinition.getFriendlyURLSeparator(),
+					LocalizedMapUtil.populateLocalizedMap(
 						objectDefinition.getDefaultLanguageId(),
 						objectDefinition.getLabel()),
 					objectDefinition.getName(),
 					objectDefinition.getPanelAppOrder(),
 					objectDefinition.getPanelCategoryKey(),
-					_getLocalizedMap(
+					LocalizedMapUtil.populateLocalizedMap(
 						objectDefinition.getDefaultLanguageId(),
 						objectDefinition.getPluralLabel()),
 					GetterUtil.getBoolean(objectDefinition.getPortlet()),
 					objectDefinition.getScope(),
+					ObjectDefinitionSettingUtil.toObjectDefinitionSettings(
+						contextUser.getCompanyId(), _groupLocalService,
+						objectDefinition.getObjectDefinitionSettings(),
+						_objectDefinitionSettingLocalService),
 					transformToList(
 						objectDefinition.getObjectFields(),
 						objectField -> ObjectFieldUtil.toObjectField(
 							objectDefinition.getDefaultLanguageId(),
-							GetterUtil.getBoolean(
-								objectDefinition.getEnableLocalization()),
 							_listTypeDefinitionLocalService, objectField,
 							_objectFieldLocalService,
 							_objectFieldSettingLocalService,
@@ -284,23 +299,34 @@ public class ObjectDefinitionResourceImpl
 					objectDefinition.getClassName(),
 					GetterUtil.getBoolean(objectDefinition.getEnableComments()),
 					GetterUtil.getBoolean(
+						objectDefinition.getEnableFriendlyURLCustomization()),
+					GetterUtil.getBoolean(
 						objectDefinition.getEnableIndexSearch(), true),
 					GetterUtil.getBoolean(
-						objectDefinition.getEnableLocalization()),
+						objectDefinition.getEnableLocalization(),
+						FeatureFlagManagerUtil.isEnabled(
+							contextUser.getCompanyId(), "LPD-32050")),
 					GetterUtil.getBoolean(
 						objectDefinition.getEnableObjectEntryDraft()),
-					_getLocalizedMap(
+					GetterUtil.getBoolean(
+						objectDefinition.getEnableObjectEntryVersioning()),
+					objectDefinition.getFriendlyURLSeparator(),
+					LocalizedMapUtil.populateLocalizedMap(
 						objectDefinition.getDefaultLanguageId(),
 						objectDefinition.getLabel()),
 					objectDefinition.getName(),
 					objectDefinition.getPanelAppOrder(),
 					objectDefinition.getPanelCategoryKey(),
-					_getLocalizedMap(
+					LocalizedMapUtil.populateLocalizedMap(
 						objectDefinition.getDefaultLanguageId(),
 						objectDefinition.getPluralLabel()),
 					GetterUtil.getBoolean(objectDefinition.getPortlet(), true),
 					objectDefinition.getScope(),
 					objectDefinition.getStorageType(),
+					ObjectDefinitionSettingUtil.toObjectDefinitionSettings(
+						contextUser.getCompanyId(), _groupLocalService,
+						objectDefinition.getObjectDefinitionSettings(),
+						_objectDefinitionSettingLocalService),
 					transformToList(
 						ArrayUtil.filter(
 							objectDefinition.getObjectFields(),
@@ -315,8 +341,6 @@ public class ObjectDefinitionResourceImpl
 										BUSINESS_TYPE_RELATIONSHIP)),
 						objectField -> ObjectFieldUtil.toObjectField(
 							objectDefinition.getDefaultLanguageId(),
-							GetterUtil.getBoolean(
-								objectDefinition.getEnableLocalization()),
 							_listTypeDefinitionLocalService, objectField,
 							_objectFieldLocalService,
 							_objectFieldSettingLocalService,
@@ -348,9 +372,20 @@ public class ObjectDefinitionResourceImpl
 						objectField.getBusinessTypeAsString(),
 						ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP)) {
 
-					_addObjectRelationship(
-						objectDefinition.getDefaultLanguageId(), objectField,
-						serviceBuilderObjectDefinition);
+					com.liferay.object.model.ObjectRelationship
+						objectRelationship = _addObjectRelationship(
+							objectDefinition.getDefaultLanguageId(),
+							objectField, serviceBuilderObjectDefinition);
+
+					if (objectDefinition.getAccountEntryRestricted() &&
+						StringUtil.equals(
+							objectDefinition.
+								getAccountEntryRestrictedObjectFieldName(),
+							objectField.getName())) {
+
+						_objectDefinitionLocalService.
+							enableAccountEntryRestricted(objectRelationship);
+					}
 				}
 			}
 		}
@@ -374,7 +409,7 @@ public class ObjectDefinitionResourceImpl
 								ObjectFieldConstants.
 									BUSINESS_TYPE_AGGREGATION)),
 						objectField -> ObjectFieldUtil.toObjectField(
-							objectDefinition.getDefaultLanguageId(), false,
+							objectDefinition.getDefaultLanguageId(),
 							_listTypeDefinitionLocalService, objectField,
 							_objectFieldLocalService,
 							_objectFieldSettingLocalService,
@@ -504,7 +539,11 @@ public class ObjectDefinitionResourceImpl
 					_getObjectFolderId(
 						objectDefinition.
 							getObjectFolderExternalReferenceCode()),
-					0);
+					0,
+					ObjectDefinitionSettingUtil.toObjectDefinitionSettings(
+						contextUser.getCompanyId(), _groupLocalService,
+						objectDefinition.getObjectDefinitionSettings(),
+						_objectDefinitionSettingLocalService));
 		}
 		else {
 			serviceBuilderObjectDefinition =
@@ -526,24 +565,39 @@ public class ObjectDefinitionResourceImpl
 						objectDefinition.getEnableCategorization(), true),
 					GetterUtil.getBoolean(objectDefinition.getEnableComments()),
 					GetterUtil.getBoolean(
+						objectDefinition.getEnableFriendlyURLCustomization()),
+					GetterUtil.getBoolean(
 						objectDefinition.getEnableIndexSearch()),
 					GetterUtil.getBoolean(
-						objectDefinition.getEnableLocalization()),
+						objectDefinition.getEnableLocalization(),
+						FeatureFlagManagerUtil.isEnabled(
+							serviceBuilderObjectDefinition.getCompanyId(),
+							"LPD-32050")),
 					GetterUtil.getBoolean(
 						objectDefinition.getEnableObjectEntryDraft()),
 					GetterUtil.getBoolean(
 						objectDefinition.getEnableObjectEntryHistory()),
-					_getLocalizedMap(
+					GetterUtil.getBoolean(
+						objectDefinition.getEnableObjectEntryVersioning()),
+					GetterUtil.getString(
+						objectDefinition.getFriendlyURLSeparator(),
+						serviceBuilderObjectDefinition.
+							getFriendlyURLSeparator()),
+					LocalizedMapUtil.populateLocalizedMap(
 						objectDefinition.getDefaultLanguageId(),
 						objectDefinition.getLabel()),
 					objectDefinition.getName(),
 					objectDefinition.getPanelAppOrder(),
 					objectDefinition.getPanelCategoryKey(),
 					GetterUtil.getBoolean(objectDefinition.getPortlet()),
-					_getLocalizedMap(
+					LocalizedMapUtil.populateLocalizedMap(
 						objectDefinition.getDefaultLanguageId(),
 						objectDefinition.getPluralLabel()),
-					objectDefinition.getScope(), statusInt);
+					objectDefinition.getScope(), statusInt,
+					ObjectDefinitionSettingUtil.toObjectDefinitionSettings(
+						contextUser.getCompanyId(), _groupLocalService,
+						objectDefinition.getObjectDefinitionSettings(),
+						_objectDefinitionSettingLocalService));
 		}
 
 		List<ObjectAction> objectActions = ListUtil.fromArray(
@@ -651,10 +705,9 @@ public class ObjectDefinitionResourceImpl
 				GetterUtil.getBoolean(objectField.getIndexed()),
 				GetterUtil.getBoolean(objectField.getIndexedAsKeyword()),
 				objectField.getIndexedLanguageId(),
-				LocalizedMapUtil.getLocalizedMap(
-					LocalizedMapUtil.populateI18nMap(
-						objectDefinition.getDefaultLanguageId(),
-						objectField.getLabel(), objectField.getName())),
+				LocalizedMapUtil.populateLocalizedMap(
+					objectDefinition.getDefaultLanguageId(),
+					objectField.getLabel(), objectField.getName()),
 				GetterUtil.getBoolean(objectField.getLocalized()),
 				objectField.getName(), objectField.getReadOnlyAsString(),
 				objectField.getReadOnlyConditionExpression(),
@@ -803,6 +856,15 @@ public class ObjectDefinitionResourceImpl
 		}
 
 		return postObjectDefinition(objectDefinition);
+	}
+
+	@Override
+	protected void preparePatch(
+		ObjectDefinition objectDefinition,
+		ObjectDefinition existingObjectDefinition) {
+
+		existingObjectDefinition.setObjectDefinitionSettings(
+			objectDefinition::getObjectDefinitionSettings);
 	}
 
 	private void _addListTypeDefinition(ObjectDefinition objectDefinition)
@@ -1011,7 +1073,7 @@ public class ObjectDefinitionResourceImpl
 		}
 	}
 
-	private void _addObjectRelationship(
+	private com.liferay.object.model.ObjectRelationship _addObjectRelationship(
 			String defaultLanguageId, ObjectField objectField,
 			com.liferay.object.model.ObjectDefinition
 				serviceBuilderObjectDefinition2)
@@ -1025,7 +1087,7 @@ public class ObjectDefinitionResourceImpl
 				objectDefinitionExternalReferenceCode1,
 				serviceBuilderObjectDefinition2.getExternalReferenceCode())) {
 
-			return;
+			return null;
 		}
 
 		com.liferay.object.model.ObjectDefinition
@@ -1041,7 +1103,7 @@ public class ObjectDefinitionResourceImpl
 					objectDefinitionExternalReferenceCode1,
 					contextUser.getUserId(),
 					serviceBuilderObjectDefinition2.getObjectFolderId(), true,
-					false);
+					ObjectDefinitionConstants.SCOPE_COMPANY, false);
 		}
 
 		com.liferay.object.model.ObjectRelationship objectRelationship =
@@ -1051,18 +1113,18 @@ public class ObjectDefinitionResourceImpl
 					serviceBuilderObjectDefinition1.getObjectDefinitionId());
 
 		if (objectRelationship != null) {
-			return;
+			return objectRelationship;
 		}
 
-		_objectRelationshipLocalService.addObjectRelationship(
+		return _objectRelationshipLocalService.addObjectRelationship(
 			objectField.getObjectRelationshipExternalReferenceCode(),
 			contextUser.getUserId(),
 			serviceBuilderObjectDefinition1.getObjectDefinitionId(),
 			serviceBuilderObjectDefinition2.getObjectDefinitionId(),
 			ObjectFieldUtil.toObjectField(
-				defaultLanguageId, false, _listTypeDefinitionLocalService,
-				objectField, _objectFieldLocalService,
-				_objectFieldSettingLocalService, _objectFilterLocalService));
+				defaultLanguageId, _listTypeDefinitionLocalService, objectField,
+				_objectFieldLocalService, _objectFieldSettingLocalService,
+				_objectFilterLocalService));
 	}
 
 	private Set<String> _getAccountEntryRestrictedObjectRelationshipsNames(
@@ -1139,13 +1201,6 @@ public class ObjectDefinitionResourceImpl
 		return accountEntryRestrictedObjectRelationshipsNames;
 	}
 
-	private Map<Locale, String> _getLocalizedMap(
-		String defaultLanguageId, Map<String, String> i18nMap) {
-
-		return LocalizedMapUtil.getLocalizedMap(
-			LocalizedMapUtil.populateI18nMap(defaultLanguageId, i18nMap, null));
-	}
-
 	private long _getObjectFolderId(String objectFolderExternalReferenceCode)
 		throws Exception {
 
@@ -1162,8 +1217,9 @@ public class ObjectDefinitionResourceImpl
 	}
 
 	private ObjectDefinition _toObjectDefinition(
-		com.liferay.object.model.ObjectDefinition
-			serviceBuilderObjectDefinition) {
+			com.liferay.object.model.ObjectDefinition
+				serviceBuilderObjectDefinition)
+		throws Exception {
 
 		if (serviceBuilderObjectDefinition == null) {
 			return null;
@@ -1171,126 +1227,89 @@ public class ObjectDefinitionResourceImpl
 
 		String permissionName =
 			com.liferay.object.model.ObjectDefinition.class.getName();
-		long rootObjectDefinitionId =
-			serviceBuilderObjectDefinition.getRootObjectDefinitionId();
 
-		ObjectDefinition objectDefinition =
-			com.liferay.object.admin.rest.internal.dto.v1_0.util.
-				ObjectDefinitionUtil.toObjectDefinition(
-					contextAcceptLanguage.getPreferredLocale(),
-					_notificationTemplateLocalService,
-					_objectActionLocalService, _objectDefinitionLocalService,
-					_objectFieldDTOConverter, _objectFieldLocalService,
-					_objectLayoutLocalService, _objectRelationshipDTOConverter,
-					_objectRelationshipLocalService,
-					_objectValidationRuleDTOConverter,
-					_objectValidationRuleLocalService, _objectViewDTOConverter,
-					_objectViewLocalService, serviceBuilderObjectDefinition,
-					_systemObjectDefinitionManagerRegistry);
+		return _objectDefinitionDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				false,
+				HashMapBuilder.put(
+					"delete",
+					() -> {
+						if (serviceBuilderObjectDefinition.isSystem()) {
+							return null;
+						}
 
-		objectDefinition.setActions(
-			() -> HashMapBuilder.put(
-				"bind",
-				() -> {
-					if (!FeatureFlagManagerUtil.isEnabled(
-							contextCompany.getCompanyId(), "LPS-187142") ||
-						(rootObjectDefinitionId != 0) ||
-						serviceBuilderObjectDefinition.isApproved() ||
-						serviceBuilderObjectDefinition.isSystem()) {
-
-						return null;
+						return addAction(
+							ActionKeys.DELETE, "deleteObjectDefinition",
+							permissionName,
+							serviceBuilderObjectDefinition.
+								getObjectDefinitionId());
 					}
+				).put(
+					"exportBoundObjectDefinitions",
+					() -> {
+						if (!FeatureFlagManagerUtil.isEnabled(
+								contextCompany.getCompanyId(), "LPD-34594") ||
+							!serviceBuilderObjectDefinition.isRootNode()) {
 
-					return addAction(
-						ActionKeys.UPDATE, "putObjectDefinition",
-						permissionName,
-						serviceBuilderObjectDefinition.getObjectDefinitionId());
-				}
-			).put(
-				"delete",
-				() -> {
-					if (serviceBuilderObjectDefinition.isSystem()) {
-						return null;
+							return null;
+						}
+
+						return addAction(
+							ActionKeys.VIEW, "getObjectDefinitionsPage",
+							permissionName,
+							serviceBuilderObjectDefinition.
+								getObjectDefinitionId());
 					}
+				).put(
+					"exportObjectDefinition",
+					() -> {
+						if (serviceBuilderObjectDefinition.
+								isRootDescendantNode() ||
+							serviceBuilderObjectDefinition.isRootNode()) {
 
-					return addAction(
-						ActionKeys.DELETE, "deleteObjectDefinition",
-						permissionName,
-						serviceBuilderObjectDefinition.getObjectDefinitionId());
-				}
-			).put(
-				"exportBoundObjectDefinitions",
-				() -> {
-					if (!FeatureFlagManagerUtil.isEnabled(
-							contextCompany.getCompanyId(), "LPS-187142") ||
-						!serviceBuilderObjectDefinition.isRootNode()) {
+							return null;
+						}
 
-						return null;
+						return addAction(
+							ActionKeys.VIEW, "getObjectDefinition",
+							permissionName,
+							serviceBuilderObjectDefinition.
+								getObjectDefinitionId());
 					}
-
-					return addAction(
-						ActionKeys.VIEW, "getObjectDefinitionsPage",
-						permissionName,
-						serviceBuilderObjectDefinition.getObjectDefinitionId());
-				}
-			).put(
-				"exportObjectDefinition",
-				() -> {
-					if (serviceBuilderObjectDefinition.isRootDescendantNode() ||
-						serviceBuilderObjectDefinition.isRootNode()) {
-
-						return null;
-					}
-
-					return addAction(
+				).put(
+					"get",
+					addAction(
 						ActionKeys.VIEW, "getObjectDefinition", permissionName,
-						serviceBuilderObjectDefinition.getObjectDefinitionId());
-				}
-			).put(
-				"get",
-				addAction(
-					ActionKeys.VIEW, "getObjectDefinition", permissionName,
-					serviceBuilderObjectDefinition.getObjectDefinitionId())
-			).put(
-				"permissions",
-				addAction(
-					ActionKeys.PERMISSIONS, "patchObjectDefinition",
-					permissionName,
-					serviceBuilderObjectDefinition.getObjectDefinitionId())
-			).put(
-				"publish",
-				() -> {
-					if (serviceBuilderObjectDefinition.isApproved()) {
-						return null;
-					}
-
-					return addAction(
-						ActionKeys.UPDATE, "postObjectDefinitionPublish",
+						serviceBuilderObjectDefinition.getObjectDefinitionId())
+				).put(
+					"permissions",
+					addAction(
+						ActionKeys.PERMISSIONS, "patchObjectDefinition",
 						permissionName,
-						serviceBuilderObjectDefinition.getObjectDefinitionId());
-				}
-			).put(
-				"unbind",
-				() -> {
-					if ((rootObjectDefinitionId == 0) ||
-						serviceBuilderObjectDefinition.isApproved()) {
+						serviceBuilderObjectDefinition.getObjectDefinitionId())
+				).put(
+					"publish",
+					() -> {
+						if (serviceBuilderObjectDefinition.isApproved()) {
+							return null;
+						}
 
-						return null;
+						return addAction(
+							ActionKeys.UPDATE, "postObjectDefinitionPublish",
+							permissionName,
+							serviceBuilderObjectDefinition.
+								getObjectDefinitionId());
 					}
-
-					return addAction(
+				).put(
+					"update",
+					addAction(
 						ActionKeys.UPDATE, "putObjectDefinition",
 						permissionName,
-						serviceBuilderObjectDefinition.getObjectDefinitionId());
-				}
-			).put(
-				"update",
-				addAction(
-					ActionKeys.UPDATE, "putObjectDefinition", permissionName,
-					serviceBuilderObjectDefinition.getObjectDefinitionId())
-			).build());
-
-		return objectDefinition;
+						serviceBuilderObjectDefinition.getObjectDefinitionId())
+				).build(),
+				null, null, contextAcceptLanguage.getPreferredLocale(), null,
+				null),
+			serviceBuilderObjectDefinition);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -1303,7 +1322,7 @@ public class ObjectDefinitionResourceImpl
 			Propagation.REQUIRES_NEW, new Class<?>[] {Exception.class});
 
 	@Reference
-	private Language _language;
+	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
@@ -1326,11 +1345,20 @@ public class ObjectDefinitionResourceImpl
 	@Reference
 	private ObjectActionService _objectActionService;
 
+	@Reference(target = DTOConverterConstants.OBJECT_DEFINITION_DTO_CONVERTER)
+	private DTOConverter
+		<com.liferay.object.model.ObjectDefinition, ObjectDefinition>
+			_objectDefinitionDTOConverter;
+
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	@Reference
 	private ObjectDefinitionService _objectDefinitionService;
+
+	@Reference
+	private ObjectDefinitionSettingLocalService
+		_objectDefinitionSettingLocalService;
 
 	@Reference(target = DTOConverterConstants.OBJECT_FIELD_DTO_CONVERTER)
 	private DTOConverter<com.liferay.object.model.ObjectField, ObjectField>

@@ -16,7 +16,12 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,13 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Andrea Sbarra
@@ -52,7 +50,7 @@ public class CategoryDisplayPage implements Serializable {
 			CategoryDisplayPage.class, json);
 	}
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		if (_actionsSupplier != null) {
@@ -95,7 +93,7 @@ public class CategoryDisplayPage implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, Map<String, String>>> _actionsSupplier;
 
-	@Schema(example = "DAB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "DAB-34098-789-N")
 	public String getCategoryExternalReferenceCode() {
 		if (_categoryExternalReferenceCodeSupplier != null) {
 			categoryExternalReferenceCode =
@@ -141,7 +139,7 @@ public class CategoryDisplayPage implements Serializable {
 	private Supplier<String> _categoryExternalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getCategoryId() {
 		if (_categoryIdSupplier != null) {
 			categoryId = _categoryIdSupplier.get();
@@ -182,7 +180,7 @@ public class CategoryDisplayPage implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _categoryIdSupplier;
 
-	@Schema(example = "DAB-34098-789-N")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "DAB-34098-789-N")
 	public String getGroupExternalReferenceCode() {
 		if (_groupExternalReferenceCodeSupplier != null) {
 			groupExternalReferenceCode =
@@ -228,7 +226,7 @@ public class CategoryDisplayPage implements Serializable {
 	private Supplier<String> _groupExternalReferenceCodeSupplier;
 
 	@DecimalMin("0")
-	@Schema(example = "30130")
+	@io.swagger.v3.oas.annotations.media.Schema(example = "30130")
 	public Long getId() {
 		if (_idSupplier != null) {
 			id = _idSupplier.get();
@@ -267,7 +265,7 @@ public class CategoryDisplayPage implements Serializable {
 	@JsonIgnore
 	private Supplier<Long> _idSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	public String getPageUuid() {
 		if (_pageUuidSupplier != null) {
 			pageUuid = _pageUuidSupplier.get();
@@ -425,8 +423,8 @@ public class CategoryDisplayPage implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.commerce.admin.channel.dto.v1_0.CategoryDisplayPage",
 		name = "x-class-name"
 	)

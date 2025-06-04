@@ -323,6 +323,7 @@ export function mockExperimentDraftReq() {
 		request: {
 			query: EXPERIMENT_DRAFT_QUERY,
 			variables: {
+				channelId: '2000',
 				experimentId: '123'
 			}
 		},
@@ -359,6 +360,7 @@ export function mockExperimentReq({
 		request: {
 			query: EXPERIMENT_QUERY,
 			variables: {
+				channelId: '2000',
 				experimentId: '123'
 			}
 		},
@@ -516,6 +518,7 @@ export function mockExperimentStatusReq({status}) {
 			fetchPolicy: 'network-only',
 			query: EXPERIMENT_STATUS_QUERY,
 			variables: {
+				channelId: '2000',
 				experimentId: '123'
 			}
 		},
@@ -1433,6 +1436,7 @@ export function mockEventAnalysisReq() {
 						eventDefinition: {
 							__typename: 'EventDefinition',
 							description: null,
+							displayName: 'assetClicked',
 							hidden: false,
 							id: '1',
 							name: 'assetClicked',
@@ -2276,6 +2280,8 @@ export const mockSessions = variables => ({
 						events: [
 							{
 								__typename: 'Event',
+								applicationId: 'Page',
+								assetTitle: 'Home - Liferay DXP',
 								canonicalUrl: 'http://localhost:8080',
 								createDate: 'Mon Dec 06 17:28:48 GMT 2021',
 								name: 'tabBlurred',

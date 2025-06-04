@@ -6,10 +6,11 @@
 package com.liferay.frontend.data.set.admin.web.internal.portlet;
 
 import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.frontend.data.set.SystemFDSEntryRegistry;
 import com.liferay.frontend.data.set.admin.web.internal.constants.FDSAdminPortletKeys;
 import com.liferay.frontend.data.set.admin.web.internal.constants.FDSAdminWebKeys;
 import com.liferay.frontend.data.set.admin.web.internal.display.context.FDSAdminDisplayContext;
-import com.liferay.frontend.data.set.resolver.FDSAPIURLResolverRegistry;
+import com.liferay.frontend.data.set.url.FDSAPIURLResolverRegistry;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
@@ -17,12 +18,12 @@ import com.liferay.portal.kernel.module.util.BundleUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.util.GetterUtil;
 
-import java.io.IOException;
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
 
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
+import java.io.IOException;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -40,12 +41,13 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 	property = {
 		"com.liferay.portlet.display-category=category.hidden",
 		"com.liferay.portlet.layout-cacheable=true",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.view-template=/data_sets.jsp",
-		"javax.portlet.name=" + FDSAdminPortletKeys.FDS_ADMIN,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=administrator,power-user,user",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/view.jsp",
+		"jakarta.portlet.name=" + FDSAdminPortletKeys.FDS_ADMIN,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=administrator,power-user,user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -106,7 +108,7 @@ public class FDSAdminPortlet extends MVCPortlet {
 			new FDSAdminDisplayContext(
 				_cetManager, _fdsAPIURLResolverRegistry,
 				_objectDefinitionLocalService, renderRequest, renderResponse,
-				_serviceTrackerList));
+				_serviceTrackerList, _systemFDSEntryRegistry));
 
 		super.doDispatch(renderRequest, renderResponse);
 	}
@@ -124,6 +126,9 @@ public class FDSAdminPortlet extends MVCPortlet {
 
 	private ServiceTrackerList<CompanyScopedOpenAPIResource>
 		_serviceTrackerList;
+
+	@Reference
+	private SystemFDSEntryRegistry _systemFDSEntryRegistry;
 
 	private class CompanyScopedRESTApplicationServiceTrackerCustomizer
 		implements ServiceTrackerCustomizer

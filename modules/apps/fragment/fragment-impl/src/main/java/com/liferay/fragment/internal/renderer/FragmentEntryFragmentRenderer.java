@@ -5,7 +5,6 @@
 
 package com.liferay.fragment.internal.renderer;
 
-import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.fragment.cache.FragmentEntryLinkCache;
 import com.liferay.fragment.configuration.FragmentJavaScriptConfiguration;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
@@ -21,10 +20,6 @@ import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.renderer.constants.FragmentRendererConstants;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.info.form.InfoForm;
-import com.liferay.info.item.InfoItemServiceRegistry;
-import com.liferay.info.search.InfoSearchClassMapperRegistry;
-import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -51,16 +46,15 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -171,20 +165,15 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 
 	private JSONObject _getInputJSONObject(
 		FragmentEntryLink fragmentEntryLink,
-		HttpServletRequest httpServletRequest, InfoForm infoForm,
-		Locale locale) {
-
-		FragmentEntryInputTemplateNodeContextHelper
-			fragmentEntryInputTemplateNodeContextHelper =
-				new FragmentEntryInputTemplateNodeContextHelper(
-					_getFragmentEntryName(fragmentEntryLink),
-					_dlAppLocalService, _fragmentEntryConfigurationParser,
-					_infoItemServiceRegistry, _infoSearchClassMapperRegistry,
-					_itemSelector);
+		FragmentRendererContext fragmentRendererContext,
+		HttpServletRequest httpServletRequest) {
 
 		InputTemplateNode inputTemplateNode =
-			fragmentEntryInputTemplateNodeContextHelper.toInputTemplateNode(
-				fragmentEntryLink, httpServletRequest, infoForm, locale);
+			_fragmentEntryInputTemplateNodeContextHelper.toInputTemplateNode(
+				fragmentRendererContext.getAttributes(),
+				_getFragmentEntryName(fragmentEntryLink), fragmentEntryLink,
+				httpServletRequest, fragmentRendererContext.getInfoForm(),
+				fragmentRendererContext.getLocale());
 
 		return inputTemplateNode.toJSONObject();
 	}
@@ -262,7 +251,7 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 		FragmentRendererContext fragmentRendererContext, String html,
 		HttpServletRequest httpServletRequest, String nonce) {
 
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("<div id=\"");
 
@@ -348,6 +337,8 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 			sb.append(fragmentRendererContext.getFragmentElementId());
 			sb.append("'); const fragmentEntryLinkNamespace = '");
 			sb.append(fragmentEntryLink.getNamespace());
+			sb.append("'; const fragmentName = '");
+			sb.append(_getFragmentEntryName(fragmentEntryLink));
 			sb.append("'; const fragmentNamespace = '");
 			sb.append(fragmentEntryLink.getNamespace());
 			sb.append("'");
@@ -357,9 +348,8 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 				sb.append(
 					JSONUtil.toString(
 						_getInputJSONObject(
-							fragmentEntryLink, httpServletRequest,
-							fragmentRendererContext.getInfoForm(),
-							fragmentRendererContext.getLocale())));
+							fragmentEntryLink, fragmentRendererContext,
+							httpServletRequest)));
 			}
 
 			sb.append("; const layoutMode = '");
@@ -420,6 +410,8 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 					fragmentRendererContext.getMode(),
 					fragmentRendererContext.getLocale());
 
+		defaultFragmentEntryProcessorContext.setAttributes(
+			fragmentRendererContext.getAttributes());
 		defaultFragmentEntryProcessorContext.setContextInfoItemReference(
 			fragmentRendererContext.getContextInfoItemReference());
 		defaultFragmentEntryProcessorContext.setFragmentElementId(
@@ -513,14 +505,15 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 	private ConfigurationProvider _configurationProvider;
 
 	@Reference
-	private DLAppLocalService _dlAppLocalService;
-
-	@Reference
 	private FragmentCollectionContributorRegistry
 		_fragmentCollectionContributorRegistry;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
+	private FragmentEntryInputTemplateNodeContextHelper
+		_fragmentEntryInputTemplateNodeContextHelper;
 
 	@Reference
 	private FragmentEntryLinkCache _fragmentEntryLinkCache;
@@ -530,15 +523,6 @@ public class FragmentEntryFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
-
-	@Reference
-	private InfoItemServiceRegistry _infoItemServiceRegistry;
-
-	@Reference
-	private InfoSearchClassMapperRegistry _infoSearchClassMapperRegistry;
-
-	@Reference
-	private ItemSelector _itemSelector;
 
 	@Reference
 	private JSONFactory _jsonFactory;

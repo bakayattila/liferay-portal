@@ -942,6 +942,25 @@ public class JournalArticleLocalServiceWrapper
 	}
 
 	@Override
+	public JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int status,
+		boolean preferApproved) {
+
+		return _journalArticleLocalService.
+			fetchLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, status, preferApproved);
+	}
+
+	@Override
+	public JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int[] statuses) {
+
+		return _journalArticleLocalService.
+			fetchLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, statuses);
+	}
+
+	@Override
 	public JournalArticle fetchLatestArticleByUrlTitle(
 		long groupId, String urlTitle, int status) {
 
@@ -2208,6 +2227,17 @@ public class JournalArticleLocalServiceWrapper
 		return _journalArticleLocalService.
 			getLatestArticleByExternalReferenceCode(
 				groupId, externalReferenceCode);
+	}
+
+	@Override
+	public JournalArticle getLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode, int status,
+			boolean preferApproved)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _journalArticleLocalService.
+			getLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode, status, preferApproved);
 	}
 
 	/**

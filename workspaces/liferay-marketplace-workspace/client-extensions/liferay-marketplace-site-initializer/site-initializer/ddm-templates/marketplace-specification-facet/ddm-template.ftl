@@ -1,4 +1,4 @@
-<style>
+<style ${nonceAttribute}>
 	.price-model-facet {
 		border-radius: 10px;
 	}
@@ -37,7 +37,7 @@
 		persistState=true
 		title="${cpSpecificationOptionsSearchFacetDisplayContext.getParameterName()?replace('-',' ')}">
 		<ul class="list-unstyled">
-			<#list entries as entry>
+			<#list entries?sort_by("displayName") as entry>
 				<li class="color-neutral-2 facet-value py-1">
 					<div class="custom-checkbox custom-control font-weight-normal">
 						<label class="facet-checkbox-label" for="${namespace}_term_${entry.getDisplayName()}">
@@ -52,7 +52,13 @@
 
 							<span class="custom-control-label font-size-paragraph-small term-name ${(entry.isSelected())?then('facet-term-selected', 'facet-term-unselected')}">
 								<span class="custom-control-label-text">
-									${htmlUtil.escape(entry.getDisplayName())}
+									<#assign displayName = entry.getDisplayName()?replace("-", " ") />
+
+									<#if displayName == 'dxp'>
+										DXP
+									<#else>
+										${htmlUtil.escape(displayName)?capitalize}
+									</#if>
 								</span>
 							</span>
 						</label>

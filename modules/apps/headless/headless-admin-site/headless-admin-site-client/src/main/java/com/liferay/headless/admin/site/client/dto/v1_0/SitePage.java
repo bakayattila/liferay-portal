@@ -8,13 +8,13 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.SitePageSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -94,16 +94,23 @@ public class SitePage implements Cloneable, Serializable {
 
 	protected String creatorExternalReferenceCode;
 
-	public CustomField[] getCustomFields() {
+	public com.liferay.headless.admin.site.client.custom.field.CustomField[]
+		getCustomFields() {
+
 		return customFields;
 	}
 
-	public void setCustomFields(CustomField[] customFields) {
+	public void setCustomFields(
+		com.liferay.headless.admin.site.client.custom.field.CustomField[]
+			customFields) {
+
 		this.customFields = customFields;
 	}
 
 	public void setCustomFields(
-		UnsafeSupplier<CustomField[], Exception> customFieldsUnsafeSupplier) {
+		UnsafeSupplier
+			<com.liferay.headless.admin.site.client.custom.field.CustomField[],
+			 Exception> customFieldsUnsafeSupplier) {
 
 		try {
 			customFields = customFieldsUnsafeSupplier.get();
@@ -113,7 +120,8 @@ public class SitePage implements Cloneable, Serializable {
 		}
 	}
 
-	protected CustomField[] customFields;
+	protected com.liferay.headless.admin.site.client.custom.field.CustomField[]
+		customFields;
 
 	public Date getDateCreated() {
 		return dateCreated;
@@ -382,29 +390,6 @@ public class SitePage implements Cloneable, Serializable {
 
 	protected String parentSitePageExternalReferenceCode;
 
-	public String getSiteExternalReferenceCode() {
-		return siteExternalReferenceCode;
-	}
-
-	public void setSiteExternalReferenceCode(String siteExternalReferenceCode) {
-		this.siteExternalReferenceCode = siteExternalReferenceCode;
-	}
-
-	public void setSiteExternalReferenceCode(
-		UnsafeSupplier<String, Exception>
-			siteExternalReferenceCodeUnsafeSupplier) {
-
-		try {
-			siteExternalReferenceCode =
-				siteExternalReferenceCodeUnsafeSupplier.get();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected String siteExternalReferenceCode;
-
 	public TaxonomyCategory[] getTaxonomyCategories() {
 		return taxonomyCategories;
 	}
@@ -561,8 +546,7 @@ public class SitePage implements Cloneable, Serializable {
 
 	public static enum Type {
 
-		COLLECTION_PAGE("CollectionPage"), CONTENT_PAGE("ContentPage"),
-		WIDGET_PAGE("WidgetPage");
+		CONTENT_PAGE("ContentPage"), WIDGET_PAGE("WidgetPage");
 
 		public static Type create(String value) {
 			for (Type type : values()) {

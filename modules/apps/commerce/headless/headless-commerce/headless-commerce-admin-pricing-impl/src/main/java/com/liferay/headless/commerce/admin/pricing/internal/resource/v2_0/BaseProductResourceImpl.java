@@ -10,7 +10,6 @@ import com.liferay.headless.commerce.admin.pricing.resource.v2_0.ProductResource
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
@@ -21,24 +20,25 @@ import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.util.ActionUtil;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
+
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import jakarta.ws.rs.core.UriInfo;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import javax.annotation.Generated;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Zoltán Takács
  * @generated
  */
 @Generated("")
-@javax.ws.rs.Path("/v2.0")
+@jakarta.ws.rs.Path("/v2.0")
 public abstract class BaseProductResourceImpl implements ProductResource {
 
 	/**
@@ -57,14 +57,14 @@ public abstract class BaseProductResourceImpl implements ProductResource {
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/discount-products/{discountProductId}/product")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/discount-products/{discountProductId}/product")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public Product getDiscountProductProduct(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("discountProductId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("discountProductId")
 			Long discountProductId)
 		throws Exception {
 
@@ -87,14 +87,14 @@ public abstract class BaseProductResourceImpl implements ProductResource {
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path("/price-entries/{priceEntryId}/product")
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path("/price-entries/{priceEntryId}/product")
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public Product getPriceEntryIdProduct(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("priceEntryId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("priceEntryId")
 			Long priceEntryId)
 		throws Exception {
 
@@ -117,16 +117,16 @@ public abstract class BaseProductResourceImpl implements ProductResource {
 	@io.swagger.v3.oas.annotations.tags.Tags(
 		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "Product")}
 	)
-	@javax.ws.rs.GET
-	@javax.ws.rs.Path(
+	@jakarta.ws.rs.GET
+	@jakarta.ws.rs.Path(
 		"/price-modifier-products/{priceModifierProductId}/product"
 	)
-	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@jakarta.ws.rs.Produces({"application/json", "application/xml"})
 	@Override
 	public Product getPriceModifierProductProduct(
 			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
-			@javax.validation.constraints.NotNull
-			@javax.ws.rs.PathParam("priceModifierProductId")
+			@jakarta.validation.constraints.NotNull
+			@jakarta.ws.rs.PathParam("priceModifierProductId")
 			Long priceModifierProductId)
 		throws Exception {
 
@@ -156,7 +156,8 @@ public abstract class BaseProductResourceImpl implements ProductResource {
 	}
 
 	public void setContextUriInfo(UriInfo contextUriInfo) {
-		this.contextUriInfo = contextUriInfo;
+		this.contextUriInfo = UriInfoUtil.getVulcanUriInfo(
+			getApplicationPath(), contextUriInfo);
 	}
 
 	public void setContextUser(
@@ -166,7 +167,8 @@ public abstract class BaseProductResourceImpl implements ProductResource {
 	}
 
 	public void setExpressionConvert(
-		ExpressionConvert<Filter> expressionConvert) {
+		ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+			expressionConvert) {
 
 		this.expressionConvert = expressionConvert;
 	}
@@ -199,6 +201,10 @@ public abstract class BaseProductResourceImpl implements ProductResource {
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider) {
 		this.sortParserProvider = sortParserProvider;
+	}
+
+	protected String getApplicationPath() {
+		return "headless-commerce-admin-pricing";
 	}
 
 	protected Map<String, String> addAction(
@@ -316,7 +322,8 @@ public abstract class BaseProductResourceImpl implements ProductResource {
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
-	protected ExpressionConvert<Filter> expressionConvert;
+	protected ExpressionConvert<com.liferay.portal.kernel.search.filter.Filter>
+		expressionConvert;
 	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;

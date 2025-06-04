@@ -101,6 +101,15 @@ const Routine = () => {
 						},
 						{
 							clickable: true,
+							key: 'testrayBuildCPUUseTime',
+							render: (testrayBuildCPUUseTime) =>
+								testrayBuildCPUUseTime === 'null' || ''
+									? '-'
+									: testrayBuildCPUUseTime,
+							value: i18n.translate('cpu-use-time'),
+						},
+						{
+							clickable: true,
 							key: 'testrayBuildGitHash',
 							render: (testrayBuildGitHash) =>
 								testrayBuildGitHash === 'null' || ''
@@ -212,8 +221,8 @@ const Routine = () => {
 										blocked: testrayStatusMetric?.blocked,
 										failed: testrayStatusMetric?.failed,
 										incomplete:
-											testrayStatusMetric?.untested +
-											testrayStatusMetric?.inProgress,
+											testrayStatusMetric?.incomplete +
+											testrayStatusMetric?.untested,
 										passed: testrayStatusMetric?.passed,
 										test_fix: testrayStatusMetric?.testfix,
 									}}

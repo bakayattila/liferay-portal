@@ -16,7 +16,6 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
@@ -37,15 +36,15 @@ import com.liferay.product.navigation.control.menu.BaseProductNavigationControlM
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.jsp.JspException;
+
 import java.io.IOException;
 import java.io.Writer;
 
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.jsp.JspException;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -81,13 +80,11 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 
 		Writer writer = httpServletResponse.getWriter();
 
-		StringBundler sb = new StringBundler(31);
+		StringBundler sb = new StringBundler(29);
 
-		sb.append("<div class=\"");
-		sb.append(_getCssClass(httpServletRequest));
-		sb.append("\"><span class=\"align-items-center ");
-		sb.append("control-menu-level-1-heading d-flex mr-1\" ");
-		sb.append("data-qa-id=\"headerTitle\"><h1 class=\"");
+		sb.append("<div class=\"control-menu-nav-item\"><span ");
+		sb.append("class=\"align-items-center control-menu-level-1-heading ");
+		sb.append("d-flex mr-1\" data-qa-id=\"headerTitle\"><h1 class=\"");
 		sb.append("lfr-portal-tooltip h4 mb-0\" title=\"");
 
 		String headerTitle = _getHeaderTitle(httpServletRequest);
@@ -191,11 +188,7 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 		String layoutMode = ParamUtil.getString(
 			httpServletRequest, "p_l_mode", Constants.VIEW);
 
-		if (layoutMode.equals(Constants.EDIT)) {
-			return true;
-		}
-
-		return false;
+		return layoutMode.equals(Constants.EDIT);
 	}
 
 	@Override
@@ -213,22 +206,6 @@ public class LayoutHeaderProductNavigationControlMenuEntry
 		}
 
 		return super.isShow(httpServletRequest);
-	}
-
-	private String _getCssClass(HttpServletRequest httpServletRequest) {
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		Layout layout = themeDisplay.getLayout();
-
-		if (!Objects.equals(
-				layout.getType(), LayoutConstants.TYPE_COLLECTION)) {
-
-			return "control-menu-nav-item control-menu-nav-item-content";
-		}
-
-		return "control-menu-nav-item";
 	}
 
 	private String _getHeaderTitle(HttpServletRequest httpServletRequest) {

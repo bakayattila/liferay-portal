@@ -10,7 +10,7 @@ import com.liferay.content.dashboard.info.item.ClassNameClassPKInfoItemIdentifie
 import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtypeFactoryRegistry;
-import com.liferay.content.dashboard.web.internal.item.selector.criteria.content.dashboard.type.criterion.ContentDashboardItemSubtypeItemSelectorCriterion;
+import com.liferay.content.dashboard.web.internal.item.selector.ContentDashboardItemSubtypeItemSelectorCriterion;
 import com.liferay.content.dashboard.web.internal.item.type.ContentDashboardItemSubtypeUtil;
 import com.liferay.content.dashboard.web.internal.model.AssetVocabularyMetric;
 import com.liferay.content.dashboard.web.internal.servlet.taglib.util.ContentDashboardDropdownItemsProvider;
@@ -54,6 +54,9 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.users.admin.item.selector.UserItemSelectorCriterion;
 
+import jakarta.portlet.ActionURL;
+import jakarta.portlet.ResourceURL;
+
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -70,9 +73,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
-
-import javax.portlet.ActionURL;
-import javax.portlet.ResourceURL;
 
 /**
  * @author Cristina González
@@ -275,8 +275,8 @@ public class ContentDashboardAdminDisplayContext {
 	public List<? extends ContentDashboardItemSubtype>
 		getContentDashboardItemSubtypes() {
 
-		if (_contentDashboardItemSubtypePayloads != null) {
-			return _contentDashboardItemSubtypePayloads;
+		if (_contentDashboardItemSubtypes != null) {
+			return _contentDashboardItemSubtypes;
 		}
 
 		String[] contentDashboardItemSubtypePayloads =
@@ -285,20 +285,19 @@ public class ContentDashboardAdminDisplayContext {
 				new String[0], false);
 
 		if (ArrayUtil.isEmpty(contentDashboardItemSubtypePayloads)) {
-			_contentDashboardItemSubtypePayloads = Collections.emptyList();
+			_contentDashboardItemSubtypes = Collections.emptyList();
 		}
 		else {
-			_contentDashboardItemSubtypePayloads =
-				TransformUtil.transformToList(
-					contentDashboardItemSubtypePayloads,
-					contentDashboardItemSubtypePayload ->
-						ContentDashboardItemSubtypeUtil.
-							toContentDashboardItemSubtype(
-								_contentDashboardItemSubtypeFactoryRegistry,
-								contentDashboardItemSubtypePayload));
+			_contentDashboardItemSubtypes = TransformUtil.transformToList(
+				contentDashboardItemSubtypePayloads,
+				contentDashboardItemSubtypePayload ->
+					ContentDashboardItemSubtypeUtil.
+						toContentDashboardItemSubtype(
+							_contentDashboardItemSubtypeFactoryRegistry,
+							contentDashboardItemSubtypePayload));
 		}
 
-		return _contentDashboardItemSubtypePayloads;
+		return _contentDashboardItemSubtypes;
 	}
 
 	public String getContentPerformanceDataFetchURL(
@@ -604,8 +603,7 @@ public class ContentDashboardAdminDisplayContext {
 		_contentDashboardDropdownItemsProvider;
 	private final ContentDashboardItemSubtypeFactoryRegistry
 		_contentDashboardItemSubtypeFactoryRegistry;
-	private List<ContentDashboardItemSubtype>
-		_contentDashboardItemSubtypePayloads;
+	private List<ContentDashboardItemSubtype> _contentDashboardItemSubtypes;
 	private Map<String, Object> _data;
 	private String _dateType;
 	private String _endDateString;

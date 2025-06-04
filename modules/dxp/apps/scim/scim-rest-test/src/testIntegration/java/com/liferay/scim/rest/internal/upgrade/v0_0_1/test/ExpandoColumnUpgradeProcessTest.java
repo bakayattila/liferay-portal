@@ -13,9 +13,12 @@ import com.liferay.expando.kernel.model.ExpandoTableConstants;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -27,7 +30,6 @@ import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -58,7 +60,6 @@ import org.junit.runner.RunWith;
  * @author Christian Moura
  */
 @DataGuard(scope = DataGuard.Scope.METHOD)
-@FeatureFlags("LPS-96845")
 @RunWith(Arquillian.class)
 public class ExpandoColumnUpgradeProcessTest {
 
@@ -89,11 +90,17 @@ public class ExpandoColumnUpgradeProcessTest {
 		try {
 			GroupResource.Builder groupResourceBuilder =
 				GroupResource.builder();
+
+			Company company = _companyLocalService.getCompany(
+				TestPropsValues.getCompanyId());
 			String languageId = UpgradeProcessUtil.getDefaultLanguageId(
 				TestPropsValues.getCompanyId());
+			User user = _userLocalService.getUser(TestPropsValues.getUserId());
 
 			GroupResource groupResource = groupResourceBuilder.authentication(
-				"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+				user.getEmailAddress(), PropsValues.DEFAULT_ADMIN_PASSWORD
+			).endpoint(
+				company.getVirtualHostname(), 8080, "http"
 			).locale(
 				LocaleUtil.fromLanguageId(languageId)
 			).build();
@@ -101,7 +108,9 @@ public class ExpandoColumnUpgradeProcessTest {
 			UserResource.Builder userResourceBuilder = UserResource.builder();
 
 			UserResource userResource = userResourceBuilder.authentication(
-				"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+				user.getEmailAddress(), PropsValues.DEFAULT_ADMIN_PASSWORD
+			).endpoint(
+				company.getVirtualHostname(), 8080, "http"
 			).locale(
 				LocaleUtil.fromLanguageId(languageId)
 			).build();
@@ -254,18 +263,24 @@ public class ExpandoColumnUpgradeProcessTest {
 		_expandoColumnLocalService.updateExpandoColumn(expandoColumn);
 	}
 
-	@Inject(
-		filter = "(&(component.name=com.liferay.scim.rest.internal.upgrade.registry.ScimRestUpgradeStepRegistrator))"
-	)
-	private static UpgradeStepRegistrator _upgradeStepRegistrator;
-
 	@Inject
 	private ClassNameLocalService _classNameLocalService;
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@Inject
 	private ExpandoColumnLocalService _expandoColumnLocalService;
 
 	@Inject
 	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Inject(
+		filter = "(&(component.name=com.liferay.scim.rest.internal.upgrade.registry.ScimRestUpgradeStepRegistrator))"
+	)
+	private UpgradeStepRegistrator _upgradeStepRegistrator;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

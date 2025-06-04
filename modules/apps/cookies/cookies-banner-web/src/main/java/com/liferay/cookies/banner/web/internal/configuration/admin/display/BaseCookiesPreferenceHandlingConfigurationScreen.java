@@ -17,16 +17,16 @@ import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.Locale;
-
-import javax.portlet.PortletResponse;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -54,11 +54,7 @@ public abstract class BaseCookiesPreferenceHandlingConfigurationScreen
 
 	@Override
 	public boolean isVisible() {
-		if (FeatureFlagManagerUtil.isEnabled("LPD-10588")) {
-			return true;
-		}
-
-		return false;
+		return FeatureFlagManagerUtil.isEnabled("LPD-10588");
 	}
 
 	@Override

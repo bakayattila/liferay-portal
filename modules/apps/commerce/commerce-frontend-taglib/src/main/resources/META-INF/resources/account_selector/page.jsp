@@ -23,21 +23,27 @@
 				).put(
 					"accountSelectorId", accountSelectorId
 				).put(
+					"checkoutURL", checkoutURL
+				).put(
 					"commerceChannelId", commerceChannelId
 				).put(
 					"createNewOrderURL", createNewOrderURL
 				).put(
+					"currencyCode", currencyCode
+				).put(
 					"currentCommerceAccount", currentCommerceAccount
 				).put(
 					"currentCommerceOrder", currentCommerceOrder
+				).put(
+					"hasAddCommerceOrderPermission", hasAddCommerceOrderPermission
+				).put(
+					"hasManageAccountsPermission", hasManageAccountsPermission
 				).put(
 					"refreshPageOnAccountSelected", true
 				).put(
 					"selectOrderURL", selectOrderURL
 				).put(
 					"setCurrentAccountURL", setCurrentAccountURL
-				).put(
-					"showOrderTypeModal", showOrderTypeModal
 				).build()
 			%>'
 			module="{accountSelectorTag} from commerce-frontend-taglib"

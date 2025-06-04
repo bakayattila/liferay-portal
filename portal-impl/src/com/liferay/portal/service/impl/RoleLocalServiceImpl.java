@@ -8,6 +8,7 @@ package com.liferay.portal.service.impl;
 import com.liferay.admin.kernel.util.PortalMyAccountApplicationType;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -26,9 +27,11 @@ import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.DuplicateRoleException;
+import com.liferay.portal.kernel.exception.NoSuchRoleException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RequiredRoleException;
 import com.liferay.portal.kernel.exception.RoleNameException;
+import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -61,6 +64,8 @@ import com.liferay.portal.kernel.model.Users_UserGroupsTable;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.SearchException;
@@ -127,6 +132,7 @@ import java.util.Set;
  */
 public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public Role addRole(
 			String externalReferenceCode, long userId, String className,
@@ -169,6 +175,14 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		role.setDescriptionMap(descriptionMap);
 		role.setType(type);
 		role.setSubtype(subtype);
+
+		if (LazyReferencingThreadLocal.isIncompleteModel()) {
+			role.setStatus(WorkflowConstants.STATUS_INCOMPLETE);
+		}
+		else {
+			role.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
 		role.setExpandoBridgeAttributes(serviceContext);
 
 		role = rolePersistence.update(role);
@@ -430,6 +444,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	 * @param  role the role
 	 * @return the deleted role
 	 */
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	@SystemEvent(
 		action = SystemEventConstants.ACTION_SKIP,
@@ -772,6 +787,40 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		return roleFinder.countByGroupRoleAndTeamRole(
 			companyId, name, excludedNames, title, description, types,
 			excludedTeamRoleId, teamGroupId);
+	}
+
+	@Override
+	public Role getOrAddIncompleteRole(
+			String externalReferenceCode, long companyId, long userId,
+			String className, long classPK, String name, int type)
+		throws Exception {
+
+		Role role = fetchRoleByExternalReferenceCode(
+			externalReferenceCode, companyId);
+
+		if (role != null) {
+			return role;
+		}
+
+		if (!LazyReferencingThreadLocal.isEnabled()) {
+			throw new NoSuchRoleException(
+				StringBundler.concat(
+					"Unable to find role with external reference code ",
+					externalReferenceCode, " and company ", companyId));
+		}
+
+		if (fetchRole(companyId, name) != null) {
+			name = externalReferenceCode;
+		}
+
+		try (SafeCloseable safeCloseable =
+				LazyReferencingThreadLocal.setIncompleteModelWithSafeCloseable(
+					true)) {
+
+			return roleLocalService.addRole(
+				externalReferenceCode, userId, className, classPK, name, null,
+				null, type, StringPool.BLANK, new ServiceContext());
+		}
 	}
 
 	/**
@@ -1396,11 +1445,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		long guestUserId = _userLocalService.getGuestUserId(companyId);
 
 		if (userId == guestUserId) {
-			if (name.equals(RoleConstants.GUEST)) {
-				return true;
-			}
-
-			return false;
+			return name.equals(RoleConstants.GUEST);
 		}
 
 		if (inherited) {
@@ -1891,11 +1936,12 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	 *         role.
 	 * @return the role with the primary key
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public Role updateRole(
-			long roleId, String name, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, String subtype,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long roleId, String name,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			String subtype, ServiceContext serviceContext)
 		throws PortalException {
 
 		Role role = rolePersistence.findByPrimaryKey(roleId);
@@ -1907,10 +1953,16 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			subtype = null;
 		}
 
+		role.setExternalReferenceCode(externalReferenceCode);
 		role.setName(name);
 		role.setTitleMap(titleMap);
 		role.setDescriptionMap(descriptionMap);
 		role.setSubtype(subtype);
+
+		if (role.getStatus() == WorkflowConstants.STATUS_INCOMPLETE) {
+			role.setStatus(WorkflowConstants.STATUS_APPROVED);
+		}
+
 		role.setExpandoBridgeAttributes(serviceContext);
 
 		return rolePersistence.update(role);

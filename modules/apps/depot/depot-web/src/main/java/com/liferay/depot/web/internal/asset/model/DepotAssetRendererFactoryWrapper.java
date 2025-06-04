@@ -25,14 +25,14 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 
-import java.util.Locale;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.WindowState;
 
-import javax.portlet.PortletURL;
-import javax.portlet.WindowState;
+import java.util.Locale;
 
 /**
  * @author Adolfo Pérez
@@ -95,7 +95,7 @@ public class DepotAssetRendererFactoryWrapper<T>
 			return assetRenderer;
 		}
 
-		Group group = _getGroup();
+		Group group = _getGroup(assetRendererGroup);
 
 		if (group == null) {
 			return null;
@@ -264,7 +264,7 @@ public class DepotAssetRendererFactoryWrapper<T>
 
 	@Override
 	public boolean isSelectable() {
-		Group group = _getGroup();
+		Group group = _getGroup(null);
 
 		if ((group != null) && group.isDepot() &&
 			!_depotApplicationController.isClassNameEnabled(
@@ -291,18 +291,26 @@ public class DepotAssetRendererFactoryWrapper<T>
 		_assetRendererFactory.setPortletId(portletId);
 	}
 
-	private Group _getGroup() {
+	private Group _getGroup(Group fallbackGroup) {
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
 		if (serviceContext == null) {
-			return _groupLocalService.fetchGroup(GroupThreadLocal.getGroupId());
+			Group group = _groupLocalService.fetchGroup(
+				GroupThreadLocal.getGroupId());
+
+			if (group != null) {
+				return group;
+			}
+
+			return fallbackGroup;
 		}
 
-		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+		long scopeGroupId = GetterUtil.getLong(
+			serviceContext.getAttribute("scopeGroupId"));
 
-		if (themeDisplay != null) {
-			return themeDisplay.getScopeGroup();
+		if (scopeGroupId != 0) {
+			return _groupLocalService.fetchGroup(scopeGroupId);
 		}
 
 		return _groupLocalService.fetchGroup(serviceContext.getScopeGroupId());

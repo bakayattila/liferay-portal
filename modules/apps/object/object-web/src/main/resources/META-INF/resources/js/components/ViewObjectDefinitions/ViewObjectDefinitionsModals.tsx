@@ -7,21 +7,18 @@ import {stringUtils} from '@liferay/object-js-components-web';
 import {sub} from 'frontend-js-web';
 import React from 'react';
 
+import ModalDeletionNotAllowed from '../ModalDeletionNotAllowed';
 import ModalImport from '../ModalImport/ModalImport';
-import ModalObjectFieldDeletionNotAllowed from '../ModalObjectFieldDeletionNotAllowed';
 import {ModalAddObjectDefinition} from './ModalAddObjectDefinition';
 import {ModalAddObjectFolder} from './ModalAddObjectFolder';
-import {ModalBindToRootObjectDefinition} from './ModalBindToRootObjectDefinition';
 import {ModalDeleteObjectDefinition} from './ModalDeleteObjectDefinition';
 import {ModalDeleteObjectFolder} from './ModalDeleteObjectFolder';
 import {ModalEditObjectFolder} from './ModalEditObjectFolder';
 import {ModalMoveObjectDefinition} from './ModalMoveObjectDefinition';
-import {ModalUnbindObjectDefinition} from './ModalUnbindObjectDefinition';
 
 import type {ModalImportProperties} from './ViewObjectDefinitions';
 
 interface ViewObjectDefinitionsModalsProps {
-	baseResourceURL: string;
 	deletedObjectDefinition?: DeletedObjectDefinition | null;
 	learnResourceContext: any;
 	modalImportProperties: ModalImportProperties;
@@ -52,7 +49,6 @@ interface ViewObjectDefinitionsModalsProps {
 }
 
 export function ViewObjectDefinitionsModals({
-	baseResourceURL,
 	deletedObjectDefinition,
 	learnResourceContext,
 	modalImportProperties,
@@ -134,22 +130,6 @@ export function ViewObjectDefinitionsModals({
 					setSelectedObjectFolder={setSelectedObjectFolder}
 				/>
 			)}
-
-			{showModal.bindToRootObjectDefinition &&
-				Liferay.FeatureFlags['LPS-187142'] && (
-					<ModalBindToRootObjectDefinition
-						baseResourceURL={baseResourceURL}
-						onVisibilityChange={() => {
-							setShowModal((previousState) => ({
-								...previousState,
-								bindToRootObjectDefinition: false,
-							}));
-						}}
-						selectedObjectDefinitionToBind={
-							selectedObjectDefinition
-						}
-					/>
-				)}
 
 			{showModal.deleteObjectDefinition && (
 				<ModalDeleteObjectDefinition
@@ -236,10 +216,33 @@ export function ViewObjectDefinitionsModals({
 				/>
 			)}
 
+			{showModal.objectDefinitionOnRootModelDeletionNotAllowed &&
+				selectedObjectDefinition &&
+				Liferay.FeatureFlags['LPD-34594'] && (
+					<ModalDeletionNotAllowed
+						content={
+							<span
+								dangerouslySetInnerHTML={{
+									__html: Liferay.Language.get(
+										'to-delete-this-object-you-must-first-disable-inheritance-and-delete-its-relationships'
+									),
+								}}
+							/>
+						}
+						onModalClose={() =>
+							setShowModal((previousState) => ({
+								...previousState,
+								objectDefinitionOnRootModelDeletionNotAllowed:
+									false,
+							}))
+						}
+					/>
+				)}
+
 			{showModal.objectFieldDeletionNotAllowed &&
 				selectedObjectDefinition &&
-				Liferay.FeatureFlags['LPS-187142'] && (
-					<ModalObjectFieldDeletionNotAllowed
+				Liferay.FeatureFlags['LPD-34594'] && (
+					<ModalDeletionNotAllowed
 						content={
 							<span
 								dangerouslySetInnerHTML={{
@@ -248,35 +251,23 @@ export function ViewObjectDefinitionsModals({
 											'x-is-being-used-by-a-root-object-and-cannot-be-deleted'
 										),
 										`<strong>"${stringUtils.getLocalizableLabel(
-											selectedObjectDefinition.defaultLanguageId,
-											selectedObjectDefinition.label,
-											selectedObjectDefinition.name
+											{
+												fallbackLabel:
+													selectedObjectDefinition.name,
+												fallbackLanguageId:
+													selectedObjectDefinition.defaultLanguageId,
+												labels: selectedObjectDefinition.label,
+											}
 										)}"</strong>`
 									),
 								}}
 							/>
 						}
-						onVisibilityChange={() =>
+						onModalClose={() =>
 							setShowModal((previousState) => ({
 								...previousState,
 								objectFieldDeletionNotAllowed: false,
 							}))
-						}
-					/>
-				)}
-
-			{showModal.unbindFromRootObjectDefinition &&
-				Liferay.FeatureFlags['LPS-187142'] && (
-					<ModalUnbindObjectDefinition
-						baseResourceURL={baseResourceURL}
-						onVisibilityChange={() => {
-							setShowModal((previousState) => ({
-								...previousState,
-								unbindFromRootObjectDefinition: false,
-							}));
-						}}
-						selectedObjectDefinitionToUnbind={
-							selectedObjectDefinition
 						}
 					/>
 				)}

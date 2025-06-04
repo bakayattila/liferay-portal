@@ -5,20 +5,23 @@
 
 package com.liferay.marketplace.service;
 
-import com.liferay.client.extension.util.spring.boot.BaseRestController;
+import com.liferay.client.extension.util.spring.boot3.service.BaseService;
 import com.liferay.petra.string.StringBundler;
 
 import java.time.Duration;
 
+import java.util.Objects;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
-import org.springframework.web.util.DefaultUriBuilderFactory;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import reactor.util.retry.Retry;
 
@@ -26,12 +29,14 @@ import reactor.util.retry.Retry;
  * @author Keven Leone
  */
 @Component
-public class ConsoleService extends BaseRestController {
+public class ConsoleService extends BaseService {
 
 	public void deleteProject(String projectId) throws Exception {
 		String projectName = _consoleProjectPrefix + "-ext" + projectId;
 
-		delete(getAuthorization(), "", "/projects/" + projectName);
+		delete(
+			getAuthorization(), "",
+			createURI(_consoleAuthURL, "/projects/", projectName));
 	}
 
 	public JSONObject deployApp(
@@ -47,7 +52,8 @@ public class ConsoleService extends BaseRestController {
 				).put(
 					"userEmail", emailAddress
 				).toString(),
-				"/admin/projects/" + projectId + "/apps"));
+				createURI(
+					_consoleAuthURL, "/admin/projects/", projectId, "/apps")));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Deployed app for project " + projectId);
@@ -71,7 +77,7 @@ public class ConsoleService extends BaseRestController {
 			).put(
 				"password", _consoleAuthPassword
 			).toString(),
-			"/login");
+			createURI(_consoleAuthURL, "/login"));
 
 		if (json == null) {
 			throw new Exception("Unable to get authorization");
@@ -93,20 +99,58 @@ public class ConsoleService extends BaseRestController {
 	public String getProjectsUsage(String userEmail) throws Exception {
 		return get(
 			getAuthorization(),
-			_defaultUriBuilderFactory.builder(
-			).path(
+			UriComponentsBuilder.fromPath(
 				"/admin/user-projects-plan-usage"
 			).queryParam(
 				"userEmail", userEmail
 			).build(
-			).toString());
+			).toUri());
 	}
 
-	public void setUpProject(String dxpVirtualInstanceId, long orderId)
+	public String getProjectUsage(String emailAddress, String projectId)
+		throws Exception {
+
+		JSONObject jsonObject = new JSONObject(getProjectsUsage(emailAddress));
+
+		JSONArray userProjectsJSONArray = jsonObject.getJSONArray(
+			"userProjects");
+
+		for (int i = 0; i < userProjectsJSONArray.length(); i++) {
+			JSONObject userProjectJSONObject =
+				userProjectsJSONArray.getJSONObject(i);
+
+			JSONArray environmentsJSONArray =
+				userProjectJSONObject.getJSONArray("environments");
+
+			for (int j = 0; j < environmentsJSONArray.length(); j++) {
+				JSONObject environmentJSONObject =
+					environmentsJSONArray.getJSONObject(j);
+
+				if (Objects.equals(
+						environmentJSONObject.getString("projectId"),
+						projectId)) {
+
+					return userProjectJSONObject.toString();
+				}
+			}
+		}
+
+		throw new Exception(
+			StringBundler.concat(
+				"No project found with email address ", emailAddress,
+				" and project ID ", projectId));
+	}
+
+	public void setUpProject(
+			String[] emailAddresses, String dxpVirtualInstanceId, long orderId)
 		throws Exception {
 
 		JSONObject jsonObject = _postProject(
 			_consoleProjectPrefix + "-ext" + orderId);
+
+		for (String emailAddress : emailAddresses) {
+			_inviteProject(emailAddress, jsonObject.getString("projectId"));
+		}
 
 		_inviteProject(
 			_trialAdminEmailAddress, jsonObject.getString("projectId"));
@@ -119,11 +163,13 @@ public class ConsoleService extends BaseRestController {
 	}
 
 	public void uninstallApp(long orderId) throws Exception {
-		delete(getAuthorization(), "", "/apps/" + orderId);
+		delete(
+			getAuthorization(), "",
+			createURI(_consoleAuthURL, "/apps/", orderId));
 	}
 
 	@Override
-	protected ExchangeFilterFunction getExchangeFilterFunction() {
+	protected ExchangeFilterFunction getWebClientExchangeFilterFunction() {
 		return (clientRequest, exchangeFunction) -> exchangeFunction.exchange(
 			clientRequest
 		).retryWhen(
@@ -140,13 +186,12 @@ public class ConsoleService extends BaseRestController {
 		);
 	}
 
-	@Override
-	protected String getLXCDXPURL() {
-		return _consoleAuthURL;
-	}
-
 	private void _inviteProject(String emailAddress, String projectId)
 		throws Exception {
+
+		if (Objects.equals(emailAddress, _consoleAuthEmailAddress)) {
+			return;
+		}
 
 		post(
 			getAuthorization(),
@@ -156,7 +201,7 @@ public class ConsoleService extends BaseRestController {
 			).put(
 				"role", "admin"
 			).toString(),
-			"/projects/" + projectId + "/invite");
+			createURI(_consoleAuthURL, "/projects/", projectId, "/invite"));
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -179,7 +224,7 @@ public class ConsoleService extends BaseRestController {
 			).put(
 				"extensionProjectUid", extensionProjectUid
 			).toString(),
-			"/lxc-extension-links");
+			createURI(_consoleAuthURL, "/lxc-extension-links"));
 
 		if (_log.isInfoEnabled()) {
 			_log.info(
@@ -207,7 +252,7 @@ public class ConsoleService extends BaseRestController {
 				).put(
 					"projectId", projectId
 				).toString(),
-				"/projects"));
+				createURI(_consoleAuthURL, "/projects")));
 
 		if (_log.isInfoEnabled()) {
 			_log.info("Created project " + jsonObject);
@@ -238,8 +283,6 @@ public class ConsoleService extends BaseRestController {
 	@Value("${liferay.marketplace.console.project.uid}")
 	private String _consoleProjectUid;
 
-	private final DefaultUriBuilderFactory _defaultUriBuilderFactory =
-		new DefaultUriBuilderFactory();
 	private long _tokenExpirationMillis;
 
 	@Value("${liferay.marketplace.trial.admin.email.address}")

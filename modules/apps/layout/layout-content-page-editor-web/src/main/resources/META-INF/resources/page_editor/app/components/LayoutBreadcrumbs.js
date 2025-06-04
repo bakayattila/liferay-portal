@@ -38,10 +38,7 @@ export function LayoutBreadcrumbs() {
 		isDragging: monitor.isDragging(),
 	}));
 
-	if (
-		isDragging ||
-		(Liferay.FeatureFlags['LPD-18221'] && activeItemIds.length > 1)
-	) {
+	if (isDragging || activeItemIds.length > 1) {
 		return null;
 	}
 
@@ -107,6 +104,10 @@ function useBreadcrumbItems() {
 	return useSelectorCallback(
 		(state) => {
 			const items = [];
+
+			if (!activeItemId) {
+				return items;
+			}
 
 			const addLayoutDataItems = (layoutDataItem) => {
 				if (

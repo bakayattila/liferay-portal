@@ -27,6 +27,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
@@ -45,6 +46,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SortedArrayList;
@@ -70,6 +72,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -537,7 +540,6 @@ public class DDMIndexerImpl implements DDMIndexer {
 		throws Exception {
 
 		if (type.equals(DDMFormFieldTypeConstants.DOCUMENT_LIBRARY) ||
-			type.equals(DDMFormFieldTypeConstants.JOURNAL_ARTICLE) ||
 			type.equals(DDMFormFieldTypeConstants.LINK_TO_LAYOUT)) {
 
 			JSONObject jsonObject = _jsonFactory.createJSONObject(valueString);
@@ -562,6 +564,31 @@ public class DDMIndexerImpl implements DDMIndexer {
 					 Validator.isNotNull(jsonObject.getString("alt"))) {
 
 				sb.append(jsonObject.getString("alt"));
+			}
+			else if (jsonObject.has("title")) {
+				sb.append(jsonObject.getString("title"));
+			}
+		}
+		else if (type.equals(DDMFormFieldTypeConstants.JOURNAL_ARTICLE)) {
+			JSONObject jsonObject = _jsonFactory.createJSONObject(valueString);
+
+			if (jsonObject == null) {
+				return;
+			}
+
+			if (jsonObject.has("titleMap")) {
+				JSONObject titleMapJSONObject = jsonObject.getJSONObject(
+					"titleMap");
+
+				Iterator<String> iterator = titleMapJSONObject.keys();
+
+				while (iterator.hasNext()) {
+					sb.append(titleMapJSONObject.getString(iterator.next()));
+
+					if (iterator.hasNext()) {
+						sb.append(StringPool.SPACE);
+					}
+				}
 			}
 			else if (jsonObject.has("title")) {
 				sb.append(jsonObject.getString("title"));
@@ -930,9 +957,39 @@ public class DDMIndexerImpl implements DDMIndexer {
 		DDMFormFieldOptions ddmFormFieldOptions =
 			(DDMFormFieldOptions)ddmFormField.getProperty("options");
 
-		Map<String, LocalizedValue> map = ddmFormFieldOptions.getOptions();
+		Map<String, LocalizedValue> options = ddmFormFieldOptions.getOptions();
 
-		for (Map.Entry<String, LocalizedValue> entry : map.entrySet()) {
+		if (MapUtil.isEmpty(options)) {
+			return sortableValue;
+		}
+
+		try {
+			JSONArray jsonArray = _jsonFactory.createJSONArray();
+
+			JSONArray sortableValueJSONArray = _jsonFactory.createJSONArray(
+				sortableValue);
+
+			for (int i = 0; i < sortableValueJSONArray.length(); i++) {
+				LocalizedValue localizedValue = options.get(
+					sortableValueJSONArray.getString(i));
+
+				if (localizedValue == null) {
+					jsonArray.put(sortableValueJSONArray.getString(i));
+				}
+				else {
+					jsonArray.put(localizedValue.getString(locale));
+				}
+			}
+
+			return jsonArray.toString();
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+		}
+
+		for (Map.Entry<String, LocalizedValue> entry : options.entrySet()) {
 			LocalizedValue localizedValue = entry.getValue();
 
 			sortableValue = StringUtil.replace(

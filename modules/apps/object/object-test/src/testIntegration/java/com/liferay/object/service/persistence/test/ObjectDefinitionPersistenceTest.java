@@ -160,6 +160,9 @@ public class ObjectDefinitionPersistenceTest {
 
 		newObjectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
 
+		newObjectDefinition.setEnableFriendlyURLCustomization(
+			RandomTestUtil.randomBoolean());
+
 		newObjectDefinition.setEnableIndexSearch(
 			RandomTestUtil.randomBoolean());
 
@@ -171,6 +174,12 @@ public class ObjectDefinitionPersistenceTest {
 
 		newObjectDefinition.setEnableObjectEntryHistory(
 			RandomTestUtil.randomBoolean());
+
+		newObjectDefinition.setEnableObjectEntryVersioning(
+			RandomTestUtil.randomBoolean());
+
+		newObjectDefinition.setFriendlyURLSeparator(
+			RandomTestUtil.randomString());
 
 		newObjectDefinition.setLabel(RandomTestUtil.randomString());
 
@@ -266,6 +275,9 @@ public class ObjectDefinitionPersistenceTest {
 			existingObjectDefinition.isEnableComments(),
 			newObjectDefinition.isEnableComments());
 		Assert.assertEquals(
+			existingObjectDefinition.isEnableFriendlyURLCustomization(),
+			newObjectDefinition.isEnableFriendlyURLCustomization());
+		Assert.assertEquals(
 			existingObjectDefinition.isEnableIndexSearch(),
 			newObjectDefinition.isEnableIndexSearch());
 		Assert.assertEquals(
@@ -277,6 +289,12 @@ public class ObjectDefinitionPersistenceTest {
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableObjectEntryHistory(),
 			newObjectDefinition.isEnableObjectEntryHistory());
+		Assert.assertEquals(
+			existingObjectDefinition.isEnableObjectEntryVersioning(),
+			newObjectDefinition.isEnableObjectEntryVersioning());
+		Assert.assertEquals(
+			existingObjectDefinition.getFriendlyURLSeparator(),
+			newObjectDefinition.getFriendlyURLSeparator());
 		Assert.assertEquals(
 			existingObjectDefinition.getLabel(),
 			newObjectDefinition.getLabel());
@@ -471,6 +489,31 @@ public class ObjectDefinitionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_OFI_A_E_S_S() throws Exception {
+		_persistence.countByC_OFI_A_E_S_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
+			RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean(), "",
+			RandomTestUtil.nextInt());
+
+		_persistence.countByC_OFI_A_E_S_S(
+			0L, 0L, RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomBoolean(), "null", 0);
+
+		_persistence.countByC_OFI_A_E_S_S(
+			0L, 0L, RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomBoolean(), (String)null, 0);
+	}
+
+	@Test
+	public void testCountByC_OFI_A_E_S_SArrayable() throws Exception {
+		_persistence.countByC_OFI_A_E_S_S(
+			RandomTestUtil.nextLong(),
+			new long[] {RandomTestUtil.nextLong(), 0L},
+			RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomString(), RandomTestUtil.nextInt());
+	}
+
+	@Test
 	public void testCountByERC_C() throws Exception {
 		_persistence.countByERC_C("", RandomTestUtil.nextLong());
 
@@ -512,13 +555,14 @@ public class ObjectDefinitionPersistenceTest {
 			"rootObjectDefinitionId", true, "titleObjectFieldId", true,
 			"accountEntryRestricted", true, "active", true, "className", true,
 			"dbTableName", true, "enableCategorization", true, "enableComments",
-			true, "enableIndexSearch", true, "enableLocalization", true,
-			"enableObjectEntryDraft", true, "enableObjectEntryHistory", true,
-			"label", true, "modifiable", true, "name", true, "panelAppOrder",
-			true, "panelCategoryKey", true, "pkObjectFieldDBColumnName", true,
-			"pkObjectFieldName", true, "pluralLabel", true, "portlet", true,
-			"scope", true, "storageType", true, "system", true, "version", true,
-			"status", true);
+			true, "enableFriendlyURLCustomization", true, "enableIndexSearch",
+			true, "enableLocalization", true, "enableObjectEntryDraft", true,
+			"enableObjectEntryHistory", true, "enableObjectEntryVersioning",
+			true, "friendlyURLSeparator", true, "label", true, "modifiable",
+			true, "name", true, "panelAppOrder", true, "panelCategoryKey", true,
+			"pkObjectFieldDBColumnName", true, "pkObjectFieldName", true,
+			"pluralLabel", true, "portlet", true, "scope", true, "storageType",
+			true, "system", true, "version", true, "status", true);
 	}
 
 	@Test
@@ -871,6 +915,9 @@ public class ObjectDefinitionPersistenceTest {
 
 		objectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
 
+		objectDefinition.setEnableFriendlyURLCustomization(
+			RandomTestUtil.randomBoolean());
+
 		objectDefinition.setEnableIndexSearch(RandomTestUtil.randomBoolean());
 
 		objectDefinition.setEnableLocalization(RandomTestUtil.randomBoolean());
@@ -880,6 +927,11 @@ public class ObjectDefinitionPersistenceTest {
 
 		objectDefinition.setEnableObjectEntryHistory(
 			RandomTestUtil.randomBoolean());
+
+		objectDefinition.setEnableObjectEntryVersioning(
+			RandomTestUtil.randomBoolean());
+
+		objectDefinition.setFriendlyURLSeparator(RandomTestUtil.randomString());
 
 		objectDefinition.setLabel(RandomTestUtil.randomString());
 

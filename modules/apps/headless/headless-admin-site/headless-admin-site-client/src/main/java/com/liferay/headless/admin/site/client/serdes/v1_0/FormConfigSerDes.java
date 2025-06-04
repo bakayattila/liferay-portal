@@ -8,13 +8,13 @@ package com.liferay.headless.admin.site.client.serdes.v1_0;
 import com.liferay.headless.admin.site.client.dto.v1_0.FormConfig;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -61,20 +61,44 @@ public class FormConfigSerDes {
 			}
 		}
 
-		if (formConfig.getFormSuccessSubmissionResult() != null) {
+		if (formConfig.getFormType() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"formSuccessSubmissionResult\": ");
+			sb.append("\"formType\": ");
 
-			if (formConfig.getFormSuccessSubmissionResult() instanceof String) {
+			sb.append("\"");
+
+			sb.append(formConfig.getFormType());
+
+			sb.append("\"");
+		}
+
+		if (formConfig.getNumberOfSteps() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfSteps\": ");
+
+			sb.append(formConfig.getNumberOfSteps());
+		}
+
+		if (formConfig.getSuccessFormSubmissionResult() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"successFormSubmissionResult\": ");
+
+			if (formConfig.getSuccessFormSubmissionResult() instanceof String) {
 				sb.append("\"");
-				sb.append((String)formConfig.getFormSuccessSubmissionResult());
+				sb.append((String)formConfig.getSuccessFormSubmissionResult());
 				sb.append("\"");
 			}
 			else {
-				sb.append(formConfig.getFormSuccessSubmissionResult());
+				sb.append(formConfig.getSuccessFormSubmissionResult());
 			}
 		}
 
@@ -104,13 +128,28 @@ public class FormConfigSerDes {
 				"formReference", String.valueOf(formConfig.getFormReference()));
 		}
 
-		if (formConfig.getFormSuccessSubmissionResult() == null) {
-			map.put("formSuccessSubmissionResult", null);
+		if (formConfig.getFormType() == null) {
+			map.put("formType", null);
+		}
+		else {
+			map.put("formType", String.valueOf(formConfig.getFormType()));
+		}
+
+		if (formConfig.getNumberOfSteps() == null) {
+			map.put("numberOfSteps", null);
 		}
 		else {
 			map.put(
-				"formSuccessSubmissionResult",
-				String.valueOf(formConfig.getFormSuccessSubmissionResult()));
+				"numberOfSteps", String.valueOf(formConfig.getNumberOfSteps()));
+		}
+
+		if (formConfig.getSuccessFormSubmissionResult() == null) {
+			map.put("successFormSubmissionResult", null);
+		}
+		else {
+			map.put(
+				"successFormSubmissionResult",
+				String.valueOf(formConfig.getSuccessFormSubmissionResult()));
 		}
 
 		return map;
@@ -134,8 +173,14 @@ public class FormConfigSerDes {
 			if (Objects.equals(jsonParserFieldName, "formReference")) {
 				return false;
 			}
+			else if (Objects.equals(jsonParserFieldName, "formType")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "numberOfSteps")) {
+				return false;
+			}
 			else if (Objects.equals(
-						jsonParserFieldName, "formSuccessSubmissionResult")) {
+						jsonParserFieldName, "successFormSubmissionResult")) {
 
 				return false;
 			}
@@ -153,11 +198,24 @@ public class FormConfigSerDes {
 					formConfig.setFormReference((Object)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "formType")) {
+				if (jsonParserFieldValue != null) {
+					formConfig.setFormType(
+						FormConfig.FormType.create(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "numberOfSteps")) {
+				if (jsonParserFieldValue != null) {
+					formConfig.setNumberOfSteps(
+						Integer.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(
-						jsonParserFieldName, "formSuccessSubmissionResult")) {
+						jsonParserFieldName, "successFormSubmissionResult")) {
 
 				if (jsonParserFieldValue != null) {
-					formConfig.setFormSuccessSubmissionResult(
+					formConfig.setSuccessFormSubmissionResult(
 						(Object)jsonParserFieldValue);
 				}
 			}
@@ -206,6 +264,10 @@ public class FormConfigSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

@@ -881,6 +881,21 @@ public class JournalArticleLocalServiceUtil {
 			groupId, externalReferenceCode);
 	}
 
+	public static JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int status,
+		boolean preferApproved) {
+
+		return getService().fetchLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, status, preferApproved);
+	}
+
+	public static JournalArticle fetchLatestArticleByExternalReferenceCode(
+		long groupId, String externalReferenceCode, int[] statuses) {
+
+		return getService().fetchLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, statuses);
+	}
+
 	public static JournalArticle fetchLatestArticleByUrlTitle(
 		long groupId, String urlTitle, int status) {
 
@@ -2059,6 +2074,15 @@ public class JournalArticleLocalServiceUtil {
 
 		return getService().getLatestArticleByExternalReferenceCode(
 			groupId, externalReferenceCode);
+	}
+
+	public static JournalArticle getLatestArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode, int status,
+			boolean preferApproved)
+		throws PortalException {
+
+		return getService().getLatestArticleByExternalReferenceCode(
+			groupId, externalReferenceCode, status, preferApproved);
 	}
 
 	/**

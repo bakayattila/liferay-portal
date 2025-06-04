@@ -30,8 +30,17 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.jackson.databind.deser.JSONStringStdDeserializer;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
+import ${configYAML.javaEEPackage}.annotation.Generated;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import ${configYAML.javaEEPackage}.validation.Valid;
+import ${configYAML.javaEEPackage}.validation.constraints.DecimalMax;
+import ${configYAML.javaEEPackage}.validation.constraints.DecimalMin;
+import ${configYAML.javaEEPackage}.validation.constraints.NotEmpty;
+import ${configYAML.javaEEPackage}.validation.constraints.NotNull;
+import ${configYAML.javaEEPackage}.validation.constraints.Size;
+
+import ${configYAML.javaEEPackage}.xml.bind.annotation.XmlElement;
+import ${configYAML.javaEEPackage}.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -48,18 +57,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMax;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author ${configYAML.author}
@@ -95,7 +92,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 )
 @JsonFilter("Liferay.Vulcan")
 <#if schema.requiredPropertySchemaNames?has_content>
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		<#if schema.deprecated>
 			deprecated = ${schema.deprecated?c},
 		</#if>
@@ -161,7 +158,7 @@ public <#if schema.discriminator?has_content>abstract</#if> class ${schemaName} 
 			@Size(${sizeParameters?join(", ")})
 		</#if>
 
-		@Schema(
+		@io.swagger.v3.oas.annotations.media.Schema(
 			<#if propertySchema.deprecated>
 				deprecated = ${propertySchema.deprecated?c}
 			</#if>
@@ -580,7 +577,7 @@ public <#if schema.discriminator?has_content>abstract</#if> class ${schemaName} 
 		return sb.toString();
 	}
 
-	@Schema(accessMode = Schema.AccessMode.READ_ONLY, defaultValue = "${configYAML.apiPackagePath}.dto.${escapedVersion}.${schemaName}", name = "x-class-name")
+	@io.swagger.v3.oas.annotations.media.Schema(accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY, defaultValue = "${configYAML.apiPackagePath}.dto.${escapedVersion}.${schemaName}", name = "x-class-name")
 	public String xClassName;
 
 	<#list enumSchemas?keys as enumName>

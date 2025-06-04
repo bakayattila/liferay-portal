@@ -16,7 +16,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,12 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -52,7 +50,7 @@ public class WidgetPageSettings extends PageSettings implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(WidgetPageSettings.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the widget page is customizable."
 	)
 	public Boolean getCustomizable() {
@@ -97,7 +95,9 @@ public class WidgetPageSettings extends PageSettings implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _customizableSupplier;
 
-	@Schema(description = "The IDs of the customizable sections.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The IDs of the customizable sections."
+	)
 	public String[] getCustomizableSectionIds() {
 		if (_customizableSectionIdsSupplier != null) {
 			customizableSectionIds = _customizableSectionIdsSupplier.get();
@@ -139,7 +139,7 @@ public class WidgetPageSettings extends PageSettings implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _customizableSectionIdsSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "Whether this widget page will inherit changes made to the associated widget page template."
 	)
 	public Boolean getInheritChanges() {
@@ -184,7 +184,9 @@ public class WidgetPageSettings extends PageSettings implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _inheritChangesSupplier;
 
-	@Schema(description = "The ID of the layout template.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The ID of the layout template."
+	)
 	public String getLayoutTemplateId() {
 		if (_layoutTemplateIdSupplier != null) {
 			layoutTemplateId = _layoutTemplateIdSupplier.get();
@@ -225,7 +227,7 @@ public class WidgetPageSettings extends PageSettings implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _layoutTemplateIdSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public ItemExternalReference getWidgetPageTemplateReference() {
 		if (_widgetPageTemplateReferenceSupplier != null) {
@@ -470,8 +472,8 @@ public class WidgetPageSettings extends PageSettings implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.WidgetPageSettings",
 		name = "x-class-name"
 	)

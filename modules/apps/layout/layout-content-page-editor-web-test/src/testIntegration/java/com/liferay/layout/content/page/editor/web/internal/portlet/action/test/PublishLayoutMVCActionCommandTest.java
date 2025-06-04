@@ -14,6 +14,9 @@ import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.fragment.constants.FragmentConstants;
+import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
+import com.liferay.fragment.listener.FragmentEntryLinkListener;
+import com.liferay.fragment.listener.FragmentEntryLinkListenerRegistry;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
@@ -27,10 +30,15 @@ import com.liferay.journal.util.JournalConverter;
 import com.liferay.layout.content.page.editor.web.internal.portlet.constants.LayoutContentPageEditorWebPortletKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.provider.LayoutStructureProvider;
+import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.BulkLayoutConverter;
+import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.layout.util.structure.DeletedLayoutStructureItem;
+import com.liferay.layout.util.structure.FragmentDropZoneLayoutStructureItem;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringBundler;
@@ -38,6 +46,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
@@ -62,7 +71,9 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -73,14 +84,14 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.portlet.PortletPreferences;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -109,9 +120,150 @@ public class PublishLayoutMVCActionCommandTest {
 		_layout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		_draftLayout = _layout.fetchDraftLayout();
+
 		_segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				_draftLayout.getPlid());
+	}
+
+	@Test
+	@TestInfo({"LPD-51205", "LPD-53620"})
+	public void testDeletedFragmentEntryLinksAreRemovedWhenLayoutIsPublished()
+		throws Exception {
+
+		int count =
+			_layoutClassedModelUsageLocalService.
+				getLayoutClassedModelUsagesCount();
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group, TestPropsValues.getUserId());
+
+		FragmentCollection fragmentCollection =
+			_fragmentCollectionLocalService.addFragmentCollection(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				StringUtil.randomString(), StringPool.BLANK, serviceContext);
+
+		FragmentEntryLink dropzoneFragmentEntryLink = _addFragmentEntryLink(
+			"{}", fragmentCollection.getFragmentCollectionId(),
+			"<lfr-drop-zone></lfr-drop-zone>", null, serviceContext);
+
+		LayoutStructure layoutStructure =
+			_layoutStructureProvider.getLayoutStructure(
+				_draftLayout.getPlid(), _segmentsExperienceId);
+
+		FragmentStyledLayoutStructureItem
+			dropZoneFragmentStyledLayoutStructureItem =
+				(FragmentStyledLayoutStructureItem)
+					layoutStructure.getLayoutStructureItemByFragmentEntryLinkId(
+						dropzoneFragmentEntryLink.getFragmentEntryLinkId());
+
+		List<String> childrenItemIds =
+			dropZoneFragmentStyledLayoutStructureItem.getChildrenItemIds();
+
+		Assert.assertEquals(
+			childrenItemIds.toString(), 1, childrenItemIds.size());
+
+		FragmentDropZoneLayoutStructureItem
+			fragmentDropZoneLayoutStructureItem =
+				(FragmentDropZoneLayoutStructureItem)
+					layoutStructure.getLayoutStructureItem(
+						childrenItemIds.get(0));
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(), 0);
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink(
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"element-text",
+					JSONUtil.put(
+						"className", JournalArticle.class.getName()
+					).put(
+						"classNameId",
+						_portal.getClassNameId(JournalArticle.class)
+					).put(
+						"classPK", journalArticle.getResourcePrimKey()
+					).put(
+						"fieldId", "JournalArticle_title"
+					))
+			).toString(),
+			fragmentCollection.getFragmentCollectionId(),
+			"<h1 data-lfr-editable-id=\"element-text\" " +
+				"data-lfr-editable-type=\"text\">Heading Example</h1>",
+			fragmentDropZoneLayoutStructureItem.getItemId(), serviceContext);
+
+		layoutStructure = _layoutStructureProvider.getLayoutStructure(
+			_draftLayout.getPlid(), _segmentsExperienceId);
+
+		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
+			(FragmentStyledLayoutStructureItem)
+				layoutStructure.getLayoutStructureItemByFragmentEntryLinkId(
+					fragmentEntryLink.getFragmentEntryLinkId());
+
+		Assert.assertEquals(
+			fragmentDropZoneLayoutStructureItem.getItemId(),
+			fragmentStyledLayoutStructureItem.getParentItemId());
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		FragmentEntryLink publishedLayoutDropzoneFragmentEntryLink =
+			_fragmentEntryLinkLocalService.getFragmentEntryLink(
+				_group.getGroupId(),
+				dropzoneFragmentEntryLink.getFragmentEntryLinkId(),
 				_layout.getPlid());
+
+		Assert.assertNotNull(publishedLayoutDropzoneFragmentEntryLink);
+
+		FragmentEntryLink publishedLayoutFragmentEntryLink =
+			_fragmentEntryLinkLocalService.getFragmentEntryLink(
+				_group.getGroupId(), fragmentEntryLink.getFragmentEntryLinkId(),
+				_layout.getPlid());
+
+		Assert.assertNotNull(publishedLayoutFragmentEntryLink);
+
+		Assert.assertEquals(
+			count + 2,
+			_layoutClassedModelUsageLocalService.
+				getLayoutClassedModelUsagesCount());
+
+		ContentLayoutTestUtil.markItemForDeletionFromLayout(
+			dropZoneFragmentStyledLayoutStructureItem.getItemId(), _draftLayout,
+			StringPool.BLANK);
+
+		dropzoneFragmentEntryLink =
+			_fragmentEntryLinkLocalService.getFragmentEntryLink(
+				dropzoneFragmentEntryLink.getFragmentEntryLinkId());
+
+		Assert.assertTrue(dropzoneFragmentEntryLink.isDeleted());
+
+		fragmentEntryLink = _fragmentEntryLinkLocalService.getFragmentEntryLink(
+			fragmentEntryLink.getFragmentEntryLinkId());
+
+		Assert.assertTrue(fragmentEntryLink.isDeleted());
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		Assert.assertNull(
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				dropzoneFragmentEntryLink.getFragmentEntryLinkId()));
+		Assert.assertNull(
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				fragmentEntryLink.getFragmentEntryLinkId()));
+		Assert.assertNull(
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				publishedLayoutDropzoneFragmentEntryLink.
+					getFragmentEntryLinkId()));
+		Assert.assertNull(
+			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
+				publishedLayoutFragmentEntryLink.getFragmentEntryLinkId()));
+
+		Assert.assertEquals(
+			count,
+			_layoutClassedModelUsageLocalService.
+				getLayoutClassedModelUsagesCount());
 	}
 
 	@Test
@@ -398,26 +550,86 @@ public class PublishLayoutMVCActionCommandTest {
 	public void testPublishedLayoutWithNoninstanciablePortlet()
 		throws Exception {
 
+		_testPublishedLayoutWithNoninstanciablePortlet();
+	}
+
+	@Test
+	@TestInfo("LPD-40170")
+	public void testPublishedLayoutWithNoninstanciablePortletMarkedForDeletion()
+		throws Exception {
+
 		ContentLayoutTestUtil.addPortletToLayout(
 			_draftLayout,
 			LayoutContentPageEditorWebPortletKeys.
 				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
 
-		Map<String, String> map = HashMapBuilder.put(
-			RandomTestUtil.randomString(), RandomTestUtil.randomString()
-		).build();
+		ContentLayoutTestUtil.markItemForDeletionFromLayout(
+			_getDraftLayoutFragmentStyledLayoutStructureItemId(), _draftLayout,
+			LayoutContentPageEditorWebPortletKeys.
+				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
 
-		_setUpPortletPreferences(
-			_draftLayout, map,
+		_testPublishedLayoutWithNoninstanciablePortlet();
+
+		ContentLayoutTestUtil.markItemForDeletionFromLayout(
+			_getDraftLayoutFragmentStyledLayoutStructureItemId(), _draftLayout,
 			LayoutContentPageEditorWebPortletKeys.
 				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
 
 		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
 
-		_assertPortletPreferences(
-			_layout, map,
-			LayoutContentPageEditorWebPortletKeys.
-				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
+		Assert.assertTrue(
+			ListUtil.isEmpty(
+				_portletPreferencesLocalService.getPortletPreferences(
+					_draftLayout.getPlid(),
+					LayoutContentPageEditorWebPortletKeys.
+						LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET)));
+		Assert.assertTrue(
+			ListUtil.isEmpty(
+				_portletPreferencesLocalService.getPortletPreferences(
+					_layout.getPlid(),
+					LayoutContentPageEditorWebPortletKeys.
+						LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET)));
+	}
+
+	@Test
+	@TestInfo("LPS-148426")
+	public void testPublishedLayoutWithNoninstanciablePortlets()
+		throws Exception {
+
+		String[] portletIds = {
+			"com_liferay_commerce_checkout_web_internal_portlet_" +
+				"CommerceCheckoutPortlet",
+			"com_liferay_commerce_order_content_web_internal_portlet_" +
+				"CommerceOpenOrderContentPortlet",
+			"com_liferay_commerce_order_content_web_internal_portlet_" +
+				"CommerceOrderContentPortlet",
+			"com_liferay_commerce_wish_list_web_internal_portlet_" +
+				"CommerceWishListContentPortlet"
+		};
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		String html = ContentLayoutTestUtil.getRenderLayoutHTML(
+			_layout, _layoutServiceContextHelper, _layoutStructureProvider,
+			_segmentsExperienceId);
+
+		for (String portletId : portletIds) {
+			Assert.assertFalse(html.contains(portletId));
+		}
+
+		for (String portletId : portletIds) {
+			ContentLayoutTestUtil.addPortletToLayout(_draftLayout, portletId);
+		}
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		html = ContentLayoutTestUtil.getRenderLayoutHTML(
+			_layout, _layoutServiceContextHelper, _layoutStructureProvider,
+			_segmentsExperienceId);
+
+		for (String portletId : portletIds) {
+			Assert.assertTrue(html.contains(portletId));
+		}
 	}
 
 	@Test
@@ -464,6 +676,47 @@ public class PublishLayoutMVCActionCommandTest {
 				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
 	}
 
+	private FragmentEntryLink _addFragmentEntryLink(
+			String editableValues, long fragmentCollectionId, String html,
+			String parentItemId, ServiceContext serviceContext)
+		throws Exception {
+
+		FragmentEntry fragmentEntry =
+			_fragmentEntryLocalService.addFragmentEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				fragmentCollectionId, RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), StringPool.BLANK, html,
+				StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
+				false, FragmentConstants.TYPE_COMPONENT, null,
+				WorkflowConstants.STATUS_APPROVED, serviceContext);
+
+		FragmentEntryLink fragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				editableValues, fragmentEntry.getCss(),
+				fragmentEntry.getConfiguration(),
+				fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), _draftLayout,
+				fragmentEntry.getFragmentEntryKey(), fragmentEntry.getType(),
+				parentItemId, 0, _segmentsExperienceId);
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+		try {
+			for (FragmentEntryLinkListener fragmentEntryLinkListener :
+					_fragmentEntryLinkListenerRegistry.
+						getFragmentEntryLinkListeners()) {
+
+				fragmentEntryLinkListener.onAddFragmentEntryLink(
+					fragmentEntryLink);
+			}
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+
+		return fragmentEntryLink;
+	}
+
 	private FragmentEntryLink _addFragmentEntryLinkToLayout(String html)
 		throws Exception {
 
@@ -480,7 +733,7 @@ public class PublishLayoutMVCActionCommandTest {
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				fragmentCollection.getFragmentCollectionId(), null,
 				RandomTestUtil.randomString(), null, html, null, false, null,
-				null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+				null, 0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 				WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		return ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
@@ -635,6 +888,32 @@ public class PublishLayoutMVCActionCommandTest {
 		Assert.assertNull(_userLocalService.fetchUser(user.getUserId()));
 	}
 
+	private String _getDraftLayoutFragmentStyledLayoutStructureItemId() {
+		LayoutStructure layoutStructure =
+			_layoutStructureProvider.getLayoutStructure(
+				_draftLayout.getPlid(), _segmentsExperienceId);
+
+		Map<Long, LayoutStructureItem> fragmentLayoutStructureItems =
+			layoutStructure.getFragmentLayoutStructureItems();
+
+		List<FragmentEntryLink> fragmentEntryLinks =
+			_fragmentEntryLinkLocalService.
+				getFragmentEntryLinksBySegmentsExperienceId(
+					_draftLayout.getGroupId(), _segmentsExperienceId,
+					_draftLayout.getPlid(), false);
+
+		Assert.assertEquals(
+			fragmentEntryLinks.toString(), 1, fragmentEntryLinks.size());
+
+		FragmentEntryLink fragmentEntryLink = fragmentEntryLinks.get(0);
+
+		LayoutStructureItem layoutStructureItem =
+			fragmentLayoutStructureItems.get(
+				fragmentEntryLink.getFragmentEntryLinkId());
+
+		return layoutStructureItem.getItemId();
+	}
+
 	private LayoutStructure _getLayoutStructure(Layout layout)
 		throws Exception {
 
@@ -663,6 +942,35 @@ public class PublishLayoutMVCActionCommandTest {
 		_assertPortletPreferences(layout, map, portletId);
 	}
 
+	private void _testPublishedLayoutWithNoninstanciablePortlet()
+		throws Exception {
+
+		ContentLayoutTestUtil.addPortletToLayout(
+			_draftLayout,
+			LayoutContentPageEditorWebPortletKeys.
+				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
+
+		Map<String, String> map = HashMapBuilder.put(
+			RandomTestUtil.randomString(), RandomTestUtil.randomString()
+		).build();
+
+		_setUpPortletPreferences(
+			_draftLayout, map,
+			LayoutContentPageEditorWebPortletKeys.
+				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		_assertPortletPreferences(
+			_draftLayout, map,
+			LayoutContentPageEditorWebPortletKeys.
+				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
+		_assertPortletPreferences(
+			_layout, map,
+			LayoutContentPageEditorWebPortletKeys.
+				LAYOUT_CONTENT_PAGE_EDITOR_WEB_NONINSTANCEABLE_TEST_PORTLET);
+	}
+
 	@Inject
 	private AssetEntryLocalService _assetEntryLocalService;
 
@@ -684,6 +992,10 @@ public class PublishLayoutMVCActionCommandTest {
 	private FragmentCollectionLocalService _fragmentCollectionLocalService;
 
 	@Inject
+	private FragmentEntryLinkListenerRegistry
+		_fragmentEntryLinkListenerRegistry;
+
+	@Inject
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@Inject
@@ -698,11 +1010,24 @@ public class PublishLayoutMVCActionCommandTest {
 	private Layout _layout;
 
 	@Inject
+	private LayoutClassedModelUsageLocalService
+		_layoutClassedModelUsageLocalService;
+
+	@Inject
 	private LayoutLocalService _layoutLocalService;
 
 	@Inject
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
+
+	@Inject
+	private LayoutServiceContextHelper _layoutServiceContextHelper;
+
+	@Inject
+	private LayoutStructureProvider _layoutStructureProvider;
+
+	@Inject
+	private Portal _portal;
 
 	@Inject
 	private PortletPreferencesFactory _portletPreferencesFactory;

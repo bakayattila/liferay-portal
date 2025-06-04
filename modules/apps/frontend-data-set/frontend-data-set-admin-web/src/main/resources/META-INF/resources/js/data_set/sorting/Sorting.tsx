@@ -10,23 +10,24 @@ import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayModal from '@clayui/modal';
-import {InputLocalized} from 'frontend-js-components-web';
-import {fetch, openModal} from 'frontend-js-web';
+import {InputLocalized, openModal} from 'frontend-js-components-web';
+import {fetch} from 'frontend-js-web';
 import fuzzy from 'fuzzy';
 import React, {useCallback, useEffect, useState} from 'react';
 
-import {IDataSet} from '../../DataSets';
 import OrderableTable from '../../components/OrderableTable';
 import RequiredMark from '../../components/RequiredMark';
+import Toggle from '../../components/Toggle';
 import {
 	API_URL,
+	DEFAULT_FETCH_HEADERS,
 	FUZZY_OPTIONS,
 	OBJECT_RELATIONSHIP,
 } from '../../utils/constants';
 import openDefaultFailureToast from '../../utils/openDefaultFailureToast';
 import openDefaultSuccessToast from '../../utils/openDefaultSuccessToast';
 import sortItems from '../../utils/sortItems';
-import {IField, IOrderable} from '../../utils/types';
+import {IDataSet, IField, IOrderable} from '../../utils/types';
 import {IDataSetSectionProps} from '../DataSet';
 
 interface IContentRendererProps {
@@ -472,6 +473,10 @@ const EditFDSSortModalContent = ({
 	);
 };
 
+const isVisible = ({item}: {item: any}): boolean =>
+	item?.orderType === ORDER_TYPE.ASCENDING.value ||
+	item?.orderType === ORDER_TYPE.DESCENDING.value;
+
 const Sorting = ({
 	dataSet,
 	fieldTreeItems,
@@ -481,6 +486,8 @@ const Sorting = ({
 	const fields = fieldTreeItems.filter((field) => field.sortable);
 	const [fdsSorts, setFDSSorts] = useState<Array<IDataSetSort>>([]);
 	const [loading, setLoading] = useState(true);
+	const [toggleActiveDisabled, setToogleActiveDisabled] =
+		useState<boolean>(false);
 
 	const fetchDataSetSorts = useCallback(async () => {
 		setLoading(true);
@@ -637,6 +644,46 @@ const Sorting = ({
 		}
 	};
 
+	const updateActive = async (item: IDataSetSort) => {
+		setToogleActiveDisabled(true);
+
+		const response = await fetch(
+			`${API_URL.SORTS}/by-external-reference-code/${item.externalReferenceCode}`,
+			{
+				body: JSON.stringify({active: !item.active}),
+				headers: DEFAULT_FETCH_HEADERS,
+				method: 'PATCH',
+			}
+		);
+
+		if (!response.ok) {
+			openDefaultFailureToast();
+
+			return;
+		}
+
+		const dataSetSort: IDataSetSort = await response.json();
+
+		if (dataSetSort?.id) {
+			const updatedFdsSorts = fdsSorts.map((sort) => {
+				if (sort.id === dataSetSort.id) {
+					sort = {...sort, ...dataSetSort};
+				}
+
+				return sort;
+			});
+
+			setFDSSorts(updatedFdsSorts);
+
+			openDefaultSuccessToast();
+		}
+		else {
+			openDefaultFailureToast();
+		}
+
+		setToogleActiveDisabled(false);
+	};
+
 	return (
 		<ClayLayout.ContainerFluid>
 			{loading ? (
@@ -653,11 +700,13 @@ const Sorting = ({
 						actions={[
 							{
 								icon: 'pencil',
+								isVisible,
 								label: Liferay.Language.get('edit'),
 								onClick: handleEdit,
 							},
 							{
 								icon: 'trash',
+								isVisible,
 								label: Liferay.Language.get('delete'),
 								onClick: handleDelete,
 							},
@@ -687,6 +736,18 @@ const Sorting = ({
 								},
 								label: Liferay.Language.get('default'),
 								name: 'default',
+							},
+							{
+								contentRenderer: {
+									component: ({item}: any) =>
+										Toggle({
+											disabled: toggleActiveDisabled,
+											item,
+											toggleChange: updateActive,
+										}),
+								},
+								label: Liferay.Language.get('status'),
+								name: 'active',
 							},
 						]}
 						items={fdsSorts}

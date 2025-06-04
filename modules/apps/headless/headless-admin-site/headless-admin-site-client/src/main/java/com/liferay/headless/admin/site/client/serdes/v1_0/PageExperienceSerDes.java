@@ -5,19 +5,18 @@
 
 package com.liferay.headless.admin.site.client.serdes.v1_0;
 
-import com.liferay.headless.admin.site.client.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageRule;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
+
+import jakarta.annotation.Generated;
 
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -127,6 +126,25 @@ public class PageExperienceSerDes {
 			sb.append("]");
 		}
 
+		if (pageExperience.getPageSpecificationExternalReferenceCode() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pageSpecificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					pageExperience.
+						getPageSpecificationExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (pageExperience.getPriority() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -137,32 +155,19 @@ public class PageExperienceSerDes {
 			sb.append(pageExperience.getPriority());
 		}
 
-		if (pageExperience.getSegmentItemExternalReferences() != null) {
+		if (pageExperience.getSegmentExternalReferenceCode() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"segmentItemExternalReferences\": ");
+			sb.append("\"segmentExternalReferenceCode\": ");
 
-			sb.append("[");
+			sb.append("\"");
 
-			for (int i = 0;
-				 i < pageExperience.getSegmentItemExternalReferences().length;
-				 i++) {
+			sb.append(
+				_escape(pageExperience.getSegmentExternalReferenceCode()));
 
-				sb.append(
-					String.valueOf(
-						pageExperience.getSegmentItemExternalReferences()[i]));
-
-				if ((i + 1) <
-						pageExperience.
-							getSegmentItemExternalReferences().length) {
-
-					sb.append(", ");
-				}
-			}
-
-			sb.append("]");
+			sb.append("\"");
 		}
 
 		sb.append("}");
@@ -223,6 +228,19 @@ public class PageExperienceSerDes {
 			map.put("pageRules", String.valueOf(pageExperience.getPageRules()));
 		}
 
+		if (pageExperience.getPageSpecificationExternalReferenceCode() ==
+				null) {
+
+			map.put("pageSpecificationExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"pageSpecificationExternalReferenceCode",
+				String.valueOf(
+					pageExperience.
+						getPageSpecificationExternalReferenceCode()));
+		}
+
 		if (pageExperience.getPriority() == null) {
 			map.put("priority", null);
 		}
@@ -230,14 +248,14 @@ public class PageExperienceSerDes {
 			map.put("priority", String.valueOf(pageExperience.getPriority()));
 		}
 
-		if (pageExperience.getSegmentItemExternalReferences() == null) {
-			map.put("segmentItemExternalReferences", null);
+		if (pageExperience.getSegmentExternalReferenceCode() == null) {
+			map.put("segmentExternalReferenceCode", null);
 		}
 		else {
 			map.put(
-				"segmentItemExternalReferences",
+				"segmentExternalReferenceCode",
 				String.valueOf(
-					pageExperience.getSegmentItemExternalReferences()));
+					pageExperience.getSegmentExternalReferenceCode()));
 		}
 
 		return map;
@@ -273,11 +291,17 @@ public class PageExperienceSerDes {
 			else if (Objects.equals(jsonParserFieldName, "pageRules")) {
 				return false;
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"pageSpecificationExternalReferenceCode")) {
+
+				return false;
+			}
 			else if (Objects.equals(jsonParserFieldName, "priority")) {
 				return false;
 			}
 			else if (Objects.equals(
-						jsonParserFieldName, "segmentItemExternalReferences")) {
+						jsonParserFieldName, "segmentExternalReferenceCode")) {
 
 				return false;
 			}
@@ -339,6 +363,15 @@ public class PageExperienceSerDes {
 					pageExperience.setPageRules(pageRulesArray);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"pageSpecificationExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					pageExperience.setPageSpecificationExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "priority")) {
 				if (jsonParserFieldValue != null) {
 					pageExperience.setPriority(
@@ -346,25 +379,11 @@ public class PageExperienceSerDes {
 				}
 			}
 			else if (Objects.equals(
-						jsonParserFieldName, "segmentItemExternalReferences")) {
+						jsonParserFieldName, "segmentExternalReferenceCode")) {
 
 				if (jsonParserFieldValue != null) {
-					Object[] jsonParserFieldValues =
-						(Object[])jsonParserFieldValue;
-
-					ItemExternalReference[] segmentItemExternalReferencesArray =
-						new ItemExternalReference[jsonParserFieldValues.length];
-
-					for (int i = 0;
-						 i < segmentItemExternalReferencesArray.length; i++) {
-
-						segmentItemExternalReferencesArray[i] =
-							ItemExternalReferenceSerDes.toDTO(
-								(String)jsonParserFieldValues[i]);
-					}
-
-					pageExperience.setSegmentItemExternalReferences(
-						segmentItemExternalReferencesArray);
+					pageExperience.setSegmentExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 		}
@@ -412,6 +431,10 @@ public class PageExperienceSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

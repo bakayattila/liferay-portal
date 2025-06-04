@@ -33,6 +33,7 @@ import com.liferay.source.formatter.processor.BNDSourceProcessor;
 import com.liferay.source.formatter.processor.CETSourceProcessor;
 import com.liferay.source.formatter.processor.CIMergeAndGitRepoSourceProcessor;
 import com.liferay.source.formatter.processor.CQLSourceProcessor;
+import com.liferay.source.formatter.processor.CSPSourceProcessor;
 import com.liferay.source.formatter.processor.CSSSourceProcessor;
 import com.liferay.source.formatter.processor.CodeownersSourceProcessor;
 import com.liferay.source.formatter.processor.ConfigSourceProcessor;
@@ -180,6 +181,14 @@ public class SourceFormatter {
 						baseDirName,
 						sourceFormatterArgs.getGitWorkingBranchName(), false),
 					baseDirName);
+				sourceFormatterArgs.setCurrentBranchAddedFileNames(
+					GitUtil.getCurrentBranchAddedFileNames(
+						sourceFormatterArgs.getBaseDirName(),
+						sourceFormatterArgs.getGitWorkingBranchName()));
+				sourceFormatterArgs.setCurrentBranchRenamedFileNames(
+					GitUtil.getCurrentBranchRenamedFileNames(
+						sourceFormatterArgs.getBaseDirName(),
+						sourceFormatterArgs.getGitWorkingBranchName()));
 			}
 			else if (sourceFormatterArgs.isFormatLatestAuthor()) {
 				sourceFormatterArgs.addRecentChangesFileNames(
@@ -191,15 +200,6 @@ public class SourceFormatter {
 					GitUtil.getLocalChangesFileNames(baseDirName, false),
 					baseDirName);
 			}
-
-			sourceFormatterArgs.setCurrentBranchAddedFileNames(
-				GitUtil.getCurrentBranchAddedFileNames(
-					sourceFormatterArgs.getBaseDirName(),
-					sourceFormatterArgs.getGitWorkingBranchName()));
-			sourceFormatterArgs.setCurrentBranchRenamedFileNames(
-				GitUtil.getCurrentBranchRenamedFileNames(
-					sourceFormatterArgs.getBaseDirName(),
-					sourceFormatterArgs.getGitWorkingBranchName()));
 
 			String[] fileNames = StringUtil.split(
 				ArgumentsUtil.getString(
@@ -354,6 +354,7 @@ public class SourceFormatter {
 		_sourceProcessors.add(new CodeownersSourceProcessor());
 		_sourceProcessors.add(new ConfigSourceProcessor());
 		_sourceProcessors.add(new CQLSourceProcessor());
+		_sourceProcessors.add(new CSPSourceProcessor());
 		_sourceProcessors.add(new CSSSourceProcessor());
 		_sourceProcessors.add(new DockerfileSourceProcessor());
 		_sourceProcessors.add(new DTDSourceProcessor());
@@ -635,6 +636,13 @@ public class SourceFormatter {
 					SourceFormatterUtil.filterFileNames(
 						_allFileNames, new String[0],
 						new String[] {"**/package.json"},
+						_sourceFormatterExcludes, false));
+			}
+			else if (_isRootTestPropertiesChanges(recentChangesFileName)) {
+				dependentFileNames.addAll(
+					SourceFormatterUtil.filterFileNames(
+						_allFileNames, new String[0],
+						new String[] {"**/test.properties"},
 						_sourceFormatterExcludes, false));
 			}
 		}
@@ -1191,6 +1199,18 @@ public class SourceFormatter {
 		}
 
 		return false;
+	}
+
+	private boolean _isRootTestPropertiesChanges(String recentChangesFileName) {
+		File portalDir = SourceFormatterUtil.getPortalDir(
+			_sourceFormatterArgs.getBaseDirName(),
+			_sourceFormatterArgs.getMaxLineLength());
+
+		if (portalDir == null) {
+			return false;
+		}
+
+		return recentChangesFileName.endsWith(portalDir + "/test.properties");
 	}
 
 	private boolean _isSubrepository() throws Exception {

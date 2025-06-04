@@ -32,7 +32,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -42,9 +42,13 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +61,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -84,7 +84,7 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -98,14 +98,12 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 		_pageSpecificationResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		PageSpecificationResource.Builder builder =
-			PageSpecificationResource.builder();
-
-		pageSpecificationResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		pageSpecificationResource = PageSpecificationResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -181,6 +179,13 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 		Assert.assertEquals(
 			regex, pageSpecification.getExternalReferenceCode());
+	}
+
+	@Test
+	public void testDeleteSiteSiteByExternalReferenceCodePageSpecification()
+		throws Exception {
+
+		Assert.assertTrue(false);
 	}
 
 	@Test
@@ -441,13 +446,6 @@ public abstract class BasePageSpecificationResourceTestCase {
 	}
 
 	@Test
-	public void testDeleteSiteSiteByExternalReferenceCodePageSpecification()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
 	public void testGetSiteSiteByExternalReferenceCodePageSpecification()
 		throws Exception {
 
@@ -466,73 +464,6 @@ public abstract class BasePageSpecificationResourceTestCase {
 		throws Exception {
 
 		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testPatchSiteSiteByExternalReferenceCodePageSpecification()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPutSiteSiteByExternalReferenceCodePageSpecification()
-		throws Exception {
-
-		Assert.assertTrue(false);
-	}
-
-	@Test
-	public void testPostSiteSiteByExternalReferenceCodePageSpecificationPublish()
-		throws Exception {
-
-		PageSpecification randomPageSpecification = randomPageSpecification();
-
-		PageSpecification postPageSpecification =
-			testPostSiteSiteByExternalReferenceCodePageSpecificationPublish_addPageSpecification(
-				randomPageSpecification);
-
-		assertEquals(randomPageSpecification, postPageSpecification);
-		assertValid(postPageSpecification);
-
-		ContentPageSpecification contentPageSpecification =
-			new ContentPageSpecification() {
-				{
-					externalReferenceCode = StringUtil.toLowerCase(
-						RandomTestUtil.randomString());
-
-					type = Type.create("ContentPageSpecification");
-				}
-			};
-
-		assertEquals(
-			contentPageSpecification,
-			testPostSiteSiteByExternalReferenceCodePageSpecificationPublish_addPageSpecification(
-				contentPageSpecification));
-
-		WidgetPageSpecification widgetPageSpecification =
-			new WidgetPageSpecification() {
-				{
-					externalReferenceCode = StringUtil.toLowerCase(
-						RandomTestUtil.randomString());
-
-					type = Type.create("WidgetPageSpecification");
-				}
-			};
-
-		assertEquals(
-			widgetPageSpecification,
-			testPostSiteSiteByExternalReferenceCodePageSpecificationPublish_addPageSpecification(
-				widgetPageSpecification));
-	}
-
-	protected PageSpecification
-			testPostSiteSiteByExternalReferenceCodePageSpecificationPublish_addPageSpecification(
-				PageSpecification pageSpecification)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	@Test
@@ -917,6 +848,75 @@ public abstract class BasePageSpecificationResourceTestCase {
 		return null;
 	}
 
+	@Test
+	public void testPatchSiteSiteByExternalReferenceCodePageSpecification()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostSiteSiteByExternalReferenceCodePageSpecificationPublish()
+		throws Exception {
+
+		PageSpecification randomPageSpecification = randomPageSpecification();
+
+		PageSpecification postPageSpecification =
+			testPostSiteSiteByExternalReferenceCodePageSpecificationPublish_addPageSpecification(
+				randomPageSpecification);
+
+		assertEquals(randomPageSpecification, postPageSpecification);
+		assertValid(postPageSpecification);
+
+		ContentPageSpecification contentPageSpecification =
+			new ContentPageSpecification() {
+				{
+					externalReferenceCode = StringUtil.toLowerCase(
+						RandomTestUtil.randomString());
+					draftContentPageSpecificationExternalReferenceCode =
+						StringUtil.toLowerCase(RandomTestUtil.randomString());
+
+					type = Type.create("ContentPageSpecification");
+				}
+			};
+
+		assertEquals(
+			contentPageSpecification,
+			testPostSiteSiteByExternalReferenceCodePageSpecificationPublish_addPageSpecification(
+				contentPageSpecification));
+
+		WidgetPageSpecification widgetPageSpecification =
+			new WidgetPageSpecification() {
+				{
+					externalReferenceCode = StringUtil.toLowerCase(
+						RandomTestUtil.randomString());
+
+					type = Type.create("WidgetPageSpecification");
+				}
+			};
+
+		assertEquals(
+			widgetPageSpecification,
+			testPostSiteSiteByExternalReferenceCodePageSpecificationPublish_addPageSpecification(
+				widgetPageSpecification));
+	}
+
+	protected PageSpecification
+			testPostSiteSiteByExternalReferenceCodePageSpecificationPublish_addPageSpecification(
+				PageSpecification pageSpecification)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutSiteSiteByExternalReferenceCodePageSpecification()
+		throws Exception {
+
+		Assert.assertTrue(false);
+	}
+
 	protected void assertContains(
 		PageSpecification pageSpecification,
 		List<PageSpecification> pageSpecifications) {
@@ -1018,8 +1018,34 @@ public abstract class BasePageSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("status", additionalAssertFieldName)) {
+				if (pageSpecification.getStatus() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("type", additionalAssertFieldName)) {
 				if (pageSpecification.getType() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"draftContentPageSpecificationExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!(pageSpecification instanceof ContentPageSpecification)) {
+					continue;
+				}
+
+				if (((ContentPageSpecification)pageSpecification).
+						getDraftContentPageSpecificationExternalReferenceCode() ==
+							null) {
+
 					valid = false;
 				}
 
@@ -1201,10 +1227,43 @@ public abstract class BasePageSpecificationResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("status", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						pageSpecification1.getStatus(),
+						pageSpecification2.getStatus())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("type", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						pageSpecification1.getType(),
 						pageSpecification2.getType())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"draftContentPageSpecificationExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!(pageSpecification1 instanceof ContentPageSpecification) ||
+					!(pageSpecification2 instanceof ContentPageSpecification)) {
+
+					continue;
+				}
+
+				if (!Objects.deepEquals(
+						((ContentPageSpecification)pageSpecification1).
+							getDraftContentPageSpecificationExternalReferenceCode(),
+						((ContentPageSpecification)pageSpecification2).
+							getDraftContentPageSpecificationExternalReferenceCode())) {
 
 					return false;
 				}
@@ -1411,6 +1470,11 @@ public abstract class BasePageSpecificationResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("status")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("type")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1466,6 +1530,10 @@ public abstract class BasePageSpecificationResourceTestCase {
 
 				pageSpecification.setExternalReferenceCode(
 					StringUtil.toLowerCase(RandomTestUtil.randomString()));
+
+				pageSpecification.
+					setDraftContentPageSpecificationExternalReferenceCode(
+						StringUtil.toLowerCase(RandomTestUtil.randomString()));
 
 				pageSpecification.setType(
 					PageSpecification.Type.create("ContentPageSpecification"));
@@ -1707,7 +1775,9 @@ public abstract class BasePageSpecificationResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BasePageSpecificationResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private

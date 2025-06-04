@@ -9,7 +9,7 @@ import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvide
 import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
-import com.liferay.change.tracking.spi.constants.CTTimelineKeys;
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.FileSizeException;
@@ -91,20 +91,20 @@ import com.liferay.translation.url.provider.TranslationURLProvider;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.util.TrashWebKeys;
 
+import jakarta.persistence.PersistenceException;
+
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+import jakarta.portlet.ResourceRequest;
+import jakarta.portlet.ResourceResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 
 import java.util.Objects;
-
-import javax.persistence.PersistenceException;
-
-import javax.portlet.Portlet;
-import javax.portlet.PortletException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -127,15 +127,15 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.render-weight=50",
 		"com.liferay.portlet.scopeable=true",
 		"com.liferay.portlet.use-default-template=true",
-		"javax.portlet.display-name=Web Content",
-		"javax.portlet.expiration-cache=0",
-		"javax.portlet.init-param.mvc-action-command-package-prefix=com.liferay.journal.web.portlet.action",
-		"javax.portlet.init-param.template-path=/META-INF/resources/",
-		"javax.portlet.init-param.view-template=/view.jsp",
-		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
-		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=power-user,user",
-		"javax.portlet.version=3.0"
+		"jakarta.portlet.display-name=Web Content",
+		"jakarta.portlet.expiration-cache=0",
+		"jakarta.portlet.init-param.mvc-action-command-package-prefix=com.liferay.journal.web.portlet.action",
+		"jakarta.portlet.init-param.template-path=/META-INF/resources/",
+		"jakarta.portlet.init-param.view-template=/view.jsp",
+		"jakarta.portlet.name=" + JournalPortletKeys.JOURNAL,
+		"jakarta.portlet.resource-bundle=content.Language",
+		"jakarta.portlet.security-role-ref=power-user,user",
+		"jakarta.portlet.version=4.0"
 	},
 	service = Portlet.class
 )
@@ -292,16 +292,16 @@ public class JournalPortlet extends MVCPortlet {
 				ActionUtil.getArticle(httpServletRequest);
 			}
 			else if (Objects.equals(path, "/view_ddm_structures.jsp")) {
-				httpServletRequest.setAttribute(
-					CTTimelineKeys.CLASS_NAME, DDMStructure.class.getName());
+				CTTimelineUtil.setClassName(
+					httpServletRequest, DDMStructure.class);
 			}
 			else if (Objects.equals(path, "/view_ddm_templates.jsp")) {
-				httpServletRequest.setAttribute(
-					CTTimelineKeys.CLASS_NAME, DDMTemplate.class.getName());
+				CTTimelineUtil.setClassName(
+					httpServletRequest, DDMTemplate.class);
 			}
 			else if (Validator.isNull(path)) {
-				httpServletRequest.setAttribute(
-					CTTimelineKeys.CLASS_NAME, JournalArticle.class.getName());
+				CTTimelineUtil.setClassName(
+					httpServletRequest, JournalArticle.class);
 			}
 			else {
 				_getFolder(httpServletRequest);
@@ -392,9 +392,8 @@ public class JournalPortlet extends MVCPortlet {
 		if (folderId > 0) {
 			_journalFolderService.fetchFolder(folderId);
 
-			httpServletRequest.setAttribute(
-				CTTimelineKeys.CLASS_NAME, JournalFolder.class.getName());
-			httpServletRequest.setAttribute(CTTimelineKeys.CLASS_PK, folderId);
+			CTTimelineUtil.setCTTimelineKeys(
+				httpServletRequest, JournalFolder.class, folderId);
 		}
 		else {
 			ThemeDisplay themeDisplay =

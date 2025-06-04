@@ -20,10 +20,9 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.ws.rs.core.Response;
 
-import javax.ws.rs.core.Response;
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -74,14 +73,14 @@ public class DiscountAccountGroupResourceImpl
 						pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountCommerceAccountGroupRelService.
 				getCommerceDiscountCommerceAccountGroupRelsCount(
 					commerceDiscount.getCommerceDiscountId());
 
 		return Page.of(
 			_toDiscountAccountGroups(commerceDiscountCommerceAccountGroupRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -96,13 +95,13 @@ public class DiscountAccountGroupResourceImpl
 						id, pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commerceDiscountCommerceAccountGroupRelService.
 				getCommerceDiscountCommerceAccountGroupRelsCount(id);
 
 		return Page.of(
 			_toDiscountAccountGroups(commerceDiscountCommerceAccountGroupRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -170,19 +169,11 @@ public class DiscountAccountGroupResourceImpl
 				commerceDiscountCommerceAccountGroupRels)
 		throws Exception {
 
-		List<DiscountAccountGroup> discountAccountGroups = new ArrayList<>();
-
-		for (CommerceDiscountCommerceAccountGroupRel
-				commerceDiscountCommerceAccountGroupRel :
-					commerceDiscountCommerceAccountGroupRels) {
-
-			discountAccountGroups.add(
-				_toDiscountAccountGroup(
-					commerceDiscountCommerceAccountGroupRel.
-						getCommerceDiscountCommerceAccountGroupRelId()));
-		}
-
-		return discountAccountGroups;
+		return transform(
+			commerceDiscountCommerceAccountGroupRels,
+			commerceDiscountCommerceAccountGroupRel -> _toDiscountAccountGroup(
+				commerceDiscountCommerceAccountGroupRel.
+					getCommerceDiscountCommerceAccountGroupRelId()));
 	}
 
 	@Reference

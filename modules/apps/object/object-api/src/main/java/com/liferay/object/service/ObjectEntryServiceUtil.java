@@ -34,24 +34,25 @@ public class ObjectEntryServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.object.service.impl.ObjectEntryServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static ObjectEntry addObjectEntry(
-			long groupId, long objectDefinitionId,
-			Map<String, Serializable> values,
+			long groupId, long objectDefinitionId, long objectEntryFolderId,
+			String defaultLanguageId, Map<String, Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addObjectEntry(
-			groupId, objectDefinitionId, values, serviceContext);
+			groupId, objectDefinitionId, objectEntryFolderId, defaultLanguageId,
+			values, serviceContext);
 	}
 
 	public static ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long groupId, long objectDefinitionId,
-			Map<String, Serializable> values,
+			long objectEntryFolderId, Map<String, Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addOrUpdateObjectEntry(
-			externalReferenceCode, groupId, objectDefinitionId, values,
-			serviceContext);
+			externalReferenceCode, groupId, objectDefinitionId,
+			objectEntryFolderId, values, serviceContext);
 	}
 
 	public static void checkModelResourcePermission(
@@ -74,6 +75,15 @@ public class ObjectEntryServiceUtil {
 
 		return getService().deleteObjectEntry(
 			externalReferenceCode, companyId, groupId);
+	}
+
+	public static ObjectEntry expireObjectEntry(
+			long userId, long objectEntryId, int version,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().expireObjectEntry(
+			userId, objectEntryId, version, serviceContext);
 	}
 
 	public static ObjectEntry fetchManyToOneObjectEntry(
@@ -122,6 +132,14 @@ public class ObjectEntryServiceUtil {
 		throws PortalException {
 
 		return getService().getObjectEntry(objectEntryId);
+	}
+
+	public static ObjectEntry getObjectEntry(
+			String externalReferenceCode, long objectDefinitionId)
+		throws PortalException {
+
+		return getService().getObjectEntry(
+			externalReferenceCode, objectDefinitionId);
 	}
 
 	public static ObjectEntry getObjectEntry(
@@ -192,6 +210,15 @@ public class ObjectEntryServiceUtil {
 			groupId, objectDefinitionId, actionId);
 	}
 
+	public static ObjectEntry partialUpdateObjectEntry(
+			long objectEntryId, Map<String, Serializable> values,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().partialUpdateObjectEntry(
+			objectEntryId, values, serviceContext);
+	}
+
 	public static ObjectEntry updateObjectEntry(
 			long objectEntryId, Map<String, Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -199,6 +226,17 @@ public class ObjectEntryServiceUtil {
 
 		return getService().updateObjectEntry(
 			objectEntryId, values, serviceContext);
+	}
+
+	public static void validate(
+			long groupId, ObjectEntry objectEntry,
+			List<String> objectValidationRuleExternalReferenceCodes,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		getService().validate(
+			groupId, objectEntry, objectValidationRuleExternalReferenceCodes,
+			serviceContext);
 	}
 
 	public static ObjectEntryService getService() {

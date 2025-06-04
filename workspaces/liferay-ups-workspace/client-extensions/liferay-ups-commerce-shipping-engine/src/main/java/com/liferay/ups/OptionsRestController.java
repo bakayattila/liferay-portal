@@ -5,7 +5,10 @@
 
 package com.liferay.ups;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.ups.constants.UPSServiceCodeConstants;
 
@@ -28,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * @author Alessio Antonio Rendina
@@ -71,8 +73,10 @@ public class OptionsRestController extends BaseRestController {
 
 			JSONObject skuJSONObject = _get(
 				"Bearer " + jwt.getTokenValue(),
-				"/o/headless-commerce-admin-catalog/v1.0/skus/" +
-					orderItemJSONObject.getString("skuId"));
+				StringBundler.concat(
+					lxcDXPServerProtocol, "://", lxcDXPMainDomain,
+					"/o/headless-commerce-admin-catalog/v1.0/skus/",
+					orderItemJSONObject.getString("skuId")));
 
 			depth += skuJSONObject.getDouble("depth");
 			height += skuJSONObject.getDouble("height");
@@ -108,19 +112,7 @@ public class OptionsRestController extends BaseRestController {
 	}
 
 	private JSONObject _get(String authorization, String path) {
-		return new JSONObject(
-			_getWebClient(
-			).get(
-			).uri(
-				uriBuilder -> uriBuilder.path(
-					path
-				).build()
-			).header(
-				HttpHeaders.AUTHORIZATION, authorization
-			).retrieve(
-			).bodyToMono(
-				String.class
-			).block());
+		return new JSONObject(get(authorization, createURI(path)));
 	}
 
 	private String _getAccessToken(
@@ -131,28 +123,21 @@ public class OptionsRestController extends BaseRestController {
 
 			String credentials = clientId + ":" + clientSecret;
 
-			WebClient webClient = WebClient.builder(
-			).baseUrl(
-				"https://wwwcie.ups.com"
-			).defaultHeader(
-				HttpHeaders.AUTHORIZATION,
-				"Basic " + encoder.encodeToString(credentials.getBytes())
-			).defaultHeader(
-				HttpHeaders.CONTENT_TYPE,
-				MediaType.APPLICATION_FORM_URLENCODED_VALUE
-			).build();
-
 			JSONObject jsonObject = new JSONObject(
-				webClient.post(
-				).uri(
-					"/security/v1/oauth/token"
-				).body(
+				post(
 					BodyInserters.fromFormData(
-						"grant_type", "client_credentials")
-				).retrieve(
-				).bodyToFlux(
-					String.class
-				).blockLast());
+						"grant_type", "client_credentials"
+					).toString(),
+					HashMapBuilder.put(
+						HttpHeaders.AUTHORIZATION,
+						"Basic " +
+							encoder.encodeToString(credentials.getBytes())
+					).put(
+						HttpHeaders.CONTENT_TYPE,
+						MediaType.APPLICATION_FORM_URLENCODED_VALUE
+					).build(),
+					createURI(
+						"https://wwwcie.ups.com/security/v1/oauth/token")));
 
 			return jsonObject.getString("access_token");
 		}
@@ -163,17 +148,6 @@ public class OptionsRestController extends BaseRestController {
 		}
 
 		return StringPool.BLANK;
-	}
-
-	private WebClient _getWebClient() {
-		return WebClient.builder(
-		).baseUrl(
-			lxcDXPServerProtocol + "://" + lxcDXPMainDomain
-		).defaultHeader(
-			HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE
-		).defaultHeader(
-			HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE
-		).build();
 	}
 
 	private JSONObject _postRate(
@@ -312,28 +286,11 @@ public class OptionsRestController extends BaseRestController {
 		).toString();
 
 		try {
-			WebClient webClient = WebClient.builder(
-			).baseUrl(
-				"https://wwwcie.ups.com"
-			).defaultHeader(
-				HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE
-			).defaultHeader(
-				HttpHeaders.AUTHORIZATION,
-				"Bearer " + _getAccessToken(clientId, clientSecret, log)
-			).defaultHeader(
-				HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE
-			).build();
-
 			return new JSONObject(
-				webClient.post(
-				).uri(
-					"/api/rating/v2403/Rate"
-				).bodyValue(
-					body
-				).retrieve(
-				).bodyToFlux(
-					String.class
-				).blockLast());
+				post(
+					"Bearer " + _getAccessToken(clientId, clientSecret, log),
+					body,
+					createURI("https://wwwcie.ups.com/api/rating/v2403/Rate")));
 		}
 		catch (Exception exception) {
 			if (log.isDebugEnabled()) {

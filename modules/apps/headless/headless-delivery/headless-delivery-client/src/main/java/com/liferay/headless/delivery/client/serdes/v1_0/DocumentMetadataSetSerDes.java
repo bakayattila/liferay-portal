@@ -9,6 +9,8 @@ import com.liferay.headless.delivery.client.dto.v1_0.DataDefinitionField;
 import com.liferay.headless.delivery.client.dto.v1_0.DocumentMetadataSet;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -17,8 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -193,6 +193,20 @@ public class DocumentMetadataSetSerDes {
 			sb.append(_toJSON(documentMetadataSet.getDescription_i18n()));
 		}
 
+		if (documentMetadataSet.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(documentMetadataSet.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (documentMetadataSet.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -343,6 +357,15 @@ public class DocumentMetadataSetSerDes {
 				String.valueOf(documentMetadataSet.getDescription_i18n()));
 		}
 
+		if (documentMetadataSet.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(documentMetadataSet.getExternalReferenceCode()));
+		}
+
 		if (documentMetadataSet.getId() == null) {
 			map.put("id", null);
 		}
@@ -421,6 +444,11 @@ public class DocumentMetadataSetSerDes {
 			}
 			else if (Objects.equals(jsonParserFieldName, "description_i18n")) {
 				return true;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				return false;
@@ -513,6 +541,14 @@ public class DocumentMetadataSetSerDes {
 						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					documentMetadataSet.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					documentMetadataSet.setId(
@@ -581,6 +617,10 @@ public class DocumentMetadataSetSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

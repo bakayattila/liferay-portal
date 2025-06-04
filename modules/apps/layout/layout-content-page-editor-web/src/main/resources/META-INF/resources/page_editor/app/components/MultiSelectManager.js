@@ -39,11 +39,7 @@ export default function MultiSelectManager() {
 			disableKeyCombination: (event) => event.key === SHIFT_KEY_CODE,
 			keyCombination: (event) => event.shiftKey && !isCtrlOrMeta(event),
 			keyboardActivation: (event) =>
-				[
-					ARROW_DOWN_KEY_CODE,
-					ARROW_UP_KEY_CODE,
-					SHIFT_KEY_CODE,
-				].includes(event.key),
+				[ARROW_DOWN_KEY_CODE, ARROW_UP_KEY_CODE].includes(event.key),
 		},
 		simpleMultiSelect: {
 			action: () => {
@@ -62,10 +58,6 @@ export default function MultiSelectManager() {
 	};
 
 	useEffect(() => {
-		if (!Liferay.FeatureFlags['LPD-18221']) {
-			return;
-		}
-
 		const onClick = (event) => {
 			const multiSelection = Object.values(keymapRef.current).find(
 				(multiSelection) =>

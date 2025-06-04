@@ -39,12 +39,12 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Guilherme Camacho
@@ -71,6 +71,7 @@ public class ObjectEntryItemSelectorViewDescriptor
 		_portal = portal;
 		_portletURL = portletURL;
 
+		_keywords = ParamUtil.getString(httpServletRequest, "keywords");
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_REQUEST);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
@@ -149,7 +150,7 @@ public class ObjectEntryItemSelectorViewDescriptor
 							ParamUtil.getLong(_portletRequest, "objectEntryId"),
 							ParamUtil.getLong(
 								_portletRequest, "objectRelationshipId"),
-							searchContainer.getStart(),
+							_keywords, searchContainer.getStart(),
 							searchContainer.getEnd());
 					},
 					objectRelatedModelsProvider.getUnrelatedModelsCount(
@@ -157,7 +158,8 @@ public class ObjectEntryItemSelectorViewDescriptor
 						_objectDefinition,
 						ParamUtil.getLong(_portletRequest, "objectEntryId"),
 						ParamUtil.getLong(
-							_portletRequest, "objectRelationshipId")));
+							_portletRequest, "objectRelationshipId"),
+						_keywords));
 			}
 			else {
 				Group scopeGroup = _themeDisplay.getScopeGroup();
@@ -197,14 +199,8 @@ public class ObjectEntryItemSelectorViewDescriptor
 
 	@Override
 	public boolean isShowBreadcrumb() {
-		if (StringUtil.equals(
-				_objectDefinition.getScope(),
-				ObjectDefinitionConstants.SCOPE_SITE)) {
-
-			return true;
-		}
-
-		return false;
+		return StringUtil.equals(
+			_objectDefinition.getScope(), ObjectDefinitionConstants.SCOPE_SITE);
 	}
 
 	@Override
@@ -223,6 +219,7 @@ public class ObjectEntryItemSelectorViewDescriptor
 
 	private final HttpServletRequest _httpServletRequest;
 	private final InfoItemItemSelectorCriterion _infoItemItemSelectorCriterion;
+	private final String _keywords;
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectEntryManager _objectEntryManager;
 	private final ObjectRelatedModelsProviderRegistry

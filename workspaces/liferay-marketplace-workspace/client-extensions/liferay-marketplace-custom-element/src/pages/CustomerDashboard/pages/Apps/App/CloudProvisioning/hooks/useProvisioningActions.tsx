@@ -7,7 +7,6 @@ import ClayButton from '@clayui/button';
 import {useModal} from '@clayui/modal';
 import {useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {KeyedMutator} from 'swr';
 
 import {useMarketplaceContext} from '../../../../../../../context/MarketplaceContext';
 import useModalContext from '../../../../../../../hooks/useModalContext';
@@ -20,10 +19,7 @@ import {InstallStatus} from '../types';
 import useProvisioningData, {ProvisioningRow} from './useProvisioningData';
 
 type UseProvisioningActionsProps = {
-	mutateOrder: KeyedMutator<{
-		placedOrder: PlacedOrder;
-		product: DeliveryProduct;
-	}>;
+	mutateOrder: ReturnType<typeof useProvisioningData>['mutateOrder'];
 	order: PlacedOrder;
 	resourceRequirements: ReturnType<
 		typeof useProvisioningData
@@ -59,9 +55,9 @@ const useProvisioningActions = ({
 			return onOpenModal({
 				body: (
 					<p>
-						{i18n.translate(
-							'you-currently-do-not-have-access-to-any-cloud-projects-please-login-as-a-user-that-has-access-to-a-project-or-contact-your-project-administrator-to-add-you-to-a-project'
-						)}
+						{`${i18n.translate(
+							'you-do-not-have-access-to-cloud-project'
+						)} ${i18n.translate('this-may-restrict-the-functionality-available-to-you')}`}
 					</p>
 				),
 				center: true,

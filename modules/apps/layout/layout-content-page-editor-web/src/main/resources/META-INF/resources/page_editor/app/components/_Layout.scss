@@ -29,6 +29,11 @@ html#{$cadmin-selector} {
 				&.empty {
 					box-shadow: inset 0 0 0 1px $cadmin-primary-l2;
 				}
+
+				&.disabled {
+					opacity: 40%;
+					pointer-events: none;
+				}
 			}
 
 			&__message {
@@ -48,11 +53,10 @@ html#{$cadmin-selector} {
 				min-height: 80px;
 
 				&__title {
-					color: $cadmin-purple;
-					font-size: 12px;
+					color: $cadmin-purple-d3;
+					font-size: 14px;
 					font-style: italic;
-					padding-left: 8px;
-					padding-top: 8px;
+					font-weight: 500;
 				}
 			}
 		}
@@ -94,10 +98,21 @@ html#{$cadmin-selector} {
 			box-shadow: inset 0 0 0 1px $cadmin-primary-l2;
 		}
 
+		&__collection-item {
+			.page-editor__no-fragments-state {
+				background: fade_out($cadmin-purple-l4, 0.9);
+				border: $dashedBorderWidth dashed $cadmin-purple-l4;
+			}
+		}
+
 		&__col,
 		&__row,
 		&__collection-item {
 			position: relative;
+
+			.page-editor__no-fragments-state {
+				padding: 4vh 12% 6vh;
+			}
 
 			&:before {
 				$spacingUnit: 12px;
@@ -230,7 +245,7 @@ html#{$cadmin-selector} {
 		}
 
 		&__row
-			> .page-editor__col:not(.active):hover
+			> .page-editor__col.hovered:not(.active)
 			> .page-editor__col__border:after {
 			box-shadow: inset 0 0 0 2px $cadmin-primary-l1;
 			z-index: $portletTopperHoveredZIndex;

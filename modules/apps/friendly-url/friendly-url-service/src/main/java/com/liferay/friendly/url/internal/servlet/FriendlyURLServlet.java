@@ -72,6 +72,15 @@ import com.liferay.redirect.tracker.RedirectNotFoundTracker;
 import com.liferay.site.model.SiteFriendlyURL;
 import com.liferay.site.service.SiteFriendlyURLLocalService;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 
 import java.util.HashMap;
@@ -79,15 +88,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -835,15 +835,17 @@ public class FriendlyURLServlet extends HttpServlet {
 				group.getGroupId(), _private, friendlyURL);
 
 		if (layoutFriendlyURL == null) {
-			if (group.isUser()) {
-				List<Layout> layouts = layoutLocalService.getLayouts(
-					group.getGroupId(), _private,
-					LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+			if (!group.isUser()) {
+				return null;
+			}
 
-				for (Layout layout : layouts) {
-					if (layout.matches(httpServletRequest, friendlyURL)) {
-						return layout;
-					}
+			List<Layout> layouts = layoutLocalService.getLayouts(
+				group.getGroupId(), _private,
+				LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+
+			for (Layout layout : layouts) {
+				if (layout.matches(httpServletRequest, friendlyURL)) {
+					return layout;
 				}
 			}
 
@@ -861,8 +863,9 @@ public class FriendlyURLServlet extends HttpServlet {
 	}
 
 	private String _getLocalizedFriendlyURL(
-		HttpServletRequest httpServletRequest, Layout layout, Locale locale,
-		Locale originalLocale) {
+			HttpServletRequest httpServletRequest, Layout layout, Locale locale,
+			Locale originalLocale)
+		throws PortalException {
 
 		String requestURI = _getRequestURI(httpServletRequest);
 
@@ -870,8 +873,16 @@ public class FriendlyURLServlet extends HttpServlet {
 			requestURI);
 
 		if (groupFriendlyURLIndex != null) {
-			String originalRequestURI = _getRequestURI(
-				portal.getOriginalServletRequest(httpServletRequest));
+			String originalRequestURI = null;
+
+			if (HttpComponentsUtil.isForwarded(httpServletRequest)) {
+				originalRequestURI = (String)httpServletRequest.getAttribute(
+					JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI);
+			}
+			else {
+				originalRequestURI = _getRequestURI(
+					portal.getOriginalServletRequest(httpServletRequest));
+			}
 
 			if (httpServletRequest.getAttribute(WebKeys.I18N_PATH) != null) {
 				int pos = originalRequestURI.indexOf(StringPool.SLASH, 1);
@@ -929,9 +940,19 @@ public class FriendlyURLServlet extends HttpServlet {
 			portal.getCompanyId(httpServletRequest),
 			PropsKeys.LOCALE_PREPEND_FRIENDLY_URL_STYLE);
 
-		if ((localePrependFriendlyURLStyle == 0) ||
-			((localePrependFriendlyURLStyle == 1) &&
-			 locale.equals(LocaleUtil.getDefault()))) {
+		User user = _getUser(httpServletRequest);
+
+		Locale userLocale = user.getLocale();
+
+		if (!user.isGuestUser() && (localePrependFriendlyURLStyle == 3) &&
+			locale.equals(userLocale)) {
+
+			appendI18nPath = false;
+		}
+		else if ((localePrependFriendlyURLStyle == 0) ||
+				 (((localePrependFriendlyURLStyle == 1) ||
+				   (localePrependFriendlyURLStyle == 3)) &&
+				  locale.equals(LocaleUtil.getDefault()))) {
 
 			appendI18nPath = false;
 		}
@@ -1068,13 +1089,8 @@ public class FriendlyURLServlet extends HttpServlet {
 	}
 
 	private boolean _isPermanentRedirect(long companyId) {
-		if (Objects.equals(
-				_getFriendlyURLRedirectionType(companyId), "permanent")) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			_getFriendlyURLRedirectionType(companyId), "permanent");
 	}
 
 	private boolean _isShowAlternativeLayoutFriendlyURLMessage(long companyId) {
@@ -1124,8 +1140,9 @@ public class FriendlyURLServlet extends HttpServlet {
 	}
 
 	private Locale _setAlternativeLayoutFriendlyURL(
-		long companyId, HttpServletRequest httpServletRequest, Layout layout,
-		String friendlyURL, SiteFriendlyURL siteFriendlyURL) {
+			long companyId, HttpServletRequest httpServletRequest,
+			Layout layout, String friendlyURL, SiteFriendlyURL siteFriendlyURL)
+		throws PortalException {
 
 		List<LayoutFriendlyURL> layoutFriendlyURLs =
 			layoutFriendlyURLLocalService.getLayoutFriendlyURLs(

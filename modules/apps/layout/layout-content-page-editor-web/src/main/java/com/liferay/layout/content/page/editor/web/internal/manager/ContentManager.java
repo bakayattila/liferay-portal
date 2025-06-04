@@ -117,6 +117,16 @@ import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.context.RequestContextMapper;
 import com.liferay.taglib.security.PermissionsURLTag;
 
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletMode;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -126,16 +136,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletMode;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.WindowState;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -1150,6 +1150,12 @@ public class ContentManager {
 			return;
 		}
 
+		String className = _portal.fetchClassName(classNameId);
+
+		if (Validator.isNull(className)) {
+			return;
+		}
+
 		long classPK = jsonObject.getLong("classPK");
 		String externalReferenceCode = jsonObject.getString(
 			"externalReferenceCode");
@@ -1165,8 +1171,7 @@ public class ContentManager {
 			return;
 		}
 
-		String className = _infoSearchClassMapperRegistry.getClassName(
-			_portal.getClassName(classNameId));
+		className = _infoSearchClassMapperRegistry.getClassName(className);
 
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
 			_layoutDisplayPageProviderRegistry.
@@ -1557,7 +1562,7 @@ public class ContentManager {
 						PRODUCT_NAVIGATION_CONTROL_MENU,
 					PortletRequest.ACTION_PHASE)
 			).setActionName(
-				"/control_menu/add_collection_item"
+				"/layout_content_page_editor/add_collection_item"
 			).setRedirect(
 				currentURL
 			).setParameter(

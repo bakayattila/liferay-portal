@@ -4,7 +4,7 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Web Content Administration";
+	property testray.main.component.name = "Web Content";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -18,7 +18,6 @@ definition {
 	@priority = 5
 	test AddCreatedStructureForImportedTemplate {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		HeadlessSite.addSite(siteName = "Site Name 2");
 
@@ -156,7 +155,7 @@ definition {
 
 			AssertConsoleTextNotPresent(value1 = "java.sql.BatchUpdateException");
 
-			AssertConsoleTextNotPresent(value1 = "javax.persistence.PersistenceException");
+			AssertConsoleTextNotPresent(value1 = "jakarta.persistence.PersistenceException");
 		}
 	}
 
@@ -319,7 +318,7 @@ definition {
 				webContentImage = "Document Title",
 				webContentTitle = "WC Title");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "global");
 
@@ -468,7 +467,7 @@ definition {
 
 			SelectFrame(value1 = "relative=top");
 
-			PortletEntry.publish();
+			WebContent.publishWithPermissions();
 		}
 
 		task ("And when a page is created with an Asset Publisher to display the Web Content and then staged") {
@@ -517,8 +516,6 @@ definition {
 
 	@priority = 4
 	test ExportLARWithNestedWebContent {
-		property testray.component.names = "Web Content Administration";
-
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		NavItem.gotoStructures();
@@ -557,7 +554,7 @@ definition {
 			templateName = "Basic Web Content",
 			webContentTitle = "Basic WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
@@ -570,7 +567,7 @@ definition {
 			webContentTitle = "WC WebContent Title",
 			webContentWebContent = "Basic WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = "WC WebContent Title");
 
@@ -609,7 +606,7 @@ definition {
 			fieldName = "TestName",
 			webContentTitle = "WC WebContent 1 Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = "WC WebContent 1 Title");
 
@@ -633,7 +630,6 @@ definition {
 	@priority = 5
 	test ImportAndUseGlobalStructureAndTemplate {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		HeadlessSite.addSite(siteName = "Site Name 2");
 
@@ -707,7 +703,7 @@ definition {
 			var count = ${count} + 1;
 		}
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = "Agricultural Science Front Page");
 
@@ -731,8 +727,6 @@ definition {
 
 	@priority = 4
 	test ImportLAR {
-		property testray.component.names = "Web Content Administration";
-
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		NavItem.gotoStructures();
@@ -758,7 +752,7 @@ definition {
 			webContentText = "WC WebContent Text",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = "WC WebContent Title");
 
@@ -801,8 +795,6 @@ definition {
 
 	@priority = 4
 	test ImportLARLinkToPageValidation {
-		property testray.component.names = "Web Content Administration";
-
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
 			layoutName = "Test Page");
@@ -840,7 +832,7 @@ definition {
 			webContentLinkToPage = "Test Page",
 			webContentTitle = "WC Title");
 
-		PortletEntry.publish();
+		WebContent.publishWithPermissions();
 
 		WebContent.viewTitle(webContentTitle = "WC Title");
 
@@ -858,8 +850,6 @@ definition {
 	@description = "This is a use case for LPS-88893."
 	@priority = 3
 	test ImportLARWithTheSameTitle {
-		property testray.component.names = "Training";
-
 		HeadlessSite.addSite(siteName = "Site Name 1");
 
 		JSONWebcontent.addWebContent(

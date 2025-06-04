@@ -13,17 +13,20 @@ import {
 	useForm,
 	useFormState,
 } from 'data-engine-js-components-web';
-import {ReactFieldBase as FieldBase} from 'dynamic-data-mapping-form-field-type';
-import {Locale} from 'dynamic-data-mapping-form-field-type/src/main/resources/META-INF/resources/types';
+import {ReactFieldBase as FieldBase} from 'dynamic-data-mapping-form-field-type/api';
 import {fetch} from 'frontend-js-web';
 import React, {useEffect, useRef, useState} from 'react';
 
-type LocalizedValue<T> = Liferay.Language.LocalizedValue<T>;
+import type {
+	Locale,
+	LocalizedValue,
+} from 'dynamic-data-mapping-form-field-type';
 
 async function fetchOptions<T>(url: string) {
 	const response = await fetch(url, {
 		headers: {
 			'Accept': 'application/json',
+			'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
 			'Content-Type': 'application/json',
 		},
 		method: 'GET',
@@ -40,34 +43,33 @@ export function getLabel<T extends ObjectMap<any>>(
 ) {
 	const value = item[key];
 
-	if (typeof value !== 'object') {
-		if (objectFieldBusinessType === 'Date') {
-			return DateTimeRenderer({
-				options: {
-					format: {
-						day: 'numeric',
-						month: 'short',
-						timeZone: 'UTC',
-						year: 'numeric',
-					},
-				},
-				value: String(value),
-			});
-		}
-
-		if (objectFieldBusinessType === 'Boolean') {
-			return String(value);
-		}
-
-		return value ? String(value) : '';
+	if (!value && objectFieldBusinessType !== 'Boolean') {
+		return '';
 	}
 
-	return stringUtils.getLocalizableLabel(
-		objectDefinitionDefaultLanguageId,
-		value as LocalizedValue<string>,
-		(value as {[key: string]: string})['name'] ??
-			(value as {[key: string]: string})['label_i18n']
-	);
+	if (objectFieldBusinessType === 'Date') {
+		return DateTimeRenderer({
+			options: {
+				format: {
+					day: 'numeric',
+					month: 'short',
+					timeZone: 'UTC',
+					year: 'numeric',
+				},
+			},
+			value: String(value),
+		});
+	}
+
+	return typeof value === 'object'
+		? stringUtils.getLocalizableLabel({
+				fallbackLabel:
+					(value as {[key: string]: string})['name'] ??
+					(value as {[key: string]: string})['label_i18n'],
+				fallbackLanguageId: objectDefinitionDefaultLanguageId,
+				labels: value as LocalizedValue<string>,
+			})
+		: String(value);
 }
 
 function LoadingWithDebounce({

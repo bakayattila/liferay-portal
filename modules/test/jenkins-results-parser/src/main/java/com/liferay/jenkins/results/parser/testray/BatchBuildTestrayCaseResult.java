@@ -367,9 +367,11 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 	}
 
 	protected String getTestResultErrors() {
-		TestResult testResult = getTestResult();
+		String testResultErrors = null;
 
 		Build build = getBuild();
+
+		TestResult testResult = getTestResult();
 
 		if (testResult == null) {
 			if (build == null) {
@@ -378,47 +380,60 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 
 			String result = build.getResult();
 
+			testResultErrors = "Failed prior to running test";
+
 			if (result == null) {
-				return "Unable to finish build on CI";
+				testResultErrors = "Unable to finish build on CI";
 			}
 
 			if (result.equals("ABORTED")) {
-				return build.getJobName() + " timed out after 2 hours";
+				testResultErrors =
+					build.getJobName() + " timed out after 2 hours";
 			}
 
 			if (result.equals("SUCCESS") || result.equals("UNSTABLE")) {
-				return "Unable to run test on CI";
+				testResultErrors = "Unable to run test on CI";
 			}
 
-			return "Failed prior to running test";
+			String failureMessage = build.getFailureMessage();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(failureMessage)) {
+				return testResultErrors;
+			}
+
+			return testResultErrors + ": " + failureMessage;
+		}
+
+		if (testResult.isSkipped()) {
+			return "Failed to run test on CI";
 		}
 
 		if (!testResult.isFailing()) {
 			return null;
 		}
 
-		String errorMessage = testResult.getErrorDetails();
+		testResultErrors = testResult.getErrorDetails();
 
-		if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
-			errorMessage = build.getFailureMessage();
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
+			testResultErrors = build.getFailureMessage();
 		}
 
-		if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
 			return "Failed for unknown reason";
 		}
 
-		if (errorMessage.contains("\n")) {
-			errorMessage = errorMessage.substring(
-				0, errorMessage.indexOf("\n"));
+		if (testResultErrors.contains("\n")) {
+			testResultErrors = testResultErrors.substring(
+				0, testResultErrors.indexOf("\n"));
 		}
 
-		errorMessage = errorMessage.trim();
+		testResultErrors = testResultErrors.trim();
 
-		if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+		if (JenkinsResultsParserUtil.isNullOrEmpty(testResultErrors)) {
 			return "Failed for unknown reason";
 		}
 
-		return errorMessage;
+		return testResultErrors;
 	}
 
 	protected Status getTestResultStatus() {
@@ -444,6 +459,9 @@ public class BatchBuildTestrayCaseResult extends BuildTestrayCaseResult {
 
 		if (testResult.isFailing()) {
 			return Status.FAILED;
+		}
+		else if (testResult.isSkipped()) {
+			return Status.UNTESTED;
 		}
 
 		return Status.PASSED;

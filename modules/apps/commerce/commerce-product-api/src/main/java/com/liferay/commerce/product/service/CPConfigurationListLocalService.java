@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.product.service;
 
+import com.liferay.commerce.product.exception.NoSuchCPConfigurationListException;
 import com.liferay.commerce.product.model.CPConfigurationList;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
@@ -18,12 +19,14 @@ import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -75,6 +78,29 @@ public interface CPConfigurationListLocalService
 	public CPConfigurationList addCPConfigurationList(
 		CPConfigurationList cpConfigurationList);
 
+	@Indexable(type = IndexableType.REINDEX)
+	public CPConfigurationList addCPConfigurationList(
+			String externalReferenceCode, long userId, long groupId,
+			long parentCPConfigurationListId, boolean master, String name,
+			double priority, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			int expirationDateMonth, int expirationDateDay,
+			int expirationDateYear, int expirationDateHour,
+			int expirationDateMinute, boolean neverExpire)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public CPConfigurationList addOrUpdateCPConfigurationList(
+			String externalReferenceCode, long companyId, long userId,
+			long groupId, long parentCPConfigurationListId, boolean master,
+			String name, double priority, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire)
+		throws PortalException;
+
 	/**
 	 * Creates a new cp configuration list with the primary key. Does not add the cp configuration list to the database.
 	 *
@@ -100,10 +126,13 @@ public interface CPConfigurationListLocalService
 	 *
 	 * @param cpConfigurationList the cp configuration list
 	 * @return the cp configuration list that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public CPConfigurationList deleteCPConfigurationList(
-		CPConfigurationList cpConfigurationList);
+			CPConfigurationList cpConfigurationList)
+		throws PortalException;
 
 	/**
 	 * Deletes the cp configuration list with the primary key from the database. Also notifies the appropriate model listeners.
@@ -119,6 +148,9 @@ public interface CPConfigurationListLocalService
 	@Indexable(type = IndexableType.DELETE)
 	public CPConfigurationList deleteCPConfigurationList(
 			long CPConfigurationListId)
+		throws PortalException;
+
+	public void deleteCPConfigurationLists(long companyId)
 		throws PortalException;
 
 	/**
@@ -219,6 +251,11 @@ public interface CPConfigurationListLocalService
 	public CPConfigurationList fetchCPConfigurationListByUuidAndGroupId(
 		String uuid, long groupId);
 
+	@Indexable(type = IndexableType.DELETE)
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
+	public CPConfigurationList forceDeleteCPConfigurationList(
+		CPConfigurationList cpConfigurationList);
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
@@ -267,6 +304,16 @@ public interface CPConfigurationListLocalService
 	public List<CPConfigurationList> getCPConfigurationLists(
 		int start, int end);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPConfigurationList> getCPConfigurationLists(
+		long groupId, long companyId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CPConfigurationList> getCPConfigurationLists(
+		long companyId, long groupId, long accountEntryId,
+		long[] accountGroupIds, long commerceChannelId,
+		long commerceOrderTypeId);
+
 	/**
 	 * Returns all the cp configuration lists matching the UUID and company.
 	 *
@@ -308,6 +355,10 @@ public interface CPConfigurationListLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPConfigurationList getMasterCPConfigurationList(long groupId)
+		throws NoSuchCPConfigurationListException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -336,6 +387,18 @@ public interface CPConfigurationListLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public CPConfigurationList updateCPConfigurationList(
 		CPConfigurationList cpConfigurationList);
+
+	@Indexable(type = IndexableType.REINDEX)
+	public CPConfigurationList updateCPConfigurationList(
+			String externalReferenceCode, long cpConfigurationListId,
+			long userId, long groupId, long parentCPConfigurationListId,
+			boolean master, String name, double priority, int displayDateMonth,
+			int displayDateDay, int displayDateYear, int displayDateHour,
+			int displayDateMinute, int expirationDateMonth,
+			int expirationDateDay, int expirationDateYear,
+			int expirationDateHour, int expirationDateMinute,
+			boolean neverExpire)
+		throws PortalException;
 
 	@Override
 	@Transactional(enabled = false)

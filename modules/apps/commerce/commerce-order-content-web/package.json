@@ -1,46 +1,46 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.111.0",
-		"@clayui/button": "3.116.0",
-		"@clayui/drop-down": "3.121.0",
-		"@clayui/empty-state": "3.116.0",
-		"@clayui/form": "3.119.0",
-		"@clayui/icon": "3.111.0",
-		"@clayui/label": "3.111.0",
-		"@clayui/link": "3.111.0",
-		"@clayui/loading-indicator": "3.111.0",
-		"@clayui/management-toolbar": "3.111.0",
-		"@clayui/modal": "3.119.0",
-		"@clayui/multi-step-nav": "3.121.0",
-		"@clayui/pagination-bar": "3.121.0",
-		"@clayui/sticker": "3.111.0",
-		"@clayui/table": "3.111.0",
-		"@clayui/tooltip": "3.119.0",
+		"@clayui/alert": "3.129.1",
+		"@clayui/autocomplete": "3.136.0",
+		"@clayui/button": "3.136.0",
+		"@clayui/drop-down": "3.136.0",
+		"@clayui/form": "3.136.0",
+		"@clayui/icon": "3.128.0",
+		"@clayui/label": "3.128.0",
+		"@clayui/link": "3.128.0",
+		"@clayui/modal": "3.136.0",
+		"@clayui/multi-step-nav": "3.136.0",
+		"@clayui/sticker": "3.129.0",
+		"@liferay/frontend-data-set-web": "*",
 		"classnames": "2.3.1",
 		"commerce-frontend-js": "*",
 		"fetch-mock": "5.13.1",
+		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
-		"lodash": "4.17.21",
-		"moment": "2.29.4",
 		"prop-types": "15.7.2",
-		"react": "16.12.0",
-		"react-dom": "16.12.0"
+		"react": "18.2.0",
+		"react-dom": "18.2.0",
+		"resize-observer-polyfill": "1.5.1"
 	},
 	"jest": {
 		"setupFiles": [
-			"<rootDir>/test/utils/setup.spec.ts"
+			"<rootDir>/test/js/tests_utilities/setup.spec.js"
+		],
+		"testMatch": [
+			"<rootDir>/test/js/**/*.js"
 		],
 		"testPathIgnorePatterns": [
-			"<rootDir>/test/utils/"
+			"<rootDir>/test/js/tests_utilities/"
 		]
 	},
 	"main": "js/index.js",
 	"name": "@liferay/commerce-order-content-web",
+	"private": true,
 	"scripts": {
 		"build": "node-scripts build",
 		"checkFormat": "node-scripts format --check",
 		"format": "node-scripts format",
 		"test": "node-scripts test"
 	},
-	"version": "4.0.130"
+	"version": "4.0.141"
 }

@@ -34,17 +34,21 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 	readonly itemsTableRows: () => Promise<Locator[]>;
 	readonly itemsTableRowAction: (sku: string) => Promise<Locator>;
 	readonly keyOrderStatus: (orderStatus: string) => Locator;
+	readonly managementBarActionsButton: Locator;
+	readonly managementBarCheckbox: Locator;
+	readonly managementBarDeleteMenuItem: Locator;
+	readonly orderActionsButton: Locator;
 	readonly orderStatusLink: (orderStatus: string) => Locator;
 	readonly page: Page;
 
 	constructor(page: Page) {
 		super(
 			page,
-			'#_com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet_fm .dnd-table'
+			'#_com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet_fm .fds table'
 		);
 
 		this.editCommerceOrderTable = page.locator(
-			'#_com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet_editOrderContainer .dnd-table'
+			'#_com_liferay_commerce_order_web_internal_portlet_CommerceOrderPortlet_editOrderContainer .fds table'
 		);
 		this.editCommerceOrderTableRow = async (
 			colPosition: number,
@@ -61,9 +65,7 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 		this.editCommerceOrderTableRows = async () => {
 			await this.editCommerceOrderTable.elementHandle();
 
-			return await this.editCommerceOrderTable
-				.locator('div.dnd-tbody div.dnd-tr')
-				.all();
+			return await this.editCommerceOrderTable.locator('tbody tr').all();
 		};
 		this.editCommerceOrderTableRowLink = async ({
 			colIndex = 1,
@@ -108,13 +110,24 @@ export class CommerceAdminOrdersPage extends CommerceDNDTablePage {
 			throw new Error(`Cannot locate order row with value ${sku}`);
 		};
 		this.keyOrderStatus = (orderStatus: string) =>
-			page.locator('.dnd-table').getByText(orderStatus);
+			page.locator('.fds table').getByText(orderStatus);
+		this.managementBarActionsButton = page.getByLabel('Actions', {
+			exact: true,
+		});
+		this.managementBarCheckbox = page.getByRole('checkbox').first();
+		this.managementBarDeleteMenuItem = page.getByRole('menuitem', {
+			exact: true,
+			name: 'delete',
+		});
+		this.orderActionsButton = page.getByRole('button', {
+			name: 'Actions',
+		});
 		this.orderStatusLink = (orderStatus: string) =>
 			page.getByRole('link', {exact: true, name: orderStatus});
 		this.page = page;
 	}
 
 	async goto() {
-		await this.applicationsMenuPage.goToCommerceOrders();
+		await this.applicationsMenuPage.goToCommerceOrders(false);
 	}
 }

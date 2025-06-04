@@ -62,15 +62,15 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -133,15 +133,14 @@ public class FragmentEntryLinkManagerTest {
 					"urls", "http://" + RandomTestUtil.randomString() + ".com"
 				).buildString());
 
+		String portletId = StringBundler.concat(
+			"com_liferay_client_extension_web_internal_portlet_",
+			"ClientExtensionEntryPortlet_", TestPropsValues.getCompanyId(), "_",
+			CETUtil.normalizeExternalReferenceCodeForPortletId(
+				clientExtensionEntry.getExternalReferenceCode()));
+
 		JSONObject processAddPortletJSONObject =
-			ContentLayoutTestUtil.addPortletToLayout(
-				draftLayout,
-				StringBundler.concat(
-					"com_liferay_client_extension_web_internal_portlet_",
-					"ClientExtensionEntryPortlet_",
-					TestPropsValues.getCompanyId(), "_",
-					CETUtil.normalizeExternalReferenceCodeForPortletId(
-						clientExtensionEntry.getExternalReferenceCode())));
+			ContentLayoutTestUtil.addPortletToLayout(draftLayout, portletId);
 
 		JSONObject fragmentEntryLinkJSONObject =
 			processAddPortletJSONObject.getJSONObject("fragmentEntryLink");
@@ -194,6 +193,13 @@ public class FragmentEntryLinkManagerTest {
 			"actions");
 
 		Assert.assertTrue(SetUtil.isEmpty(actionsJSONObject.keySet()));
+
+		Assert.assertEquals(
+			_portal.getPortletTitle(
+				portletId, LocaleThreadLocal.getSiteDefaultLocale()),
+			fragmentEntryLinkJSONObject.getString("name"));
+		Assert.assertEquals(
+			portletId, fragmentEntryLinkJSONObject.getString("portletId"));
 	}
 
 	@Test
@@ -209,6 +215,8 @@ public class FragmentEntryLinkManagerTest {
 						"firstName")));
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		InfoItemFormProvider<?> infoItemFormProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
@@ -226,7 +234,7 @@ public class FragmentEntryLinkManagerTest {
 				_portal.getClassNameId(objectDefinition.getClassName())),
 			"0", layout.fetchDraftLayout(), _layoutStructureProvider,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid()),
+				draftLayout.getPlid()),
 			allInfoFields.toArray(new InfoField<?>[0]));
 
 		LayoutStructure layoutStructure = (LayoutStructure)jsonObject.get(

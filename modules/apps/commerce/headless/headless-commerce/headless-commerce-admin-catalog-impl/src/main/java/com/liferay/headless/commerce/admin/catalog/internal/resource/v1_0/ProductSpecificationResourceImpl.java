@@ -114,20 +114,20 @@ public class ProductSpecificationResourceImpl
 			cpDefinitionSpecificationOptionValues =
 				_cpDefinitionSpecificationOptionValueService.
 					getCPDefinitionSpecificationOptionValues(
-						cpDefinition.getCPDefinitionId(),
+						cpDefinition.getCPDefinitionId(), null,
 						pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_cpDefinitionSpecificationOptionValueService.
 				getCPDefinitionSpecificationOptionValuesCount(
-					cpDefinition.getCPDefinitionId());
+					cpDefinition.getCPDefinitionId(), null);
 
 		return Page.of(
 			_toProductSpecifications(
 				cpDefinitionSpecificationOptionValues,
 				contextAcceptLanguage.getPreferredLocale()),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override

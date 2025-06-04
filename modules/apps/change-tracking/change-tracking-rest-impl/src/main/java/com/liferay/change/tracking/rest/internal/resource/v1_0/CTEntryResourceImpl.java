@@ -12,13 +12,11 @@ import com.liferay.change.tracking.rest.internal.odata.entity.v1_0.CTEntryEntity
 import com.liferay.change.tracking.rest.resource.v1_0.CTEntryResource;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
-import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
 import com.liferay.change.tracking.spi.history.CTCollectionHistoryProvider;
 import com.liferay.change.tracking.spi.history.CTCollectionHistoryProviderRegistry;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
-import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.search.BooleanClause;
 import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
@@ -42,9 +40,9 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Collections;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Collections;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -94,8 +92,12 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 				Long ctCollectionId, Long modelClassNameId, Long modelClassPK)
 		throws Exception {
 
+		CTCollectionHistoryProvider<?> ctCollectionHistoryProvider =
+			_ctCollectionHistoryProviderRegistry.getCTCollectionHistoryProvider(
+				modelClassNameId);
+
 		com.liferay.change.tracking.model.CTEntry ctEntry =
-			_ctEntryLocalService.fetchTimelineCTEntry(
+			ctCollectionHistoryProvider.getCTEntry(
 				ctCollectionId, modelClassNameId, modelClassPK);
 
 		if (ctEntry == null) {
@@ -134,24 +136,13 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 					_ctCollectionHistoryProviderRegistry.
 						getCTCollectionHistoryProvider(classNameId);
 
-				if (ctCollectionHistoryProvider != null) {
-					UnsafeConsumer<SearchUtil.SearchContext, Exception>
-						unsafeConsumer =
-							ctCollectionHistoryProvider.
-								getSearchContextUnsafeConsumer(
-									classNameId, GetterUtil.getLong(classPK));
+				UnsafeConsumer<SearchUtil.SearchContext, Exception>
+					unsafeConsumer =
+						ctCollectionHistoryProvider.
+							getSearchContextUnsafeConsumer(
+								classNameId, GetterUtil.getLong(classPK));
 
-					unsafeConsumer.accept(searchContext);
-				}
-				else {
-					searchContext.setAttribute(
-						"modelClassNameId", new Long[] {classNameId});
-
-					if (classPK != null) {
-						searchContext.setAttribute(
-							"modelClassPK", new Long[] {classPK});
-					}
-				}
+				unsafeConsumer.accept(searchContext);
 
 				if (siteId != null) {
 					searchContext.setAttribute(
@@ -259,22 +250,6 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 						return null;
 					}
 
-					CTSQLModeThreadLocal.CTSQLMode ctSQLMode =
-						_ctDisplayRendererRegistry.getCTSQLMode(
-							ctEntry.getCtCollectionId(), ctEntry);
-
-					T model = _ctDisplayRendererRegistry.fetchCTModel(
-						ctEntry.getCtCollectionId(), ctSQLMode,
-						ctEntry.getModelClassNameId(),
-						ctEntry.getModelClassPK());
-
-					if ((model == null) ||
-						_ctDisplayRendererRegistry.isHideable(
-							model, ctEntry.getModelClassNameId())) {
-
-						return null;
-					}
-
 					return addAction(
 						ActionKeys.UPDATE, ctEntry.getCtCollectionId(),
 						"getCTEntry", _ctCollectionModelResourcePermission);
@@ -335,9 +310,6 @@ public class CTEntryResourceImpl extends BaseCTEntryResourceImpl {
 	)
 	private volatile ModelResourcePermission<CTCollection>
 		_ctCollectionModelResourcePermission;
-
-	@Reference
-	private CTDisplayRendererRegistry _ctDisplayRendererRegistry;
 
 	@Reference(
 		target = "(component.name=com.liferay.change.tracking.rest.internal.dto.v1_0.converter.CTEntryDTOConverter)"

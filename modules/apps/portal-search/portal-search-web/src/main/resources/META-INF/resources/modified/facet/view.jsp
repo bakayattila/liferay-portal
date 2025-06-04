@@ -5,7 +5,7 @@
  */
 --%>
 
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
@@ -145,7 +145,7 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 								id='<%= liferayPortletResponse.getNamespace() + "customRangeFrom" %>'
 								md="6"
 							>
-								<aui:field-wrapper label="from">
+								<aui:field-wrapper label="from" name="fromInput">
 									<liferay-ui:input-date
 										cssClass="modified-facet-custom-range-input-date-from"
 										dayParam="fromDay"
@@ -165,7 +165,7 @@ ModifiedFacetPortletInstanceConfiguration modifiedFacetPortletInstanceConfigurat
 								id='<%= liferayPortletResponse.getNamespace() + "customRangeTo" %>'
 								md="6"
 							>
-								<aui:field-wrapper label="to">
+								<aui:field-wrapper label="to" name="toInput">
 									<liferay-ui:input-date
 										cssClass="modified-facet-custom-range-input-date-to"
 										dayParam="toDay"

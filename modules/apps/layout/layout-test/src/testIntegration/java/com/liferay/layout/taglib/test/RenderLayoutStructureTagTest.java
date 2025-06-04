@@ -28,18 +28,29 @@ import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
+import com.liferay.fragment.helper.DefaultInputFragmentEntryConfigurationProvider;
+import com.liferay.fragment.listener.FragmentEntryLinkListener;
+import com.liferay.fragment.listener.FragmentEntryLinkListenerRegistry;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.info.collection.provider.RepeatableFieldInfoItemCollectionProvider;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.exception.InfoFormValidationException;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
+import com.liferay.info.field.type.BooleanInfoFieldType;
+import com.liferay.info.field.type.InfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
+import com.liferay.info.form.InfoForm;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.capability.InfoItemCapability;
+import com.liferay.info.item.provider.InfoItemDetailsProvider;
+import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.info.test.util.MockInfoServiceRegistrationHolder;
@@ -52,7 +63,9 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
+import com.liferay.layout.manager.FormManager;
 import com.liferay.layout.page.template.info.item.capability.DisplayPageInfoItemCapability;
 import com.liferay.layout.page.template.info.item.capability.EditPageInfoItemCapability;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -60,65 +73,108 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.layout.provider.LayoutStructureProvider;
 import com.liferay.layout.taglib.servlet.taglib.RenderLayoutStructureTag;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
+import com.liferay.layout.test.util.LayoutFriendlyURLRandomizerBumper;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
-import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.FormStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
+import com.liferay.layout.util.structure.LayoutStructureRule;
+import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectEntryFolderConstants;
+import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.field.builder.TextObjectFieldBuilder;
+import com.liferay.object.field.util.ObjectFieldUtil;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectDefinitionLocalService;
+import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.test.util.ObjectRelationshipTestUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.exception.InfoFormException;
+import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
+import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.servlet.HttpMethods;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
+import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlag;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PortalImpl;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.criteria.Criteria;
 import com.liferay.segments.criteria.CriteriaSerializer;
@@ -128,9 +184,18 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+
+import java.io.Serializable;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -163,6 +228,10 @@ public class RenderLayoutStructureTagTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
+		_originalName = PrincipalThreadLocal.getName();
+
+		PrincipalThreadLocal.setName(TestPropsValues.getUserId());
+
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			TestPropsValues.getGroupId(), TestPropsValues.getUserId());
 
@@ -171,10 +240,329 @@ public class RenderLayoutStructureTagTest {
 
 	@After
 	public void tearDown() {
+		PrincipalThreadLocal.setName(_originalName);
 		ServiceContextThreadLocal.popServiceContext();
 	}
 
+	@FeatureFlag("LPD-21926")
 	@Test
+	@TestInfo({"LPD-50584", "LPD-52416"})
+	public void testDisplayPageTemplateWithMappedFriendlyURLInfoField()
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.addCustomObjectDefinition(
+				TestPropsValues.getUserId(), 0, null, false, true, true, true,
+				false, false, null, RandomTestUtil.randomLocaleStringMap(),
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
+				RandomTestUtil.randomLocaleStringMap(), true,
+				ObjectDefinitionConstants.SCOPE_COMPANY,
+				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
+				ListUtil.fromArray(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), "text")));
+
+		_objectDefinitionLocalService.publishCustomObjectDefinition(
+			TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId());
+
+		objectDefinition.setEnableFriendlyURLCustomization(true);
+
+		ObjectDefinition relationshipObjectDefinition =
+			_objectDefinitionLocalService.addCustomObjectDefinition(
+				TestPropsValues.getUserId(), 0, null, false, true, true, true,
+				false, false, null, RandomTestUtil.randomLocaleStringMap(),
+				ObjectDefinitionTestUtil.getRandomName(), null, null,
+				RandomTestUtil.randomLocaleStringMap(), true,
+				ObjectDefinitionConstants.SCOPE_COMPANY,
+				ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT,
+				Collections.emptyList(),
+				ListUtil.fromArray(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), "text")));
+
+		_objectDefinitionLocalService.publishCustomObjectDefinition(
+			TestPropsValues.getUserId(),
+			relationshipObjectDefinition.getObjectDefinitionId());
+
+		relationshipObjectDefinition.setEnableFriendlyURLCustomization(true);
+
+		ObjectRelationship objectRelationship =
+			ObjectRelationshipTestUtil.addObjectRelationship(
+				_objectRelationshipLocalService, objectDefinition,
+				relationshipObjectDefinition);
+
+		long classNameId = _portal.getClassNameId(
+			objectDefinition.getClassName());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(), classNameId, 0, true,
+				WorkflowConstants.STATUS_APPROVED);
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		JSONObject jsonObject = ContentLayoutTestUtil.addFormToLayout(
+			false, String.valueOf(classNameId), "0", draftLayout,
+			_layoutStructureProvider, segmentsExperienceId);
+
+		LayoutStructure layoutStructure =
+			_layoutStructureProvider.getLayoutStructure(
+				draftLayout.getPlid(), segmentsExperienceId);
+
+		List<FragmentEntryLink> addedFragmentEntryLinks = new ArrayList<>();
+
+		_formManager.addFragmentEntryLinksLayoutStructureItems(
+			addedFragmentEntryLinks, _jsonFactory.createJSONObject(),
+			(FormStyledLayoutStructureItem)
+				layoutStructure.getLayoutStructureItem(
+					jsonObject.getString("addedItemId")),
+			true, draftLayout, layoutStructure,
+			LocaleUtil.getMostRelevantLocale(), segmentsExperienceId,
+			_serviceContext, null);
+
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				draftLayout.getGroupId(), draftLayout.getPlid(),
+				segmentsExperienceId, layoutStructure.toString());
+
+		for (FragmentEntryLink addedFragmentEntryLink :
+				addedFragmentEntryLinks) {
+
+			for (FragmentEntryLinkListener fragmentEntryLinkListener :
+					_fragmentEntryLinkListenerRegistry.
+						getFragmentEntryLinkListeners()) {
+
+				fragmentEntryLinkListener.onAddFragmentEntryLink(
+					addedFragmentEntryLink);
+			}
+		}
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		layoutStructure = _layoutStructureProvider.getLayoutStructure(
+			layout.getPlid(),
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				layout.getPlid()));
+
+		Map<Long, LayoutStructureItem> fragmentLayoutStructureItems =
+			layoutStructure.getFragmentLayoutStructureItems();
+
+		Assert.assertEquals(
+			MapUtil.toString(fragmentLayoutStructureItems), 3,
+			fragmentLayoutStructureItems.size());
+
+		String content = _getRenderLayoutHTML(layout);
+
+		List<String> expectedList = new ArrayList<>();
+		String friendlyURLValue = StringUtil.toLowerCase(
+			StringUtil.removeSubstring(
+				RandomTestUtil.randomString(
+					LayoutFriendlyURLRandomizerBumper.INSTANCE),
+				StringPool.SLASH));
+		String relationshipFriendlyURLValue = StringUtil.toLowerCase(
+			StringUtil.removeSubstring(
+				RandomTestUtil.randomString(
+					LayoutFriendlyURLRandomizerBumper.INSTANCE),
+				StringPool.SLASH));
+		String relationshipTextValue = RandomTestUtil.randomString();
+		String textValue = RandomTestUtil.randomString();
+
+		for (Map.Entry<Long, LayoutStructureItem> entry :
+				fragmentLayoutStructureItems.entrySet()) {
+
+			FragmentEntryLink fragmentEntryLink =
+				_fragmentEntryLinkLocalService.getFragmentEntryLink(
+					entry.getKey());
+
+			if (Objects.equals(
+					fragmentEntryLink.getRendererKey(),
+					"INPUTS-submit-button")) {
+
+				continue;
+			}
+
+			String expectedContent = StringBundler.concat(
+				"id=\"", fragmentEntryLink.getNamespace(),
+				"-text-input\" name=\"text\" placeholder=\"\" type=\"text\" ",
+				"value=\"");
+
+			JSONObject editableValueJSONObject = _jsonFactory.createJSONObject(
+				fragmentEntryLink.getEditableValues());
+
+			JSONObject fremarkerFragmentEntryProcessorJSONObject =
+				editableValueJSONObject.getJSONObject(
+					FragmentEntryProcessorConstants.
+						KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR);
+
+			String namespace = StringBundler.concat(
+				ObjectRelationship.class.getName(), StringPool.POUND,
+				relationshipObjectDefinition.getName(), StringPool.POUND,
+				objectRelationship.getName());
+
+			if (Objects.equals(
+					fremarkerFragmentEntryProcessorJSONObject.getString(
+						"inputFieldId"),
+					"ObjectEntry_objectEntryFriendlyURL")) {
+
+				expectedContent = StringBundler.concat(
+					"id=\"", fragmentEntryLink.getNamespace(),
+					"-friendly-url-input\" name=\"objectEntryFriendlyURL\" ",
+					"type=\"text\" value=\"");
+
+				expectedList.add(
+					expectedContent + friendlyURLValue + StringPool.QUOTE);
+			}
+			else if (Objects.equals(
+						fremarkerFragmentEntryProcessorJSONObject.getString(
+							"inputFieldId"),
+						StringBundler.concat(
+							namespace, StringPool.UNDERLINE,
+							objectRelationship.getName(),
+							"_objectEntryFriendlyURL"))) {
+
+				expectedContent = StringBundler.concat(
+					"id=\"", fragmentEntryLink.getNamespace(),
+					"-friendly-url-input\" name=\"",
+					objectRelationship.getName(),
+					"_objectEntryFriendlyURL\"\" type=\"text\" value=\"");
+
+				expectedList.add(
+					expectedContent + relationshipFriendlyURLValue +
+						StringPool.QUOTE);
+			}
+			else if (Objects.equals(
+						fremarkerFragmentEntryProcessorJSONObject.getString(
+							"inputFieldId"),
+						StringBundler.concat(
+							namespace, StringPool.UNDERLINE,
+							objectRelationship.getName(), "_text"))) {
+
+				expectedList.add(
+					expectedContent + relationshipTextValue + StringPool.QUOTE);
+			}
+			else {
+				expectedList.add(
+					expectedContent + textValue + StringPool.QUOTE);
+			}
+
+			Assert.assertTrue(
+				content,
+				StringUtil.contains(
+					content, expectedContent + StringPool.QUOTE,
+					StringPool.BLANK));
+		}
+
+		_serviceContext.setAttribute(
+			"friendlyUrlMap",
+			HashMapBuilder.put(
+				relationshipObjectDefinition.getDefaultLanguageId(),
+				relationshipFriendlyURLValue
+			).build());
+
+		ObjectEntry relationshipObjectEntry =
+			_objectEntryLocalService.addObjectEntry(
+				TestPropsValues.getUserId(), 0,
+				relationshipObjectDefinition.getObjectDefinitionId(),
+				ObjectEntryFolderConstants.
+					PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+				null,
+				HashMapBuilder.<String, Serializable>put(
+					"text", relationshipTextValue
+				).build(),
+				_serviceContext);
+
+		Assert.assertEquals(
+			relationshipFriendlyURLValue,
+			relationshipObjectEntry.getURLTitle(
+				objectDefinition.getDefaultLocale()));
+
+		_serviceContext.setAttribute(
+			"friendlyUrlMap",
+			HashMapBuilder.put(
+				objectDefinition.getDefaultLanguageId(), friendlyURLValue
+			).build());
+
+		ObjectEntry objectEntry = _objectEntryLocalService.addObjectEntry(
+			TestPropsValues.getUserId(), 0,
+			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
+			HashMapBuilder.<String, Serializable>put(
+				objectRelationship.getName(),
+				relationshipObjectEntry.getObjectEntryId()
+			).put(
+				"text", textValue
+			).build(),
+			_serviceContext);
+
+		Assert.assertEquals(
+			friendlyURLValue,
+			objectEntry.getURLTitle(objectDefinition.getDefaultLocale()));
+
+		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
+			_layoutDisplayPageProviderRegistry.
+				getLayoutDisplayPageProviderByClassName(
+					objectDefinition.getClassName());
+
+		MockHttpServletRequest mockHttpServletRequest =
+			_getMockHttpServletRequest(
+				layout,
+				layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+					new InfoItemReference(
+						objectDefinition.getClassName(),
+						objectEntry.getObjectEntryId())),
+				Collections.emptyMap(), null);
+
+		mockHttpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM, objectEntry);
+
+		InfoItemDetailsProvider infoItemDetailsProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemDetailsProvider.class, objectDefinition.getClassName());
+
+		mockHttpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM_DETAILS,
+			infoItemDetailsProvider.getInfoItemDetails(objectEntry));
+
+		_serviceContext.setRequest(mockHttpServletRequest);
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
+
+		try {
+			MockHttpServletResponse mockHttpServletResponse = _renderLayout(
+				layout, mockHttpServletRequest);
+
+			content = mockHttpServletResponse.getContentAsString();
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
+		}
+
+		for (String value : expectedList) {
+			Assert.assertTrue(
+				content, StringUtil.contains(content, value, StringPool.BLANK));
+		}
+
+		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
+		_objectDefinitionLocalService.deleteObjectDefinition(
+			relationshipObjectDefinition);
+	}
+
+	@Test
+	@TestInfo({"LPD-33573", "LPD-55091"})
 	public void testEnsureFileURLWhenChangingGroupFriendlyURL()
 		throws Exception {
 
@@ -190,9 +578,16 @@ public class RenderLayoutStructureTagTest {
 			StringUtil.contains(
 				url, _group.getFriendlyURL(), StringPool.BLANK));
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
+
+		ContentLayoutTestUtil.addItemToLayout(
+			"{}", LayoutDataItemTypeConstants.TYPE_CONTAINER,
+			layout.fetchDraftLayout(), _layoutStructureProvider,
+			segmentExperienceId);
 
 		ContentLayoutTestUtil.addItemToLayout(
 			JSONUtil.put(
@@ -219,6 +614,12 @@ public class RenderLayoutStructureTagTest {
 
 		Assert.assertTrue(
 			content, StringUtil.contains(content, url, StringPool.BLANK));
+		Assert.assertFalse(
+			content,
+			StringUtil.contains(content, "style=\"\"", StringPool.BLANK));
+		Assert.assertTrue(
+			content,
+			StringUtil.contains(content, "style=\"", StringPool.BLANK));
 
 		_groupLocalService.updateFriendlyURL(
 			_group.getGroupId(), "/new-friendly-url");
@@ -234,6 +635,103 @@ public class RenderLayoutStructureTagTest {
 
 		Assert.assertTrue(
 			content, StringUtil.contains(content, url, StringPool.BLANK));
+	}
+
+	@Test
+	public void testLayoutStructureRules() throws Exception {
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				ListUtil.fromArray(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), "text"),
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_BOOLEAN,
+						ObjectFieldConstants.DB_TYPE_BOOLEAN,
+						RandomTestUtil.randomString(), "boolean")));
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		Map<String, String> inputTypesMap = _addFormToLayout(
+			objectDefinition.getClassName(), draftLayout);
+
+		_addLayoutStructureRule(inputTypesMap, draftLayout);
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		String content = _getRenderLayoutHTML(layout);
+
+		LayoutStructure layoutStructure =
+			_layoutStructureProvider.getLayoutStructure(
+				layout.getPlid(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(layout.getPlid()));
+
+		FragmentStyledLayoutStructureItem
+			submitButtonFragmentStyledLayoutStructureItem =
+				(FragmentStyledLayoutStructureItem)
+					layoutStructure.getLayoutStructureItem(
+						inputTypesMap.get(
+							DefaultInputFragmentEntryConfigurationProvider.
+								FORM_INPUT_SUBMIT_BUTTON));
+
+		FragmentEntryLink submitButtonFragmentEntryLink =
+			_fragmentEntryLinkLocalService.getFragmentEntryLink(
+				submitButtonFragmentStyledLayoutStructureItem.
+					getFragmentEntryLinkId());
+
+		String submitButtonIdAttribute =
+			"id=\"fragment-" + submitButtonFragmentEntryLink.getNamespace() +
+				"-submit-button\"";
+
+		Assert.assertTrue(
+			content,
+			StringUtil.contains(
+				content, "disabled " + submitButtonIdAttribute,
+				StringPool.BLANK));
+
+		FragmentStyledLayoutStructureItem
+			textInputFragmentStyledLayoutStructureItem =
+				(FragmentStyledLayoutStructureItem)
+					layoutStructure.getLayoutStructureItem(
+						inputTypesMap.get(
+							TextInfoFieldType.INSTANCE.getName()));
+
+		FragmentEntryLink textInputFragmentEntryLink =
+			_fragmentEntryLinkLocalService.getFragmentEntryLink(
+				textInputFragmentStyledLayoutStructureItem.
+					getFragmentEntryLinkId());
+
+		String textInputIdAttribute =
+			"id=\"" + textInputFragmentEntryLink.getNamespace() +
+				"-text-input\"";
+
+		Assert.assertFalse(
+			content,
+			StringUtil.contains(
+				content, textInputIdAttribute, StringPool.BLANK));
+
+		content = _getRenderLayoutHTML(
+			layout, Collections.emptyMap(),
+			UserTestUtil.addCompanyAdminUser(
+				_companyLocalService.getCompany(_group.getCompanyId())));
+
+		Assert.assertTrue(
+			content,
+			StringUtil.contains(
+				content, submitButtonIdAttribute, StringPool.BLANK));
+		Assert.assertFalse(
+			content,
+			StringUtil.contains(
+				content, "disabled " + submitButtonIdAttribute,
+				StringPool.BLANK));
+		Assert.assertTrue(
+			content,
+			StringUtil.contains(
+				content, textInputIdAttribute, StringPool.BLANK));
 	}
 
 	@Test
@@ -295,18 +793,19 @@ public class RenderLayoutStructureTagTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
-		CollectionStyledLayoutStructureItem
-			collectionStyledLayoutStructureItem =
-				_addCollectionStyledLayoutStructureItem(
-					assetListEntry, layout, segmentsExperienceId);
-
-		_addFragmentEntryLinks(
-			layout, collectionStyledLayoutStructureItem.getItemId(),
-			segmentsExperienceId);
+		_addCollectionStyledLayoutStructureItem(
+			assetListEntry, layout, _COUNT_INFO_LIST_ITEMS, "none",
+			segmentsExperienceId,
+			_addFragmentEntryLinks(
+				_COUNT_FRAGMENT_ENTRY_LINKS,
+				JSONUtil.put("collectionFieldId", "JournalArticle_title"),
+				layout.fetchDraftLayout(), segmentsExperienceId));
 
 		List<AssetEntry> assetEntries = _addAssetEntries(assetListEntry);
 
@@ -341,6 +840,59 @@ public class RenderLayoutStructureTagTest {
 	}
 
 	@Test
+	@TestInfo("LPS-163440")
+	public void testRenderCollectionStyledLayoutStructureItemForFlexRowListStyle()
+		throws Exception {
+
+		AssetListEntry assetListEntry =
+			_assetListEntryLocalService.addAssetListEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(),
+				AssetListEntryTypeConstants.TYPE_DYNAMIC, _serviceContext);
+
+		JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		_addCollectionStyledLayoutStructureItem(
+			JSONUtil.put(
+				"classNameId", _portal.getClassNameId(AssetListEntry.class)
+			).put(
+				"classPK", assetListEntry.getAssetListEntryId()
+			).put(
+				"itemType", AssetEntry.class.getName()
+			).put(
+				"type", InfoListItemSelectorReturnType.class.getName()
+			),
+			JSONUtil.put(
+				"align", "align-items-end"
+			).put(
+				"justify", "justify-content-center"
+			),
+			layout, "flex-row", segmentsExperienceId,
+			_addFragmentEntryLinks(
+				1, JSONUtil.put("collectionFieldId", "JournalArticle_title"),
+				layout.fetchDraftLayout(), segmentsExperienceId));
+
+		MockHttpServletResponse mockHttpServletResponse = _renderLayout(
+			layout, _getMockHttpServletRequest(layout));
+
+		String content = mockHttpServletResponse.getContentAsString();
+
+		Assert.assertTrue(
+			content.contains(
+				"d-flex flex-row align-items-end justify-content-center"));
+	}
+
+	@Test
 	public void testRenderCollectionStyledLayoutStructureItemForRepeatableFields()
 		throws Exception {
 
@@ -366,7 +918,7 @@ public class RenderLayoutStructureTagTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				null, _group.getGroupId(), 0,
+				null, _group.getGroupId(), 0, null,
 				_portal.getClassNameId(JournalArticle.class.getName()),
 				ddmStructure.getStructureId(), RandomTestUtil.randomString(), 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
@@ -383,52 +935,39 @@ public class RenderLayoutStructureTagTest {
 		mockHttpServletRequest.setAttribute(
 			InfoDisplayWebKeys.INFO_ITEM, journalArticle);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
-		LayoutStructure layoutStructure =
-			_addCollectionStyledLayoutStructureItemAndGetLayoutStructure(
-				JSONUtil.put(
-					"fieldName", "Fieldset"
-				).put(
-					"itemSubType", String.valueOf(ddmStructure.getStructureId())
-				).put(
-					"itemType", JournalArticle.class.getName()
-				).put(
-					"key",
-					RepeatableFieldInfoItemCollectionProvider.class.getName()
-				).put(
-					"type",
-					InfoListProviderItemSelectorReturnType.class.getName()
-				),
-				JSONUtil.put(
-					"displayAllPages", true
-				).put(
-					"numberOfItems", 3
-				).put(
-					"numberOfItemsPerPage", 3
-				).put(
-					"paginationType", "none"
-				).put(
-					"showAllItems", true
-				),
-				layout, null, segmentsExperienceId);
-
-		List<CollectionStyledLayoutStructureItem>
-			collectionStyledLayoutStructureItems =
-				layoutStructure.getCollectionStyledLayoutStructureItems();
-
-		CollectionStyledLayoutStructureItem
-			collectionStyledLayoutStructureItem =
-				collectionStyledLayoutStructureItems.get(0);
-
-		List<String> childrenItemIds =
-			collectionStyledLayoutStructureItem.getChildrenItemIds();
-
-		_addFragmentEntryLinkToLayout(
-			JSONUtil.put("collectionFieldId", "DDMStructure_Text1"), layout,
-			childrenItemIds.get(0), segmentsExperienceId);
+		_addCollectionStyledLayoutStructureItem(
+			JSONUtil.put(
+				"fieldName", "Fieldset"
+			).put(
+				"itemSubType", String.valueOf(ddmStructure.getStructureId())
+			).put(
+				"itemType", JournalArticle.class.getName()
+			).put(
+				"key", RepeatableFieldInfoItemCollectionProvider.class.getName()
+			).put(
+				"type", InfoListProviderItemSelectorReturnType.class.getName()
+			),
+			JSONUtil.put(
+				"displayAllPages", true
+			).put(
+				"numberOfItems", 3
+			).put(
+				"numberOfItemsPerPage", 3
+			).put(
+				"paginationType", "none"
+			).put(
+				"showAllItems", true
+			),
+			layout, null, segmentsExperienceId,
+			_addFragmentEntryLinks(
+				1, JSONUtil.put("collectionFieldId", "DDMStructure_Text1"),
+				layout.fetchDraftLayout(), segmentsExperienceId));
 
 		MockHttpServletResponse mockHttpServletResponse = _renderLayout(
 			layout, mockHttpServletRequest);
@@ -503,21 +1042,28 @@ public class RenderLayoutStructureTagTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		SegmentsExperience segmentsExperience =
-			SegmentsTestUtil.addSegmentsExperience(
-				_group.getGroupId(), segmentsEntry2.getSegmentsEntryId(),
-				layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
-		_createLayoutStructure(
+		SegmentsExperience draftSegmentsExperience = _addSegmentsExperience(
+			draftLayout, segmentsEntry2.getSegmentsEntryId());
+
+		_addCollectionStyledLayoutStructureItem(
 			assetListEntry.getAssetListEntryId(), layout,
-			segmentsExperience.getSegmentsExperienceId());
+			draftSegmentsExperience.getSegmentsExperienceId());
 
 		MockHttpServletRequest mockHttpServletRequest =
 			_getMockHttpServletRequest(layout);
 
+		SegmentsExperience publishedSegmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				_group.getGroupId(),
+				draftSegmentsExperience.getSegmentsExperienceKey(),
+				layout.getPlid());
+
 		mockHttpServletRequest.addParameter(
 			"segmentsExperienceId",
-			String.valueOf(segmentsExperience.getSegmentsExperienceId()));
+			String.valueOf(
+				publishedSegmentsExperience.getSegmentsExperienceId()));
 
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();
@@ -525,7 +1071,7 @@ public class RenderLayoutStructureTagTest {
 		RenderLayoutStructureTag renderLayoutStructureTag =
 			_getRenderLayoutStructureTag(
 				layout, mockHttpServletRequest, mockHttpServletResponse,
-				segmentsExperience.getSegmentsExperienceId());
+				publishedSegmentsExperience.getSegmentsExperienceId());
 
 		renderLayoutStructureTag.doTag(
 			mockHttpServletRequest, mockHttpServletResponse);
@@ -586,21 +1132,28 @@ public class RenderLayoutStructureTagTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		SegmentsExperience segmentsExperience =
-			SegmentsTestUtil.addSegmentsExperience(
-				_group.getGroupId(), segmentsEntry.getSegmentsEntryId(),
-				layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
-		_createLayoutStructure(
+		SegmentsExperience draftSegmentsExperience = _addSegmentsExperience(
+			draftLayout, segmentsEntry.getSegmentsEntryId());
+
+		_addCollectionStyledLayoutStructureItem(
 			assetListEntry.getAssetListEntryId(), layout,
-			segmentsExperience.getSegmentsExperienceId());
+			draftSegmentsExperience.getSegmentsExperienceId());
 
 		MockHttpServletRequest mockHttpServletRequest =
 			_getMockHttpServletRequest(layout);
 
+		SegmentsExperience publishedSegmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				_group.getGroupId(),
+				draftSegmentsExperience.getSegmentsExperienceKey(),
+				layout.getPlid());
+
 		mockHttpServletRequest.addParameter(
 			"segmentsExperienceId",
-			String.valueOf(segmentsExperience.getSegmentsExperienceId()));
+			String.valueOf(
+				publishedSegmentsExperience.getSegmentsExperienceId()));
 
 		MockHttpServletResponse mockHttpServletResponse =
 			new MockHttpServletResponse();
@@ -608,7 +1161,7 @@ public class RenderLayoutStructureTagTest {
 		RenderLayoutStructureTag renderLayoutStructureTag =
 			_getRenderLayoutStructureTag(
 				layout, mockHttpServletRequest, mockHttpServletResponse,
-				segmentsExperience.getSegmentsExperienceId());
+				publishedSegmentsExperience.getSegmentsExperienceId());
 
 		renderLayoutStructureTag.doTag(
 			mockHttpServletRequest, mockHttpServletResponse);
@@ -626,6 +1179,183 @@ public class RenderLayoutStructureTagTest {
 		Assert.assertEquals(
 			expectedJournalArticle2.getArticleId(),
 			actualJournalArticle.getArticleId());
+	}
+
+	@FeatureFlags(
+		featureFlags = {
+			@FeatureFlag(value = "LPD-32050"), @FeatureFlag(value = "LPD-37927")
+		}
+	)
+	@Test
+	@TestInfo("LPD-48715")
+	public void testRenderCollectionStyledLayoutStructureItemWithLocalizedObjectField()
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionTestUtil.publishObjectDefinition(
+				ListUtil.fromArray(
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"myLocalizedText"
+					).localized(
+						true
+					).objectFieldSettings(
+						Collections.emptyList()
+					).build(),
+					new TextObjectFieldBuilder(
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap(
+							RandomTestUtil.randomString())
+					).name(
+						"myText"
+					).objectFieldSettings(
+						Collections.emptyList()
+					).build()),
+				ObjectDefinitionConstants.SCOPE_SITE);
+
+		String myLocalizedTextENValue = RandomTestUtil.randomString();
+		String myLocalizedTextESValue = RandomTestUtil.randomString();
+		String myTextValue = RandomTestUtil.randomString();
+
+		_objectEntryLocalService.addObjectEntry(
+			TestPropsValues.getUserId(), _group.getGroupId(),
+			objectDefinition.getObjectDefinitionId(),
+			ObjectEntryFolderConstants.PARENT_OBJECT_ENTRY_FOLDER_ID_DEFAULT,
+			null,
+			HashMapBuilder.<String, Serializable>put(
+				"myLocalizedText", myLocalizedTextENValue
+			).put(
+				"myLocalizedText_i18n",
+				HashMapBuilder.put(
+					LocaleUtil.toLanguageId(LocaleUtil.SPAIN),
+					myLocalizedTextESValue
+				).put(
+					LocaleUtil.toLanguageId(LocaleUtil.US),
+					myLocalizedTextENValue
+				).build()
+			).put(
+				"myText", myTextValue
+			).build(),
+			ServiceContextTestUtil.getServiceContext());
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		_addCollectionStyledLayoutStructureItem(
+			JSONUtil.put(
+				"itemSubtype", objectDefinition.getObjectDefinitionId()
+			).put(
+				"itemType", objectDefinition.getClassName()
+			).put(
+				"key", objectDefinition.getClassName()
+			).put(
+				"type", InfoListProviderItemSelectorReturnType.class.getName()
+			),
+			JSONUtil.put(
+				"displayAllPages", true
+			).put(
+				"paginationType", "none"
+			).put(
+				"showAllItems", true
+			),
+			layout, null, segmentsExperienceId,
+			ArrayUtil.append(
+				_addFragmentEntryLinks(
+					1,
+					JSONUtil.put(
+						"collectionFieldId", "ObjectField_myLocalizedText"),
+					draftLayout, segmentsExperienceId),
+				_addFragmentEntryLinks(
+					1, JSONUtil.put("collectionFieldId", "ObjectField_myText"),
+					draftLayout, segmentsExperienceId)));
+
+		_testRenderLayoutWithLocale(
+			layout, LocaleUtil.CHINESE, "<h1", myLocalizedTextENValue, "</h1>",
+			"<h1", myTextValue, "</h1>");
+		_testRenderLayoutWithLocale(
+			layout, LocaleUtil.SPAIN, "<h1", myLocalizedTextESValue, "</h1>",
+			"<h1", myTextValue, "</h1>");
+		_testRenderLayoutWithLocale(
+			layout, LocaleUtil.US, "<h1", myLocalizedTextENValue, "</h1>",
+			"<h1", myTextValue, "</h1>");
+	}
+
+	@Test
+	@TestInfo("LPS-173440")
+	public void testRenderCollectionStyledLayoutStructureItemWithoutPermissions()
+		throws Exception {
+
+		AssetListEntry assetListEntry =
+			_assetListEntryLocalService.addAssetListEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(),
+				AssetListEntryTypeConstants.TYPE_MANUAL, _serviceContext);
+
+		Role guestRole = RoleLocalServiceUtil.getRole(
+			TestPropsValues.getCompanyId(), RoleConstants.GUEST);
+
+		ResourcePermissionLocalServiceUtil.removeResourcePermission(
+			TestPropsValues.getCompanyId(), AssetListEntry.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(assetListEntry.getAssetListEntryId()),
+			guestRole.getRoleId(), ActionKeys.VIEW);
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		_addCollectionStyledLayoutStructureItem(
+			assetListEntry, layout, _COUNT_INFO_LIST_ITEMS, "none",
+			segmentsExperienceId,
+			_addFragmentEntryLinks(
+				_COUNT_FRAGMENT_ENTRY_LINKS,
+				JSONUtil.put("collectionFieldId", "JournalArticle_title"),
+				layout.fetchDraftLayout(), segmentsExperienceId));
+
+		_addAssetEntries(assetListEntry);
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try {
+			Company company = _companyLocalService.fetchCompany(
+				TestPropsValues.getCompanyId());
+
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(company.getGuestUser()));
+
+			MockHttpServletRequest mockHttpServletRequest =
+				_getMockHttpServletRequest(layout);
+			MockHttpServletResponse mockHttpServletResponse =
+				new MockHttpServletResponse();
+
+			RenderLayoutStructureTag renderLayoutStructureTag =
+				_getRenderLayoutStructureTag(
+					layout, mockHttpServletRequest, mockHttpServletResponse,
+					segmentsExperienceId);
+
+			renderLayoutStructureTag.doTag(
+				mockHttpServletRequest, mockHttpServletResponse);
+
+			String content = mockHttpServletResponse.getContentAsString();
+
+			Assert.assertTrue(content.isEmpty());
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+		}
 	}
 
 	@Test
@@ -669,10 +1399,23 @@ public class RenderLayoutStructureTagTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		_createLayoutStructure(
-			assetListEntry.getAssetListEntryId(), layout,
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		_addCollectionStyledLayoutStructureItem(
+			JSONUtil.put(
+				"classNameId", _portal.getClassNameId(AssetListEntry.class)
+			).put(
+				"classPK", assetListEntry.getAssetListEntryId()
+			).put(
+				"itemType", JournalArticle.class.getName()
+			).put(
+				"type", InfoListItemSelectorReturnType.class.getName()
+			),
+			null, layout,
+			"com.liferay.journal.web.internal.info.list.renderer." +
+				"BulletedJournalArticleBasicInfoListRenderer",
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid()));
+				draftLayout.getPlid()));
 
 		MockHttpServletRequest mockHttpServletRequest =
 			_getMockHttpServletRequest(layout);
@@ -692,6 +1435,102 @@ public class RenderLayoutStructureTagTest {
 		Assert.assertEquals(
 			expectedJournalArticle1.getArticleId(),
 			actualJournalArticle.getArticleId());
+	}
+
+	@Test
+	@TestInfo({"LPS-123825", "LPS-149178"})
+	public void testRenderCollectionStyledLayoutStructureItemWithPagination()
+		throws Exception {
+
+		AssetListEntry assetListEntry =
+			_assetListEntryLocalService.addAssetListEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(),
+				AssetListEntryTypeConstants.TYPE_DYNAMIC,
+				UnicodePropertiesBuilder.create(
+					true
+				).put(
+					"anyAssetType",
+					String.valueOf(_portal.getClassNameId(JournalArticle.class))
+				).put(
+					"orderByColumn1", "priority"
+				).put(
+					"orderByType1", "ASC"
+				).buildString(),
+				_serviceContext);
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		String itemId = _addCollectionStyledLayoutStructureItem(
+			JSONUtil.put(
+				"classNameId", _portal.getClassNameId(AssetListEntry.class)
+			).put(
+				"classPK", assetListEntry.getAssetListEntryId()
+			).put(
+				"itemType", JournalArticle.class.getName()
+			).put(
+				"type", InfoListItemSelectorReturnType.class.getName()
+			),
+			null, layout, null, segmentsExperienceId,
+			_addFragmentEntryLinks(
+				1, JSONUtil.put("collectionFieldId", "JournalArticle_title"),
+				layout.fetchDraftLayout(), segmentsExperienceId));
+
+		Locale locale = _portal.getSiteDefaultLocale(_group);
+
+		List<String> titles = _addJournalArticlesAndGetTitles(7, locale);
+
+		_testPagination(
+			itemId,
+			JSONUtil.put(
+				"displayAllItems", false
+			).put(
+				"displayAllPages", true
+			).put(
+				"numberOfItemsPerPage", 2
+			),
+			layout, 2, 4, segmentsExperienceId, titles);
+
+		_testPagination(
+			itemId,
+			JSONUtil.put(
+				"displayAllPages", false
+			).put(
+				"numberOfItemsPerPage", 6
+			).put(
+				"numberOfPages", 1
+			),
+			layout, 6, 1, segmentsExperienceId, titles);
+
+		_testPagination(
+			itemId,
+			JSONUtil.put(
+				"displayAllPages", true
+			).put(
+				"numberOfItemsPerPage", 7
+			).put(
+				"numberOfPages", 1
+			),
+			layout, 7, 1, segmentsExperienceId, titles);
+
+		_testPagination(
+			itemId,
+			JSONUtil.put(
+				"displayAllItems", false
+			).put(
+				"displayAllPages", false
+			).put(
+				"numberOfItemsPerPage", 2
+			).put(
+				"numberOfPages", 2
+			),
+			layout, 2, 2, segmentsExperienceId, titles);
 	}
 
 	@Test
@@ -716,10 +1555,12 @@ public class RenderLayoutStructureTagTest {
 		try {
 			Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
+			Layout draftLayout = layout.fetchDraftLayout();
+
 			LayoutPageTemplateStructure layoutPageTemplateStructure =
 				LayoutPageTemplateStructureLocalServiceUtil.
 					fetchLayoutPageTemplateStructure(
-						_group.getGroupId(), layout.getPlid());
+						_group.getGroupId(), draftLayout.getPlid());
 
 			LayoutStructure layoutStructure = LayoutStructure.of(
 				layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
@@ -752,10 +1593,12 @@ public class RenderLayoutStructureTagTest {
 
 			_layoutPageTemplateStructureLocalService.
 				updateLayoutPageTemplateStructureData(
-					_group.getGroupId(), layout.getPlid(),
+					_group.getGroupId(), draftLayout.getPlid(),
 					_segmentsExperienceLocalService.
-						fetchDefaultSegmentsExperienceId(layout.getPlid()),
+						fetchDefaultSegmentsExperienceId(draftLayout.getPlid()),
 					layoutStructure.toString());
+
+			ContentLayoutTestUtil.publishLayout(draftLayout, layout);
 
 			String content = _getRenderLayoutHTML(layout);
 
@@ -775,9 +1618,11 @@ public class RenderLayoutStructureTagTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		long segmentsExperienceId =
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid());
+				draftLayout.getPlid());
 
 		JSONObject jsonObject = ContentLayoutTestUtil.addItemToLayout(
 			JSONUtil.put(
@@ -1159,6 +2004,7 @@ public class RenderLayoutStructureTagTest {
 	}
 
 	@Test
+	@TestInfo("LPD-52923")
 	public void testRenderFormWithSuccessMessage() throws Exception {
 		InfoField<TextInfoFieldType> infoField = _getInfoField(false);
 
@@ -1179,37 +2025,56 @@ public class RenderLayoutStructureTagTest {
 					_portal.getClassNameId(MockObject.class.getName())),
 				"0", layout, _layoutStructureProvider, infoField);
 
-			MockHttpServletRequest mockHttpServletRequest =
-				_getMockHttpServletRequest(layout);
-
-			SessionMessages.add(mockHttpServletRequest, formItemId);
-
-			MockHttpServletResponse mockHttpServletResponse = _renderLayout(
-				layout, mockHttpServletRequest);
-
-			String content = mockHttpServletResponse.getContentAsString();
-
-			String formStartHTML = "<form action=\"";
-
-			Assert.assertFalse(content.contains(formStartHTML));
-
 			Locale locale = _portal.getSiteDefaultLocale(_group);
 
-			String expectedSuccessMessage = LanguageUtil.get(
-				locale,
-				"thank-you.-your-information-was-successfully-received");
+			_testRenderFormWithSuccessMessage(
+				StringBundler.concat(
+					"<div class=\"bg-white font-weight-semi-bold p-5 text-3 ",
+					"text-center text-secondary\">",
+					LanguageUtil.get(
+						locale,
+						"thank-you.-your-information-was-successfully-" +
+							"received"),
+					"</div>"),
+				formItemId, infoField, layout);
 
-			String expectedSuccessHTML = StringBundler.concat(
-				"<div class=\"bg-white font-weight-semi-bold p-5 text-3 ",
-				"text-center text-secondary\">", expectedSuccessMessage,
-				"</div>");
+			Layout draftLayout = layout.fetchDraftLayout();
 
-			Assert.assertTrue(content.contains(expectedSuccessHTML));
+			long segmentsExperienceId =
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(draftLayout.getPlid());
 
-			String expectedInfoFieldInput =
-				"<p>InputName:" + infoField.getName() + "</p>";
+			LayoutStructure layoutStructure =
+				_layoutStructureProvider.getLayoutStructure(
+					draftLayout.getPlid(), segmentsExperienceId);
 
-			Assert.assertFalse(content.contains(expectedInfoFieldInput));
+			List<FormStyledLayoutStructureItem> formStyledLayoutStructureItems =
+				layoutStructure.getFormStyledLayoutStructureItems();
+
+			FormStyledLayoutStructureItem formStyledLayoutStructureItem =
+				formStyledLayoutStructureItems.get(0);
+
+			String message =
+				"<script>alert('" + RandomTestUtil.randomString() +
+					"')</script>";
+
+			formStyledLayoutStructureItem.setSuccessMessageJSONObject(
+				JSONUtil.put(
+					"message",
+					JSONUtil.put(LocaleUtil.toLanguageId(locale), message)
+				).put(
+					"type", "embedded"
+				));
+
+			_layoutPageTemplateStructureLocalService.
+				updateLayoutPageTemplateStructureData(
+					_group.getGroupId(), draftLayout.getPlid(),
+					segmentsExperienceId, layoutStructure.toString());
+
+			ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+			_testRenderFormWithSuccessMessage(
+				HtmlUtil.escape(message), formItemId, infoField, layout);
 		}
 	}
 
@@ -1224,6 +2089,8 @@ public class RenderLayoutStructureTagTest {
 		FileEntry fileEntry = _addFileEntry();
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		_addFragmentEntryLinkToLayout(
 			JSONUtil.put(
@@ -1255,7 +2122,7 @@ public class RenderLayoutStructureTagTest {
 				)),
 			"BASIC_COMPONENT-image", layout.fetchDraftLayout(),
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid()));
+				draftLayout.getPlid()));
 
 		ContentLayoutTestUtil.publishLayout(layout.fetchDraftLayout(), layout);
 
@@ -1288,6 +2155,8 @@ public class RenderLayoutStructureTagTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
+		Layout draftLayout = layout.fetchDraftLayout();
+
 		_addFragmentEntryLinkToLayout(
 			JSONUtil.put(
 				"element-text",
@@ -1308,7 +2177,7 @@ public class RenderLayoutStructureTagTest {
 				)),
 			"BASIC_COMPONENT-heading", layout.fetchDraftLayout(),
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid()));
+				draftLayout.getPlid()));
 
 		ContentLayoutTestUtil.publishLayout(layout.fetchDraftLayout(), layout);
 
@@ -1324,6 +2193,36 @@ public class RenderLayoutStructureTagTest {
 					"href=\"https://www.liferay.com/\">", expectedContent,
 					"</a></h1></div>"),
 				StringPool.BLANK));
+	}
+
+	@Test
+	@TestInfo("LPD-41653")
+	public void testViewAssertAnalyticsTargetableCollectionIdForCollectionStyledLayoutStructureItem()
+		throws Exception {
+
+		AssetListEntry assetListEntry =
+			_assetListEntryLocalService.addAssetListEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(),
+				AssetListEntryTypeConstants.TYPE_MANUAL, _serviceContext);
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		String itemId = _addCollectionStyledLayoutStructureItem(
+			assetListEntry, layout, _COUNT_INFO_LIST_ITEMS, "none",
+			segmentsExperienceId);
+
+		String content = _getRenderLayoutHTML(layout);
+
+		Assert.assertTrue(
+			content.contains(
+				"id=\"analytics-targetable-collection-" + itemId + "\""));
 	}
 
 	@Test
@@ -1374,95 +2273,75 @@ public class RenderLayoutStructureTagTest {
 		return assetEntries;
 	}
 
-	private CollectionStyledLayoutStructureItem
-			_addCollectionStyledLayoutStructureItem(
-				AssetListEntry assetListEntry, Layout layout,
-				long segmentsExperienceId)
+	private String _addCollectionStyledLayoutStructureItem(
+			AssetListEntry assetListEntry, Layout layout,
+			int numberOfItemsPerPage, String paginationType,
+			long segmentsExperienceId, FragmentEntryLink... fragmentEntryLinks)
 		throws Exception {
 
-		LayoutStructure layoutStructure =
-			_addCollectionStyledLayoutStructureItemAndGetLayoutStructure(
-				JSONUtil.put(
-					"classNameId", _portal.getClassNameId(AssetListEntry.class)
-				).put(
-					"classPK", assetListEntry.getAssetListEntryId()
-				).put(
-					"itemType", JournalArticle.class.getName()
-				).put(
-					"type", InfoListItemSelectorReturnType.class.getName()
-				),
-				JSONUtil.put(
-					"displayAllPages", true
-				).put(
-					"numberOfItems", _COUNT_INFO_LIST_ITEMS
-				).put(
-					"numberOfItemsPerPage", _COUNT_INFO_LIST_ITEMS
-				).put(
-					"paginationType", "none"
-				).put(
-					"showAllItems", true
-				),
-				layout, null, segmentsExperienceId);
-
-		List<CollectionStyledLayoutStructureItem>
-			collectionStyledLayoutStructureItems =
-				layoutStructure.getCollectionStyledLayoutStructureItems();
-
-		Assert.assertEquals(
-			collectionStyledLayoutStructureItems.toString(), 1,
-			collectionStyledLayoutStructureItems.size());
-
-		return collectionStyledLayoutStructureItems.get(0);
+		return _addCollectionStyledLayoutStructureItem(
+			JSONUtil.put(
+				"classNameId", _portal.getClassNameId(AssetListEntry.class)
+			).put(
+				"classPK", assetListEntry.getAssetListEntryId()
+			).put(
+				"itemType", JournalArticle.class.getName()
+			).put(
+				"type", InfoListItemSelectorReturnType.class.getName()
+			),
+			JSONUtil.put(
+				"displayAllPages", true
+			).put(
+				"numberOfItemsPerPage", numberOfItemsPerPage
+			).put(
+				"paginationType", paginationType
+			).put(
+				"showAllItems", true
+			),
+			layout, null, segmentsExperienceId, fragmentEntryLinks);
 	}
 
-	private LayoutStructure
-			_addCollectionStyledLayoutStructureItemAndGetLayoutStructure(
-				JSONObject collectionJSONObject,
-				JSONObject displayConfigJSONObject, Layout layout,
-				String listStyle, long segmentsExperienceId)
+	private String _addCollectionStyledLayoutStructureItem(
+			JSONObject collectionJSONObject, JSONObject displayConfigJSONObject,
+			Layout layout, String listStyle, long segmentsExperienceId,
+			FragmentEntryLink... fragmentEntryLinks)
 		throws Exception {
 
-		LayoutPageTemplateStructure layoutPageTemplateStructure =
-			LayoutPageTemplateStructureLocalServiceUtil.
-				fetchLayoutPageTemplateStructure(
-					_group.getGroupId(), layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
-		LayoutStructure layoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
-
-		CollectionStyledLayoutStructureItem
-			collectionStyledLayoutStructureItem =
-				(CollectionStyledLayoutStructureItem)
-					layoutStructure.addCollectionStyledLayoutStructureItem(
-						layoutStructure.getMainItemId(), 0);
-
-		collectionStyledLayoutStructureItem.setCollectionJSONObject(
-			collectionJSONObject);
+		String itemId = ContentLayoutTestUtil.addCollectionDisplayToLayout(
+			collectionJSONObject, draftLayout, _layoutStructureProvider,
+			listStyle, null, 0, segmentsExperienceId, fragmentEntryLinks);
 
 		if (displayConfigJSONObject != null) {
-			JSONObject itemConfigJSONObject =
-				collectionStyledLayoutStructureItem.getItemConfigJSONObject();
-
-			for (String key : displayConfigJSONObject.keySet()) {
-				itemConfigJSONObject.put(key, displayConfigJSONObject.get(key));
-			}
-
-			collectionStyledLayoutStructureItem.updateItemConfig(
-				itemConfigJSONObject);
+			_updateItemConfig(
+				itemId, displayConfigJSONObject, draftLayout,
+				segmentsExperienceId);
 		}
 
-		collectionStyledLayoutStructureItem.setListStyle(listStyle);
-		collectionStyledLayoutStructureItem.setNamespace(
-			RandomTestUtil.randomString());
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
 
-		layoutPageTemplateStructure =
-			_layoutPageTemplateStructureLocalService.
-				updateLayoutPageTemplateStructureData(
-					_group.getGroupId(), layout.getPlid(), segmentsExperienceId,
-					layoutStructure.toString());
+		return itemId;
+	}
 
-		return LayoutStructure.of(
-			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
+	private void _addCollectionStyledLayoutStructureItem(
+			long assetListEntryId, Layout layout, long segmentsExperienceId)
+		throws Exception {
+
+		_addCollectionStyledLayoutStructureItem(
+			JSONUtil.put(
+				"classNameId", _portal.getClassNameId(AssetListEntry.class)
+			).put(
+				"classPK", assetListEntryId
+			).put(
+				"itemType", JournalArticle.class.getName()
+			).put(
+				"type", InfoListItemSelectorReturnType.class.getName()
+			),
+			null, layout,
+			"com.liferay.journal.web.internal.info.list.renderer." +
+				"BulletedJournalArticleBasicInfoListRenderer",
+			segmentsExperienceId);
 	}
 
 	private Layout _addDisplayPageWithFormAndGetLayout(InfoField... infoFields)
@@ -1470,7 +2349,7 @@ public class RenderLayoutStructureTagTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				null, _group.getGroupId(), 0,
+				null, _group.getGroupId(), 0, null,
 				_portal.getClassNameId(MockObject.class.getName()), 0,
 				RandomTestUtil.randomString(), 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
@@ -1498,6 +2377,94 @@ public class RenderLayoutStructureTagTest {
 				_group, TestPropsValues.getUserId()));
 	}
 
+	private Map<String, String> _addFormToLayout(
+			String className, Layout layout)
+		throws Exception {
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				layout.getPlid());
+
+		JSONObject jsonObject = ContentLayoutTestUtil.addFormToLayout(
+			false, String.valueOf(_portal.getClassNameId(className)), "0",
+			layout, _layoutStructureProvider, segmentsExperienceId);
+
+		String parentItemId = jsonObject.getString("addedItemId");
+
+		int position = 0;
+
+		Map<String, Long> map = new HashMap<>();
+
+		for (InfoField<?> infoField : _getEditableInfoFields(className)) {
+			InfoFieldType infoFieldType = infoField.getInfoFieldType();
+
+			FragmentEntry fragmentEntry =
+				_fragmentCollectionContributorRegistry.getFragmentEntry(
+					_getInputFragmentEntryKey(infoFieldType.getName()));
+
+			FragmentEntryLink fragmentEntryLink =
+				ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+					JSONUtil.put(
+						FragmentEntryProcessorConstants.
+							KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
+						JSONUtil.put("inputFieldId", infoField.getUniqueId())
+					).toString(),
+					fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
+					fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
+					fragmentEntry.getJs(), layout,
+					fragmentEntry.getFragmentEntryKey(),
+					fragmentEntry.getType(), parentItemId, position,
+					segmentsExperienceId);
+
+			map.put(
+				infoFieldType.getName(),
+				fragmentEntryLink.getFragmentEntryLinkId());
+
+			position++;
+		}
+
+		FragmentEntry fragmentEntry =
+			_fragmentCollectionContributorRegistry.getFragmentEntry(
+				_getInputFragmentEntryKey(
+					DefaultInputFragmentEntryConfigurationProvider.
+						FORM_INPUT_SUBMIT_BUTTON));
+
+		FragmentEntryLink fragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				"{}", fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
+				fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
+				fragmentEntry.getJs(), layout,
+				fragmentEntry.getFragmentEntryKey(), fragmentEntry.getType(),
+				parentItemId, position, segmentsExperienceId);
+
+		map.put(
+			DefaultInputFragmentEntryConfigurationProvider.
+				FORM_INPUT_SUBMIT_BUTTON,
+			fragmentEntryLink.getFragmentEntryLinkId());
+
+		LayoutStructure layoutStructure =
+			_layoutStructureProvider.getLayoutStructure(
+				layout.getPlid(), segmentsExperienceId);
+
+		Map<Long, LayoutStructureItem> fragmentLayoutStructureItems =
+			layoutStructure.getFragmentLayoutStructureItems();
+
+		Assert.assertEquals(
+			MapUtil.toString(fragmentLayoutStructureItems), map.size(),
+			fragmentLayoutStructureItems.size());
+
+		Map<String, String> inputTypesMap = new HashMap<>();
+
+		for (Map.Entry<String, Long> entry : map.entrySet()) {
+			LayoutStructureItem layoutStructureItem =
+				fragmentLayoutStructureItems.get(entry.getValue());
+
+			inputTypesMap.put(entry.getKey(), layoutStructureItem.getItemId());
+		}
+
+		return inputTypesMap;
+	}
+
 	private FragmentEntry _addFragmentEntry() throws Exception {
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
@@ -1511,24 +2478,37 @@ public class RenderLayoutStructureTagTest {
 			StringPool.BLANK,
 			"<h1 data-lfr-editable-id=\"element-text\" " +
 				"data-lfr-editable-type=\"text\">Heading Example</h1>",
-			StringPool.BLANK, false, StringPool.BLANK, null, 0, false,
+			StringPool.BLANK, false, StringPool.BLANK, null, 0, false, false,
 			FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, _serviceContext);
 	}
 
-	private void _addFragmentEntryLinks(
-			Layout layout, String parentItemId, long segmentsExperienceId)
+	private FragmentEntryLink[] _addFragmentEntryLinks(
+			int count, JSONObject jsonObject, Layout layout,
+			long segmentsExperienceId)
 		throws Exception {
+
+		FragmentEntryLink[] fragmentEntryLinks = new FragmentEntryLink[count];
 
 		FragmentEntry fragmentEntry = _addFragmentEntry();
 
-		for (int i = 0; i < _COUNT_FRAGMENT_ENTRY_LINKS; i++) {
-			_addFragmentEntryLinkToLayout(
-				JSONUtil.put(
-					"element-text",
-					JSONUtil.put("collectionFieldId", "JournalArticle_title")),
-				fragmentEntry, layout, parentItemId, i, segmentsExperienceId);
+		for (int i = 0; i < count; i++) {
+			fragmentEntryLinks[i] =
+				_fragmentEntryLinkLocalService.addFragmentEntryLink(
+					null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+					0, segmentsExperienceId, layout.getPlid(),
+					fragmentEntry.getCss(), fragmentEntry.getHtml(),
+					fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
+					JSONUtil.put(
+						FragmentEntryProcessorConstants.
+							KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+						JSONUtil.put("element-text", jsonObject)
+					).toString(),
+					StringPool.BLANK, 0, fragmentEntry.getFragmentEntryKey(),
+					fragmentEntry.getType(), _serviceContext);
 		}
+
+		return fragmentEntryLinks;
 	}
 
 	private FragmentEntryLink _addFragmentEntryLinkToLayout(
@@ -1601,6 +2581,95 @@ public class RenderLayoutStructureTagTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 	}
 
+	private List<String> _addJournalArticlesAndGetTitles(
+			int count, Locale locale)
+		throws Exception {
+
+		List<String> titles = new ArrayList<>();
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext();
+
+		serviceContext.setCommand(Constants.ADD);
+		serviceContext.setLayoutFullURL("http://localhost");
+
+		for (int i = 0; i < count; i++) {
+			serviceContext.setAssetPriority(i);
+
+			JournalArticle journalArticle = JournalTestUtil.addArticle(
+				_group.getGroupId(),
+				JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				JournalArticleConstants.CLASS_NAME_ID_DEFAULT,
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), locale, true, true,
+				serviceContext);
+
+			titles.add(journalArticle.getTitle(locale));
+		}
+
+		return titles;
+	}
+
+	private void _addLayoutStructureRule(
+			Map<String, String> inputTypesMap, Layout layout)
+		throws Exception {
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				layout.getPlid());
+
+		LayoutStructure layoutStructure =
+			_layoutStructureProvider.getLayoutStructure(
+				layout.getPlid(), segmentsExperienceId);
+
+		LayoutStructureRule layoutStructureRule =
+			layoutStructure.addLayoutStructureRule(
+				RandomTestUtil.randomString());
+
+		layoutStructureRule.setActionsJSONArray(
+			JSONUtil.putAll(
+				JSONUtil.put(
+					"id", RandomTestUtil.randomString()
+				).put(
+					"itemId",
+					inputTypesMap.get(TextInfoFieldType.INSTANCE.getName())
+				).put(
+					"type", "hide"
+				),
+				JSONUtil.put(
+					"id", RandomTestUtil.randomString()
+				).put(
+					"itemId",
+					inputTypesMap.get(
+						DefaultInputFragmentEntryConfigurationProvider.
+							FORM_INPUT_SUBMIT_BUTTON)
+				).put(
+					"type", "disable"
+				)));
+		layoutStructureRule.setConditionsJSONArray(
+			JSONUtil.put(
+				JSONUtil.put(
+					"field", "user"
+				).put(
+					"id", RandomTestUtil.randomString()
+				).put(
+					"options",
+					JSONUtil.put(
+						"type", "equal"
+					).put(
+						"value", String.valueOf(TestPropsValues.getUserId())
+					)
+				).put(
+					"type", "user"
+				)));
+		layoutStructureRule.setConditionType("all");
+
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group.getGroupId(), layout.getPlid(), segmentsExperienceId,
+				layoutStructure.toString());
+	}
+
 	private SegmentsEntry _addSegmentsEntryByFirstName(String firstName)
 		throws Exception {
 
@@ -1612,6 +2681,41 @@ public class RenderLayoutStructureTagTest {
 
 		return SegmentsTestUtil.addSegmentsEntry(
 			_group.getGroupId(), CriteriaSerializer.serialize(criteria));
+	}
+
+	private SegmentsExperience _addSegmentsExperience(
+			Layout layout, long segmentsEntryId)
+		throws Exception {
+
+		MVCActionCommand addSegmentsExperienceMVCActionCommand =
+			ContentLayoutTestUtil.getMVCActionCommand(
+				"/layout_content_page_editor/add_segments_experience");
+
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
+			ContentLayoutTestUtil.getMockLiferayPortletActionRequest(
+				_companyLocalService.getCompany(_group.getCompanyId()), _group,
+				layout);
+
+		mockLiferayPortletActionRequest.setParameter(
+			"groupId", String.valueOf(layout.getGroupId()));
+		mockLiferayPortletActionRequest.setParameter(
+			"name", RandomTestUtil.randomString());
+		mockLiferayPortletActionRequest.setParameter(
+			"plid", String.valueOf(layout.getPlid()));
+		mockLiferayPortletActionRequest.setParameter(
+			"segmentsEntryId", String.valueOf(segmentsEntryId));
+
+		JSONObject jsonObject = ReflectionTestUtil.invoke(
+			addSegmentsExperienceMVCActionCommand, "doTransactionalCommand",
+			new Class<?>[] {ActionRequest.class, ActionResponse.class},
+			mockLiferayPortletActionRequest,
+			new MockLiferayPortletActionResponse());
+
+		JSONObject segmentsExperienceJSONObject = jsonObject.getJSONObject(
+			"segmentsExperience");
+
+		return _segmentsExperienceLocalService.getSegmentsExperience(
+			segmentsExperienceJSONObject.getLong("segmentsExperienceId"));
 	}
 
 	private void _assertErrorMessage(
@@ -1669,24 +2773,125 @@ public class RenderLayoutStructureTagTest {
 		}
 	}
 
-	private void _createLayoutStructure(
-			long assetListEntryId, Layout layout, long segmentsExperienceId)
+	private void _assertNumericPagination(
+		String html, int pageNumber, int numberOfPages) {
+
+		Assert.assertEquals(
+			html, numberOfPages + 2, StringUtil.count(html, "page-item"));
+
+		String[] pageItems = html.split("page-item");
+
+		Assert.assertEquals(
+			pageItems.toString(), numberOfPages + 3, pageItems.length);
+
+		Assert.assertTrue(
+			pageItems[pageNumber],
+			StringUtil.endsWith(pageItems[pageNumber], "\"active "));
+
+		if (pageNumber != 1) {
+			Assert.assertFalse(
+				pageItems[0], StringUtil.endsWith(pageItems[0], "\"disabled "));
+		}
+		else {
+			Assert.assertTrue(
+				pageItems[0], StringUtil.endsWith(pageItems[0], "\"disabled "));
+		}
+
+		if (pageNumber != numberOfPages) {
+			Assert.assertFalse(
+				pageItems[pageNumber + 1],
+				StringUtil.endsWith(pageItems[pageNumber + 1], "\"disabled "));
+		}
+		else {
+			Assert.assertTrue(
+				pageItems[pageNumber + 1],
+				StringUtil.endsWith(pageItems[pageNumber + 1], "\"disabled "));
+		}
+	}
+
+	private void _assertPagination(
+			String itemId, Layout layout, int pageNumber,
+			int numberOfItemsPerPage, int numberOfPages, String paginationType,
+			List<String> strings)
 		throws Exception {
 
-		_addCollectionStyledLayoutStructureItemAndGetLayoutStructure(
-			JSONUtil.put(
-				"classNameId", _portal.getClassNameId(AssetListEntry.class)
-			).put(
-				"classPK", assetListEntryId
-			).put(
-				"itemType", JournalArticle.class.getName()
-			).put(
-				"type", InfoListItemSelectorReturnType.class.getName()
-			),
-			null, layout,
-			"com.liferay.journal.web.internal.info.list.renderer." +
-				"BulletedJournalArticleBasicInfoListRenderer",
-			segmentsExperienceId);
+		String html = _getRenderLayoutHTML(
+			layout,
+			HashMapBuilder.put(
+				"page_number_" + itemId,
+				() -> {
+					if (pageNumber > 1) {
+						return String.valueOf(pageNumber);
+					}
+
+					return null;
+				}
+			).build(),
+			null);
+
+		int endIndex = pageNumber * numberOfItemsPerPage;
+		int startIndex =
+			(pageNumber * numberOfItemsPerPage) - numberOfItemsPerPage;
+
+		for (int i = 0; i < strings.size(); i++) {
+			String string = strings.get(i);
+
+			if ((i >= startIndex) && (i < endIndex)) {
+				Assert.assertTrue(
+					html + " does not contain " + string,
+					html.contains(string));
+			}
+			else {
+				Assert.assertFalse(
+					html + " contains " + string, html.contains(string));
+			}
+		}
+
+		if (paginationType.equals("numeric")) {
+			_assertNumericPagination(html, pageNumber, numberOfPages);
+		}
+		else {
+			_assertSimplePagination(html, itemId, pageNumber, numberOfPages);
+		}
+	}
+
+	private void _assertSimplePagination(
+		String html, String itemId, int pageNumber, int numberOfPages) {
+
+		Assert.assertTrue(
+			html, html.contains("paginationNextButton_" + itemId));
+		Assert.assertTrue(
+			html, html.contains("paginationPreviousButton_" + itemId));
+
+		if (pageNumber != 1) {
+			Assert.assertFalse(
+				html,
+				html.contains(
+					"paginationPreviousButton_" + itemId +
+						"\" disabled=\"disabled\""));
+		}
+		else {
+			Assert.assertTrue(
+				html,
+				html.contains(
+					"paginationPreviousButton_" + itemId +
+						"\" disabled=\"disabled\""));
+		}
+
+		if (pageNumber != numberOfPages) {
+			Assert.assertFalse(
+				html,
+				html.contains(
+					"paginationNextButton_" + itemId +
+						"\" disabled=\"disabled\""));
+		}
+		else {
+			Assert.assertTrue(
+				html,
+				html.contains(
+					"paginationNextButton_" + itemId +
+						"\" disabled=\"disabled\""));
+		}
 	}
 
 	private DDMForm _deserialize(String content) {
@@ -1712,6 +2917,20 @@ public class RenderLayoutStructureTagTest {
 		return layoutStructure;
 	}
 
+	private List<InfoField<?>> _getEditableInfoFields(String className)
+		throws Exception {
+
+		InfoItemFormProvider<?> infoItemFormProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemFormProvider.class, className);
+
+		InfoForm infoForm = infoItemFormProvider.getInfoForm(
+			StringPool.BLANK, _group.getGroupId());
+
+		return ListUtil.filter(
+			infoForm.getAllInfoFields(), InfoField::isEditable);
+	}
+
 	private InfoField<TextInfoFieldType> _getInfoField(boolean readOnly) {
 		return InfoField.builder(
 		).infoFieldType(
@@ -1729,15 +2948,51 @@ public class RenderLayoutStructureTagTest {
 		).build();
 	}
 
+	private String _getInputFragmentEntryKey(String infoFieldTypeName) {
+		if (Objects.equals(
+				infoFieldTypeName, BooleanInfoFieldType.INSTANCE.getName())) {
+
+			return "INPUTS-checkbox";
+		}
+
+		if (Objects.equals(
+				infoFieldTypeName,
+				DefaultInputFragmentEntryConfigurationProvider.
+					FORM_INPUT_SUBMIT_BUTTON)) {
+
+			return "INPUTS-submit-button";
+		}
+
+		if (Objects.equals(
+				infoFieldTypeName, TextInfoFieldType.INSTANCE.getName())) {
+
+			return "INPUTS-text-input";
+		}
+
+		return null;
+	}
+
 	private MockHttpServletRequest _getMockHttpServletRequest(Layout layout)
 		throws Exception {
 
-		return _getMockHttpServletRequest(layout, null);
+		return _getMockHttpServletRequest(
+			layout, null, Collections.emptyMap(), null);
 	}
 
 	private MockHttpServletRequest _getMockHttpServletRequest(
 			Layout layout,
 			LayoutDisplayPageObjectProvider layoutDisplayPageObjectProvider)
+		throws Exception {
+
+		return _getMockHttpServletRequest(
+			layout, layoutDisplayPageObjectProvider, Collections.emptyMap(),
+			null);
+	}
+
+	private MockHttpServletRequest _getMockHttpServletRequest(
+			Layout layout,
+			LayoutDisplayPageObjectProvider layoutDisplayPageObjectProvider,
+			Map<String, String> map, User user)
 		throws Exception {
 
 		MockHttpServletRequest mockHttpServletRequest =
@@ -1752,9 +3007,20 @@ public class RenderLayoutStructureTagTest {
 			"ORIGINAL_HTTP_SERVLET_REQUEST", mockHttpServletRequest);
 		mockHttpServletRequest.setMethod(HttpMethods.GET);
 
+		for (Map.Entry<String, String> entry : map.entrySet()) {
+			mockHttpServletRequest.setParameter(
+				entry.getKey(), entry.getValue());
+		}
+
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)mockHttpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
+
+		if (user != null) {
+			themeDisplay.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
+			themeDisplay.setUser(user);
+		}
 
 		themeDisplay.setRequest(mockHttpServletRequest);
 
@@ -1762,8 +3028,15 @@ public class RenderLayoutStructureTagTest {
 	}
 
 	private String _getRenderLayoutHTML(Layout layout) throws Exception {
+		return _getRenderLayoutHTML(layout, Collections.emptyMap(), null);
+	}
+
+	private String _getRenderLayoutHTML(
+			Layout layout, Map<String, String> map, User user)
+		throws Exception {
+
 		MockHttpServletResponse mockHttpServletResponse = _renderLayout(
-			layout, _getMockHttpServletRequest(layout));
+			layout, _getMockHttpServletRequest(layout, null, map, user));
 
 		return mockHttpServletResponse.getContentAsString();
 	}
@@ -1821,6 +3094,125 @@ public class RenderLayoutStructureTagTest {
 		return mockHttpServletResponse;
 	}
 
+	private void _testPagination(
+			String itemId, JSONObject jsonObject, Layout layout,
+			int numberOfItemsPerPage, int numberOfPages,
+			long segmentsExperienceId, List<String> strings)
+		throws Exception {
+
+		jsonObject.put("paginationType", "numeric");
+
+		_updateItemConfig(
+			itemId, jsonObject, layout.fetchDraftLayout(),
+			segmentsExperienceId);
+
+		ContentLayoutTestUtil.publishLayout(layout.fetchDraftLayout(), layout);
+
+		for (int i = 1; i <= numberOfPages; i++) {
+			_assertPagination(
+				itemId, layout, i, numberOfItemsPerPage, numberOfPages,
+				"numeric", strings);
+		}
+
+		jsonObject.put("paginationType", "simple");
+
+		_updateItemConfig(
+			itemId, jsonObject, layout.fetchDraftLayout(),
+			segmentsExperienceId);
+
+		ContentLayoutTestUtil.publishLayout(layout.fetchDraftLayout(), layout);
+
+		for (int i = 1; i <= numberOfPages; i++) {
+			_assertPagination(
+				itemId, layout, i, numberOfItemsPerPage, numberOfPages,
+				"simple", strings);
+		}
+	}
+
+	private void _testRenderFormWithSuccessMessage(
+			String expectedSuccessHTML, String formItemId,
+			InfoField<TextInfoFieldType> infoField, Layout layout)
+		throws Exception {
+
+		MockHttpServletRequest mockHttpServletRequest =
+			_getMockHttpServletRequest(layout);
+
+		SessionMessages.add(mockHttpServletRequest, formItemId);
+
+		MockHttpServletResponse mockHttpServletResponse = _renderLayout(
+			layout, mockHttpServletRequest);
+
+		String content = mockHttpServletResponse.getContentAsString();
+
+		Assert.assertFalse(content.contains("<form action=\""));
+		Assert.assertFalse(
+			content.contains("<p>InputName:" + infoField.getName() + "</p>"));
+		Assert.assertTrue(content, content.contains(expectedSuccessHTML));
+	}
+
+	private void _testRenderLayoutWithLocale(
+			Layout layout, Locale locale, String... strings)
+		throws Exception {
+
+		MockHttpServletRequest mockHttpServletRequest =
+			ContentLayoutTestUtil.getMockHttpServletRequest(
+				_companyLocalService.getCompany(layout.getCompanyId()), _group,
+				layout);
+
+		mockHttpServletRequest.setAttribute(
+			"ORIGINAL_HTTP_SERVLET_REQUEST", mockHttpServletRequest);
+		mockHttpServletRequest.setMethod(HttpMethods.GET);
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)mockHttpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		themeDisplay.setLanguageId(LocaleUtil.toLanguageId(locale));
+		themeDisplay.setLocale(locale);
+
+		themeDisplay.setRequest(mockHttpServletRequest);
+
+		MockHttpServletResponse mockHttpServletResponse = _renderLayout(
+			layout, mockHttpServletRequest);
+
+		String content = mockHttpServletResponse.getContentAsString();
+
+		for (String string : strings) {
+			int index = content.indexOf(string);
+
+			Assert.assertTrue(index >= 0);
+
+			content = content.substring(index);
+		}
+	}
+
+	private void _updateItemConfig(
+			String itemId, JSONObject jsonObject, Layout layout,
+			long segmentsExperienceId)
+		throws Exception {
+
+		LayoutStructure layoutStructure =
+			_layoutStructureProvider.getLayoutStructure(
+				layout.getPlid(), segmentsExperienceId);
+
+		LayoutStructureItem layoutStructureItem =
+			layoutStructure.getLayoutStructureItem(itemId);
+
+		JSONObject itemConfigJSONObject =
+			layoutStructureItem.getItemConfigJSONObject();
+
+		for (String key : jsonObject.keySet()) {
+			itemConfigJSONObject.put(key, jsonObject.get(key));
+		}
+
+		layoutStructureItem.updateItemConfig(itemConfigJSONObject);
+
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group.getGroupId(), layout.getPlid(), segmentsExperienceId,
+				layoutStructure.toString());
+	}
+
 	private static final int _COUNT_FRAGMENT_ENTRY_LINKS = 5;
 
 	private static final int _COUNT_INFO_LIST_ITEMS = 5;
@@ -1864,11 +3256,21 @@ public class RenderLayoutStructureTagTest {
 	private EntityCache _entityCache;
 
 	@Inject
+	private FormManager _formManager;
+
+	@Inject
 	private FragmentCollectionContributorRegistry
 		_fragmentCollectionContributorRegistry;
 
 	@Inject
 	private FragmentCollectionLocalService _fragmentCollectionLocalService;
+
+	@Inject
+	private FragmentEntryLinkListenerRegistry
+		_fragmentEntryLinkListenerRegistry;
+
+	@Inject
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@Inject
 	private FragmentEntryLocalService _fragmentEntryLocalService;
@@ -1879,6 +3281,9 @@ public class RenderLayoutStructureTagTest {
 	@Inject
 	private GroupLocalService _groupLocalService;
 
+	@Inject
+	private InfoItemServiceRegistry _infoItemServiceRegistry;
+
 	@Inject(
 		filter = "component.name=com.liferay.journal.web.internal.layout.display.page.JournalArticleLayoutDisplayPageProvider"
 	)
@@ -1887,6 +3292,13 @@ public class RenderLayoutStructureTagTest {
 
 	@Inject
 	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Inject
+	private JSONFactory _jsonFactory;
+
+	@Inject
+	private LayoutDisplayPageProviderRegistry
+		_layoutDisplayPageProviderRegistry;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
@@ -1903,6 +3315,17 @@ public class RenderLayoutStructureTagTest {
 
 	@Inject
 	private MultiVMPool _multiVMPool;
+
+	@Inject
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Inject
+	private ObjectEntryLocalService _objectEntryLocalService;
+
+	@Inject
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
+
+	private String _originalName;
 
 	@Inject
 	private Portal _portal;

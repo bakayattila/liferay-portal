@@ -71,7 +71,6 @@ import com.liferay.portal.security.auth.EmailAddressGeneratorFactory;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.users.admin.kernel.util.UserInitialsGeneratorUtil;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -1006,11 +1005,7 @@ public class UserImpl extends UserBaseImpl {
 			getCompanyId(), PropsKeys.TERMS_OF_USE_REQUIRED,
 			PropsValues.TERMS_OF_USE_REQUIRED);
 
-		if (termsOfUseRequired) {
-			return false;
-		}
-
-		return true;
+		return !termsOfUseRequired;
 	}
 
 	@Override
@@ -1132,20 +1127,20 @@ public class UserImpl extends UserBaseImpl {
 			List<Organization> organizations)
 		throws PortalException {
 
-		List<Organization> parentOrganizations = new ArrayList<>();
+		return TransformUtil.transform(
+			organizations,
+			organization -> {
+				Organization parentOrganization =
+					organization.getParentOrganization();
 
-		for (Organization organization : organizations) {
-			Organization parentOrganization =
-				organization.getParentOrganization();
+				if ((parentOrganization == null) ||
+					organizations.contains(parentOrganization)) {
 
-			if ((parentOrganization != null) &&
-				!organizations.contains(parentOrganization)) {
+					return null;
+				}
 
-				parentOrganizations.add(parentOrganization);
-			}
-		}
-
-		return parentOrganizations;
+				return parentOrganization;
+			});
 	}
 
 	private boolean _isRequirePasswordReset() {

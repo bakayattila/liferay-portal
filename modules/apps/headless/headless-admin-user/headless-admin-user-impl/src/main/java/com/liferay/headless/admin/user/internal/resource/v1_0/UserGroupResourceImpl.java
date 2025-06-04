@@ -31,9 +31,9 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import java.util.Map;
+import jakarta.ws.rs.core.MultivaluedMap;
 
-import javax.ws.rs.core.MultivaluedMap;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -157,23 +157,18 @@ public class UserGroupResourceImpl extends BaseUserGroupResourceImpl {
 		com.liferay.portal.kernel.model.UserGroup serviceBuilderUserGroup =
 			_userGroupService.getUserGroup(userGroupId);
 
-		serviceBuilderUserGroup = _userGroupService.updateUserGroup(
-			userGroupId,
-			GetterUtil.getString(
-				userGroup.getName(), serviceBuilderUserGroup.getName()),
-			GetterUtil.getString(
-				userGroup.getDescription(),
-				serviceBuilderUserGroup.getDescription()),
-			null);
-
-		if (Validator.isNotNull(userGroup.getExternalReferenceCode())) {
-			serviceBuilderUserGroup =
-				_userGroupService.updateExternalReferenceCode(
-					serviceBuilderUserGroup,
-					userGroup.getExternalReferenceCode());
-		}
-
-		return _toUserGroup(serviceBuilderUserGroup);
+		return _toUserGroup(
+			_userGroupService.updateUserGroup(
+				GetterUtil.getString(
+					userGroup.getExternalReferenceCode(),
+					serviceBuilderUserGroup.getExternalReferenceCode()),
+				userGroupId,
+				GetterUtil.getString(
+					userGroup.getName(), serviceBuilderUserGroup.getName()),
+				GetterUtil.getString(
+					userGroup.getDescription(),
+					serviceBuilderUserGroup.getDescription()),
+				null));
 	}
 
 	@Override
@@ -192,10 +187,9 @@ public class UserGroupResourceImpl extends BaseUserGroupResourceImpl {
 	@Override
 	public UserGroup postUserGroup(UserGroup userGroup) throws Exception {
 		return _toUserGroup(
-			_userGroupService.updateExternalReferenceCode(
-				_userGroupService.addUserGroup(
-					userGroup.getName(), userGroup.getDescription(), null),
-				userGroup.getExternalReferenceCode()));
+			_userGroupService.addUserGroup(
+				userGroup.getExternalReferenceCode(), userGroup.getName(),
+				userGroup.getDescription(), null));
 	}
 
 	@Override
@@ -226,11 +220,9 @@ public class UserGroupResourceImpl extends BaseUserGroupResourceImpl {
 		}
 
 		return _toUserGroup(
-			_userGroupService.updateExternalReferenceCode(
-				_userGroupService.updateUserGroup(
-					userGroupId, userGroup.getName(),
-					userGroup.getDescription(), null),
-				userGroup.getExternalReferenceCode()));
+			_userGroupService.updateUserGroup(
+				userGroup.getExternalReferenceCode(), userGroupId,
+				userGroup.getName(), userGroup.getDescription(), null));
 	}
 
 	@Override

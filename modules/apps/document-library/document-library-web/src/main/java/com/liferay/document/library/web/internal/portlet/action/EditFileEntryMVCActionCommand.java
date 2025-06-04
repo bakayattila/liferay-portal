@@ -9,6 +9,7 @@ import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.asset.kernel.exception.AssetTagException;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.document.library.configuration.DLConfiguration;
+import com.liferay.document.library.configuration.DLFileEntryMimeTypeConfiguration;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.exception.DLStorageQuotaExceededException;
 import com.liferay.document.library.kernel.antivirus.AntivirusScannerException;
@@ -49,6 +50,7 @@ import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -111,6 +113,14 @@ import com.liferay.portal.util.RepositoryUtil;
 import com.liferay.trash.service.TrashEntryService;
 import com.liferay.upload.UploadResponseHandler;
 
+import jakarta.portlet.ActionRequest;
+import jakarta.portlet.ActionResponse;
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -126,14 +136,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-
-import javax.portlet.ActionRequest;
-import javax.portlet.ActionResponse;
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload.FileUploadBase;
 
@@ -153,9 +155,9 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	configurationPid = "com.liferay.document.library.configuration.DLConfiguration",
 	property = {
-		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
-		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
-		"javax.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
+		"jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
+		"jakarta.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
+		"jakarta.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
 		"mvc.command.name=/document_library/edit_file_entry",
 		"mvc.command.name=/document_library/upload_multiple_file_entries"
 	},
@@ -906,6 +908,19 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				StringUtil.merge(
 					_getAllowedFileExtensions(portletConfig, actionRequest)));
 		}
+		else if (exception instanceof FileMimeTypeException) {
+			DLFileEntryMimeTypeConfiguration dlFileEntryMimeTypeConfiguration =
+				_configurationProvider.getCompanyConfiguration(
+					DLFileEntryMimeTypeConfiguration.class,
+					themeDisplay.getCompanyId());
+
+			errorMessage = _language.format(
+				themeDisplay.getLocale(),
+				"please-enter-a-file-with-a-valid-mime-type-x",
+				StringUtil.merge(
+					dlFileEntryMimeTypeConfiguration.fileMimeTypes(),
+					StringPool.COMMA_AND_SPACE));
+		}
 		else if (exception instanceof FileNameException) {
 			errorMessage = _language.get(
 				themeDisplay.getLocale(),
@@ -1182,6 +1197,7 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 				exception instanceof DLStorageQuotaExceededException ||
 				exception instanceof DuplicateFileEntryException ||
 				exception instanceof FileExtensionException ||
+				exception instanceof FileMimeTypeException ||
 				exception instanceof FileNameException ||
 				exception instanceof FileSizeException ||
 				exception instanceof UploadRequestSizeException) {
@@ -1542,6 +1558,9 @@ public class EditFileEntryMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private DDMBeanTranslator _ddmBeanTranslator;

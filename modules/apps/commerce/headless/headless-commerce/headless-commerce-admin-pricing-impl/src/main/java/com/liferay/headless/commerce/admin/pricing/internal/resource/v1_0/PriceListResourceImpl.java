@@ -44,14 +44,14 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+
 import java.math.BigDecimal;
 
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Map;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -232,8 +232,8 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 		CommercePriceList commercePriceList =
 			_commercePriceListService.addOrUpdateCommercePriceList(
-				externalReferenceCode, commerceCatalog.getGroupId(), 0L,
-				commerceCurrency.getCommerceCurrencyId(), true,
+				externalReferenceCode, 0L, commerceCatalog.getGroupId(),
+				commerceCurrency.getCode(), true,
 				CommercePriceListConstants.TYPE_PRICE_LIST, 0, false,
 				priceList.getName(),
 				GetterUtil.get(priceList.getPriority(), 0D),
@@ -359,7 +359,7 @@ public class PriceListResourceImpl extends BasePriceListResourceImpl {
 
 		commercePriceList = _commercePriceListService.updateCommercePriceList(
 			commercePriceList.getCommercePriceListId(),
-			commerceCurrency.getCommerceCurrencyId(), true, 0,
+			commerceCurrency.getCode(), true, 0,
 			GetterUtil.get(priceList.getName(), commercePriceList.getName()),
 			GetterUtil.get(
 				priceList.getPriority(), commercePriceList.getPriority()),

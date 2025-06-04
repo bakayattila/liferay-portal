@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -51,7 +49,9 @@ public class PageRuleCondition implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(PageRuleCondition.class, json);
 	}
 
-	@Schema(description = "The page rule condition's description.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page rule condition's description."
+	)
 	public String getCondition() {
 		if (_conditionSupplier != null) {
 			condition = _conditionSupplier.get();
@@ -92,7 +92,9 @@ public class PageRuleCondition implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _conditionSupplier;
 
-	@Schema(description = "The page rule condition's external reference code.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page rule condition's external reference code."
+	)
 	public String getExternalReferenceCode() {
 		if (_externalReferenceCodeSupplier != null) {
 			externalReferenceCode = _externalReferenceCodeSupplier.get();
@@ -135,7 +137,9 @@ public class PageRuleCondition implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema(description = "The page rule condition's type.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page rule condition's type."
+	)
 	public String getType() {
 		if (_typeSupplier != null) {
 			type = _typeSupplier.get();
@@ -174,7 +178,9 @@ public class PageRuleCondition implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _typeSupplier;
 
-	@Schema(description = "The page rule condition's value.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The page rule condition's value."
+	)
 	public String getValue() {
 		if (_valueSupplier != null) {
 			value = _valueSupplier.get();
@@ -311,8 +317,8 @@ public class PageRuleCondition implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.PageRuleCondition",
 		name = "x-class-name"
 	)

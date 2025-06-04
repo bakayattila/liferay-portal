@@ -5,7 +5,7 @@
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
-import {openSelectionModal} from 'frontend-js-web';
+import {openSelectionModal} from 'frontend-js-components-web';
 import React, {useState} from 'react';
 
 export default function SelectCollection({
@@ -95,12 +95,20 @@ export default function SelectCollection({
 					/>
 
 					<ClayButtonWithIcon
-						aria-label={Liferay.Language.get('change-collection')}
+						aria-label={
+							values.clearButtonEnabled
+								? Liferay.Language.get('change-collection')
+								: Liferay.Language.get('select-collection')
+						}
 						className="c-mr-2 flex-shrink-0"
 						displayType="secondary"
 						onClick={onChangeCollectionButtonClick}
 						symbol={values.clearButtonEnabled ? 'change' : 'plus'}
-						title={Liferay.Language.get('change-collection')}
+						title={
+							values.clearButtonEnabled
+								? Liferay.Language.get('change-collection')
+								: Liferay.Language.get('select-collection')
+						}
 					/>
 
 					{values.clearButtonEnabled ? (

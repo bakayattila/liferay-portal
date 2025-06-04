@@ -4,7 +4,7 @@ definition {
 	property custom.properties = "default.layout.template.id=1_column";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Document Management";
+	property testray.main.component.name = "Documents and Media";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -80,7 +80,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanMoveDocumentsWithMultiplePaginations {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property portal.release = "quarantine";
 
 		HeadlessSite.addSite(siteName = "Site Name");

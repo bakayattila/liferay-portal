@@ -8,12 +8,12 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.PageExperienceSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -130,6 +130,32 @@ public class PageExperience implements Cloneable, Serializable {
 
 	protected PageRule[] pageRules;
 
+	public String getPageSpecificationExternalReferenceCode() {
+		return pageSpecificationExternalReferenceCode;
+	}
+
+	public void setPageSpecificationExternalReferenceCode(
+		String pageSpecificationExternalReferenceCode) {
+
+		this.pageSpecificationExternalReferenceCode =
+			pageSpecificationExternalReferenceCode;
+	}
+
+	public void setPageSpecificationExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			pageSpecificationExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			pageSpecificationExternalReferenceCode =
+				pageSpecificationExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String pageSpecificationExternalReferenceCode;
+
 	public Integer getPriority() {
 		return priority;
 	}
@@ -151,30 +177,30 @@ public class PageExperience implements Cloneable, Serializable {
 
 	protected Integer priority;
 
-	public ItemExternalReference[] getSegmentItemExternalReferences() {
-		return segmentItemExternalReferences;
+	public String getSegmentExternalReferenceCode() {
+		return segmentExternalReferenceCode;
 	}
 
-	public void setSegmentItemExternalReferences(
-		ItemExternalReference[] segmentItemExternalReferences) {
+	public void setSegmentExternalReferenceCode(
+		String segmentExternalReferenceCode) {
 
-		this.segmentItemExternalReferences = segmentItemExternalReferences;
+		this.segmentExternalReferenceCode = segmentExternalReferenceCode;
 	}
 
-	public void setSegmentItemExternalReferences(
-		UnsafeSupplier<ItemExternalReference[], Exception>
-			segmentItemExternalReferencesUnsafeSupplier) {
+	public void setSegmentExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			segmentExternalReferenceCodeUnsafeSupplier) {
 
 		try {
-			segmentItemExternalReferences =
-				segmentItemExternalReferencesUnsafeSupplier.get();
+			segmentExternalReferenceCode =
+				segmentExternalReferenceCodeUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected ItemExternalReference[] segmentItemExternalReferences;
+	protected String segmentExternalReferenceCode;
 
 	@Override
 	public PageExperience clone() throws CloneNotSupportedException {

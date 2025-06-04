@@ -21,7 +21,6 @@ import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.AttachmentBase64;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.AttachmentUrl;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Product;
-import com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.commerce.admin.catalog.internal.util.v1_0.AttachmentUtil;
 import com.liferay.headless.commerce.admin.catalog.resource.v1_0.AttachmentResource;
 import com.liferay.headless.commerce.core.util.ServiceContextHelper;
@@ -33,6 +32,8 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.vulcan.custom.field.CustomField;
+import com.liferay.portal.vulcan.custom.field.CustomFieldsUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.fields.NestedField;
@@ -43,8 +44,8 @@ import com.liferay.upload.UniqueFileNameProvider;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -477,15 +478,10 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 			serviceContext.setAssetTagNames(attachment.getTags());
 		}
 
-		Map<String, Serializable> expandoBridgeAttributes =
-			CustomFieldsUtil.toMap(
+		serviceContext.setExpandoBridgeAttributes(
+			_getExpandoBridgeAttributes(
 				CPAttachmentFileEntry.class.getName(),
-				contextCompany.getCompanyId(), attachment.getCustomFields(),
-				contextAcceptLanguage.getPreferredLocale());
-
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
-		}
+				attachment.getCustomFields()));
 
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
@@ -514,16 +510,10 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 			serviceContext.setAssetTagNames(attachmentBase64.getTags());
 		}
 
-		Map<String, Serializable> expandoBridgeAttributes =
-			CustomFieldsUtil.toMap(
+		serviceContext.setExpandoBridgeAttributes(
+			_getExpandoBridgeAttributes(
 				CPAttachmentFileEntry.class.getName(),
-				contextCompany.getCompanyId(),
-				attachmentBase64.getCustomFields(),
-				contextAcceptLanguage.getPreferredLocale());
-
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
-		}
+				attachmentBase64.getCustomFields()));
 
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
@@ -549,15 +539,10 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 			serviceContext.setAssetTagNames(attachmentUrl.getTags());
 		}
 
-		Map<String, Serializable> expandoBridgeAttributes =
-			CustomFieldsUtil.toMap(
+		serviceContext.setExpandoBridgeAttributes(
+			_getExpandoBridgeAttributes(
 				CPAttachmentFileEntry.class.getName(),
-				contextCompany.getCompanyId(), attachmentUrl.getCustomFields(),
-				contextAcceptLanguage.getPreferredLocale());
-
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
-		}
+				attachmentUrl.getCustomFields()));
 
 		CPAttachmentFileEntry cpAttachmentFileEntry =
 			AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
@@ -638,7 +623,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 				WorkflowConstants.STATUS_APPROVED,
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_cpAttachmentFileEntryService.getCPAttachmentFileEntriesCount(
 				_classNameLocalService.getClassNameId(
 					cpDefinition.getModelClass()),
@@ -646,7 +631,22 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 				WorkflowConstants.STATUS_APPROVED);
 
 		return Page.of(
-			_toAttachments(cpAttachmentFileEntries), pagination, totalItems);
+			_toAttachments(cpAttachmentFileEntries), pagination, totalCount);
+	}
+
+	private Map<String, Serializable> _getExpandoBridgeAttributes(
+		String className, CustomField[] customFields) {
+
+		Map<String, Serializable> expandoBridgeAttributes =
+			CustomFieldsUtil.toMap(
+				className, contextCompany.getCompanyId(), customFields,
+				contextAcceptLanguage.getPreferredLocale());
+
+		if (expandoBridgeAttributes == null) {
+			expandoBridgeAttributes = new HashMap<>();
+		}
+
+		return expandoBridgeAttributes;
 	}
 
 	private Attachment _toAttachment(Long cpAttachmentFileEntryId)
@@ -662,17 +662,10 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 			List<CPAttachmentFileEntry> cpAttachmentFileEntries)
 		throws Exception {
 
-		List<Attachment> attachments = new ArrayList<>();
-
-		for (CPAttachmentFileEntry cpAttachmentFileEntry :
-				cpAttachmentFileEntries) {
-
-			attachments.add(
-				_toAttachment(
-					cpAttachmentFileEntry.getCPAttachmentFileEntryId()));
-		}
-
-		return attachments;
+		return transform(
+			cpAttachmentFileEntries,
+			cpAttachmentFileEntry -> _toAttachment(
+				cpAttachmentFileEntry.getCPAttachmentFileEntryId()));
 	}
 
 	private Attachment _updateCPAttachmentFileEntry(
@@ -687,15 +680,10 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 			serviceContext.setAssetTagNames(attachment.getTags());
 		}
 
-		Map<String, Serializable> expandoBridgeAttributes =
-			CustomFieldsUtil.toMap(
+		serviceContext.setExpandoBridgeAttributes(
+			_getExpandoBridgeAttributes(
 				CPAttachmentFileEntry.class.getName(),
-				contextCompany.getCompanyId(), attachment.getCustomFields(),
-				contextAcceptLanguage.getPreferredLocale());
-
-		if (expandoBridgeAttributes != null) {
-			serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
-		}
+				attachment.getCustomFields()));
 
 		cpAttachmentFileEntry = AttachmentUtil.updateCPAttachmentFileEntry(
 			cpAttachmentFileEntry, _cpAttachmentFileEntryService,

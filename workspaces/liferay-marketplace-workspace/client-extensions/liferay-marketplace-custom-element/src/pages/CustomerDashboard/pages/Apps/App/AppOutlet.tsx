@@ -14,8 +14,8 @@ import {
 
 import Navbar, {NavbarProps} from '../../../../../components/Navbar';
 import {PageRenderer} from '../../../../../components/Page';
-import {ORDER_WORKFLOW_STATUS_CODE} from '../../../../../enums/Order';
-import {OrderType} from '../../../../../enums/OrderType';
+import {MarketplaceDeliveryProduct} from '../../../../../entity/MarketplaceDeliveryProduct';
+import {OrderTypes, OrderWorkflowStatusCode} from '../../../../../enums/Order';
 import useGetProductByOrderId from '../../../../../hooks/useGetProductByOrderId';
 import i18n from '../../../../../i18n';
 import getProductPriceModel from '../../../../GetApp/utils/getProductPriceModel';
@@ -88,63 +88,57 @@ const BaseOutlet: React.FC<BaseOutletProps> = ({
 	);
 };
 
-const AppOutlet = () => {
-	return (
-		<BaseOutlet
-			backTitle={i18n.translate('back-to-my-apps')}
-			routes={({placedOrder, product}) => {
-				const {isPaidApp} = getProductPriceModel(product);
+const AppOutlet = () => (
+	<BaseOutlet
+		backTitle={i18n.translate('back-to-my-apps')}
+		routes={({marketplaceDeliveryOrder, placedOrder, product}) => {
+			const {isPaidApp} = getProductPriceModel(product);
 
-				const isCompletedOrderWithVirtualItems =
-					placedOrder.workflowStatusInfo.code ===
-						ORDER_WORKFLOW_STATUS_CODE.COMPLETED &&
-					placedOrder.placedOrderItems.some(
-						(item: PlacedOrderItems) => item.virtualItems?.length
-					);
+			const marketplaceDeliveryProduct = new MarketplaceDeliveryProduct(
+				product
+			);
 
-				const tabs = [
-					{
-						name: i18n.translate('details'),
-						path: '',
-					},
-				];
+			const isCompletedOrderWithVirtualItems =
+				placedOrder.workflowStatusInfo.code ===
+					OrderWorkflowStatusCode.COMPLETED &&
+				placedOrder.placedOrderItems.some(
+					(item: PlacedOrderItems) => item.virtualItems?.length
+				);
 
-				if (
-					placedOrder.orderTypeExternalReferenceCode ===
-					OrderType.CLOUD
-				) {
-					return [
-						...tabs,
-						{
-							name: i18n.translate('app-provisioning'),
-							path: 'cloud-provisioning',
-						},
-					];
-				}
+			const tabs = [
+				{
+					name: i18n.translate('details'),
+					path: '',
+				},
+				{
+					name: i18n.translate('download'),
+					path: 'download',
+					visible:
+						isCompletedOrderWithVirtualItems &&
+						(marketplaceDeliveryOrder.isDownloadable ||
+							marketplaceDeliveryProduct.appSettings
+								.isDownloadable),
+				},
+				{
+					name: i18n.translate('app-provisioning'),
+					path: 'cloud-provisioning',
+					visible:
+						placedOrder.orderTypeExternalReferenceCode ===
+						OrderTypes.CLOUDAPP,
+				},
+				{
+					name: i18n.translate('licenses'),
+					path: 'licenses',
+					visible:
+						placedOrder.orderTypeExternalReferenceCode ===
+							OrderTypes.DXPAPP && isPaidApp,
+				},
+			];
 
-				if (
-					placedOrder.orderTypeExternalReferenceCode === OrderType.DXP
-				) {
-					return [
-						...tabs,
-						{
-							name: i18n.translate('download'),
-							path: 'download',
-							visible: isCompletedOrderWithVirtualItems,
-						},
-						{
-							name: i18n.translate('licenses'),
-							path: 'licenses',
-							visible: isPaidApp,
-						},
-					];
-				}
-
-				return tabs;
-			}}
-		/>
-	);
-};
+			return tabs;
+		}}
+	/>
+);
 
 export {BaseOutlet};
 

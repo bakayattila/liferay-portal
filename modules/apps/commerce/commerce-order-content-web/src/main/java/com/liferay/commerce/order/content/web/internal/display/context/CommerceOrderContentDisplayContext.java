@@ -72,6 +72,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -86,6 +87,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -102,6 +104,11 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.File;
 import java.io.InputStream;
 
@@ -116,11 +123,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Alessio Antonio Rendina
@@ -147,6 +149,7 @@ public class CommerceOrderContentDisplayContext {
 			CommerceTermEntryService commerceTermEntryService,
 			ConfigurationProvider configurationProvider,
 			DLAppLocalService dlAppLocalService,
+			GroupLocalService groupLocalService,
 			HttpServletRequest httpServletRequest, ItemSelector itemSelector,
 			ModelResourcePermission<CommerceOrder> modelResourcePermission,
 			PercentageFormatter percentageFormatter,
@@ -172,6 +175,7 @@ public class CommerceOrderContentDisplayContext {
 		_commerceTermEntryService = commerceTermEntryService;
 		_configurationProvider = configurationProvider;
 		_dlAppLocalService = dlAppLocalService;
+		_groupLocalService = groupLocalService;
 		_httpServletRequest = httpServletRequest;
 		_itemSelector = itemSelector;
 		_modelResourcePermission = modelResourcePermission;
@@ -203,6 +207,8 @@ public class CommerceOrderContentDisplayContext {
 
 		_commerceOrderNoteId = ParamUtil.getLong(
 			httpServletRequest, "commerceOrderNoteId");
+
+		_group = _themeDisplay.getScopeGroup();
 	}
 
 	public CommerceChannel fetchCommerceChannel() {
@@ -302,16 +308,20 @@ public class CommerceOrderContentDisplayContext {
 	}
 
 	public CommerceOrder getCommerceOrder() throws PortalException {
-		long commerceOrderId = getCommerceOrderId();
-
-		if (commerceOrderId > 0) {
-			return _commerceOrderService.fetchCommerceOrder(
-				getCommerceOrderId());
+		if (_commerceOrder != null) {
+			return _commerceOrder;
 		}
 
-		return _commerceOrderService.fetchCommerceOrder(
-			ParamUtil.getString(_httpServletRequest, "commerceOrderUuid"),
-			_cpRequestHelper.getCommerceChannelGroupId());
+		_commerceOrder = _commerceOrderService.fetchCommerceOrder(
+			getCommerceOrderId());
+
+		if (_commerceOrder == null) {
+			_commerceOrder = _commerceOrderService.fetchCommerceOrder(
+				ParamUtil.getString(_httpServletRequest, "commerceOrderUuid"),
+				_cpRequestHelper.getCommerceChannelGroupId());
+		}
+
+		return _commerceOrder;
 	}
 
 	public String getCommerceOrderDate(CommerceOrder commerceOrder) {
@@ -325,6 +335,10 @@ public class CommerceOrderContentDisplayContext {
 	}
 
 	public long getCommerceOrderId() {
+		if (_commerceOrder != null) {
+			return _commerceOrder.getCommerceOrderId();
+		}
+
 		return ParamUtil.getLong(_httpServletRequest, "commerceOrderId");
 	}
 
@@ -419,33 +433,6 @@ public class CommerceOrderContentDisplayContext {
 		}
 
 		return commerceOrderType.getName(languageId);
-	}
-
-	public List<CommerceOrderType> getCommerceOrderTypes()
-		throws PortalException {
-
-		CommerceChannel commerceChannel = fetchCommerceChannel();
-
-		if (commerceChannel == null) {
-			return Collections.emptyList();
-		}
-
-		return _commerceOrderTypeService.getCommerceOrderTypes(
-			CommerceChannel.class.getName(),
-			commerceChannel.getCommerceChannelId(), true, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS);
-	}
-
-	public int getCommerceOrderTypesCount() throws PortalException {
-		CommerceChannel commerceChannel = fetchCommerceChannel();
-
-		if (commerceChannel == null) {
-			return 0;
-		}
-
-		return _commerceOrderTypeService.getCommerceOrderTypesCount(
-			CommerceChannel.class.getName(),
-			commerceChannel.getCommerceChannelId(), true);
 	}
 
 	public String getCommercePriceDisplayType() {
@@ -570,6 +557,12 @@ public class CommerceOrderContentDisplayContext {
 	public long getDisplayStyleGroupId(String portletId)
 		throws ConfigurationException {
 
+		if (_displayStyleGroupId != null) {
+			return _displayStyleGroupId;
+		}
+
+		String displayStyleGroupExternalReferenceCode = null;
+
 		if (Validator.isNull(portletId)) {
 			return _cpRequestHelper.getScopeGroupId();
 		}
@@ -583,8 +576,24 @@ public class CommerceOrderContentDisplayContext {
 							class,
 						_themeDisplay);
 
-			return openCommerceOrderContentPortletInstanceConfiguration.
-				displayStyleGroupId();
+			displayStyleGroupExternalReferenceCode =
+				openCommerceOrderContentPortletInstanceConfiguration.
+					displayStyleGroupExternalReferenceCode();
+
+			if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+				_group = _groupLocalService.fetchGroupByExternalReferenceCode(
+					displayStyleGroupExternalReferenceCode,
+					_themeDisplay.getCompanyId());
+			}
+
+			if (_group != null) {
+				_displayStyleGroupId = _group.getGroupId();
+			}
+			else {
+				_displayStyleGroupId = _themeDisplay.getScopeGroupId();
+			}
+
+			return _displayStyleGroupId;
 		}
 		else if (portletId.equals(CommercePortletKeys.COMMERCE_ORDER_CONTENT)) {
 			CommerceOrderContentPortletInstanceConfiguration
@@ -593,11 +602,89 @@ public class CommerceOrderContentDisplayContext {
 						CommerceOrderContentPortletInstanceConfiguration.class,
 						_themeDisplay);
 
-			return commerceOrderContentPortletInstanceConfiguration.
-				displayStyleGroupId();
+			displayStyleGroupExternalReferenceCode =
+				commerceOrderContentPortletInstanceConfiguration.
+					displayStyleGroupExternalReferenceCode();
+
+			if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+				_group = _groupLocalService.fetchGroupByExternalReferenceCode(
+					displayStyleGroupExternalReferenceCode,
+					_themeDisplay.getCompanyId());
+			}
+
+			if (_group != null) {
+				_displayStyleGroupId = _group.getGroupId();
+			}
+			else {
+				_displayStyleGroupId = _themeDisplay.getScopeGroupId();
+			}
+
+			return _displayStyleGroupId;
 		}
 
 		return _cpRequestHelper.getScopeGroupId();
+	}
+
+	public String getDisplayStyleGroupKey(String portletId)
+		throws ConfigurationException {
+
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			return _displayStyleGroupKey;
+		}
+
+		String displayStyleGroupExternalReferenceCode = null;
+
+		if (portletId.equals(CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT)) {
+			OpenCommerceOrderContentPortletInstanceConfiguration
+				openCommerceOrderContentPortletInstanceConfiguration =
+					_configurationProvider.getPortletInstanceConfiguration(
+						OpenCommerceOrderContentPortletInstanceConfiguration.
+							class,
+						_themeDisplay);
+
+			displayStyleGroupExternalReferenceCode =
+				openCommerceOrderContentPortletInstanceConfiguration.
+					displayStyleGroupExternalReferenceCode();
+
+			if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+				_group = _groupLocalService.fetchGroupByExternalReferenceCode(
+					displayStyleGroupExternalReferenceCode,
+					_themeDisplay.getCompanyId());
+			}
+
+			if (_group != null) {
+				_displayStyleGroupKey = _group.getGroupKey();
+			}
+			else {
+				_displayStyleGroupKey = StringPool.BLANK;
+			}
+		}
+		else if (portletId.equals(CommercePortletKeys.COMMERCE_ORDER_CONTENT)) {
+			CommerceOrderContentPortletInstanceConfiguration
+				commerceOrderContentPortletInstanceConfiguration =
+					_configurationProvider.getPortletInstanceConfiguration(
+						CommerceOrderContentPortletInstanceConfiguration.class,
+						_themeDisplay);
+
+			displayStyleGroupExternalReferenceCode =
+				commerceOrderContentPortletInstanceConfiguration.
+					displayStyleGroupExternalReferenceCode();
+
+			if (Validator.isNotNull(displayStyleGroupExternalReferenceCode)) {
+				_group = _groupLocalService.fetchGroupByExternalReferenceCode(
+					displayStyleGroupExternalReferenceCode,
+					_themeDisplay.getCompanyId());
+			}
+
+			if (_group != null) {
+				_displayStyleGroupKey = _group.getGroupKey();
+			}
+			else {
+				_displayStyleGroupKey = StringPool.BLANK;
+			}
+		}
+
+		return _displayStyleGroupKey;
 	}
 
 	public List<DropdownItem> getDropdownItems() throws Exception {
@@ -1286,11 +1373,7 @@ public class CommerceOrderContentDisplayContext {
 		List<CommerceOrderItem> commerceOrderItems =
 			commerceOrder.getCommerceOrderItems();
 
-		if (commerceOrderItems.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !commerceOrderItems.isEmpty();
 	}
 
 	private CommerceOrderFieldsConfiguration
@@ -1386,6 +1469,7 @@ public class CommerceOrderContentDisplayContext {
 	private final CommerceAddressService _commerceAddressService;
 	private final CommerceChannelLocalService _commerceChannelLocalService;
 	private final CommerceContext _commerceContext;
+	private CommerceOrder _commerceOrder;
 	private final Format _commerceOrderDateFormat;
 	private final CommerceOrderEngine _commerceOrderEngine;
 	private CommerceOrderFieldsConfiguration _commerceOrderFieldsConfiguration;
@@ -1410,7 +1494,11 @@ public class CommerceOrderContentDisplayContext {
 	private final CommerceTermEntryService _commerceTermEntryService;
 	private final ConfigurationProvider _configurationProvider;
 	private final CPRequestHelper _cpRequestHelper;
+	private Long _displayStyleGroupId;
+	private String _displayStyleGroupKey;
 	private final DLAppLocalService _dlAppLocalService;
+	private Group _group;
+	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;
 	private final ItemSelector _itemSelector;
 	private final ModelResourcePermission<CommerceOrder>

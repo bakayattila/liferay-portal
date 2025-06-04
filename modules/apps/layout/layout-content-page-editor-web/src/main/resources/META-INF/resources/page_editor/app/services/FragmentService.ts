@@ -259,7 +259,7 @@ export default {
 		);
 	},
 
-	pasteItem({
+	pasteItems({
 		itemIds,
 		onNetworkStatus,
 		parentItemId,
@@ -299,12 +299,12 @@ export default {
 			itemClassPK?: string | null;
 			itemExternalReferenceCode?: string | null;
 		}>;
-		languageId: string;
+		languageId: Liferay.Language.Locale;
 		segmentsExperienceId: string;
 	}) {
 		const body: {
 			data: string;
-			languageId: string;
+			languageId: Liferay.Language.Locale;
 			segmentsExperienceId: string;
 		} = {
 			data: JSON.stringify(data),

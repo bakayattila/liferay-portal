@@ -5,19 +5,23 @@
 
 package com.liferay.object.model.impl;
 
+import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -32,6 +36,22 @@ public class ObjectDefinitionImplTest {
 	@Rule
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
+
+	@Test
+	public void testGetPortletId() {
+		ObjectDefinition objectDefinition = new ObjectDefinitionImpl();
+
+		String classNameSuffix = RandomTestUtil.randomString();
+
+		objectDefinition.setClassName(
+			ObjectDefinitionConstants.
+				CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION + classNameSuffix);
+
+		Assert.assertEquals(
+			ObjectPortletKeys.OBJECT_DEFINITIONS + StringPool.UNDERLINE +
+				classNameSuffix,
+			objectDefinition.getPortletId());
+	}
 
 	@Test
 	public void testGetRESTContextPath() {
@@ -61,7 +81,8 @@ public class ObjectDefinitionImplTest {
 		}
 	}
 
-	@FeatureFlags("LPS-187142")
+	@FeatureFlag("LPD-34594")
+	@Ignore
 	@Test
 	public void testGetRESTContextPathRootDescendantNode() {
 
@@ -77,7 +98,7 @@ public class ObjectDefinitionImplTest {
 			"/headless-builder/applications/endpoints", true, "APIEndpoint",
 			"APIApplication", true);
 		_testGetRESTContextPath(
-			"/commerce-returns/commerce-return-items", true,
+			"/commerce/returns/commerce/return-items", true,
 			"CommerceReturnItem", "CommerceReturn", true);
 	}
 

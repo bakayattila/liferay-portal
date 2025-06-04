@@ -16,7 +16,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -30,16 +30,22 @@ public class SegmentsExperienceManager {
 	}
 
 	public long getSegmentsExperienceId(HttpServletRequest httpServletRequest) {
-		long segmentsExperienceId = ParamUtil.getLong(
-			PortalUtil.getOriginalServletRequest(httpServletRequest),
-			"segmentsExperienceId", -1);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if (themeDisplay == null) {
+			return _segmentsExperienceLocalService.
+				fetchDefaultSegmentsExperienceId(
+					ParamUtil.getLong(httpServletRequest, "plid"));
+		}
 
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
+		long segmentsExperienceId = ParamUtil.getLong(
+			PortalUtil.getOriginalServletRequest(httpServletRequest),
+			"segmentsExperienceId", -1);
 
 		if ((segmentsExperienceId != -1) &&
 			permissionChecker.isGroupAdmin(themeDisplay.getScopeGroupId())) {
@@ -55,13 +61,8 @@ public class SegmentsExperienceManager {
 			return segmentsExperienceIds[0];
 		}
 
-		if (themeDisplay != null) {
-			return _segmentsExperienceLocalService.
-				fetchDefaultSegmentsExperienceId(themeDisplay.getPlid());
-		}
-
 		return _segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-			ParamUtil.getLong(httpServletRequest, "plid"));
+			themeDisplay.getPlid());
 	}
 
 	private final SegmentsExperienceLocalService

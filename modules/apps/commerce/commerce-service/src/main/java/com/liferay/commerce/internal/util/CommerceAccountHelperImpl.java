@@ -16,7 +16,9 @@ import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.commerce.configuration.CommerceAccountGroupServiceConfiguration;
 import com.liferay.commerce.configuration.CommerceAccountServiceConfiguration;
+import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceConstants;
+import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
 import com.liferay.commerce.product.constants.CommerceChannelConstants;
 import com.liferay.commerce.product.model.CommerceChannel;
@@ -49,15 +51,15 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.ArrayList;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -287,6 +289,22 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 			long commerceChannelGroupId, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
+		HttpServletRequest originalHttpServletRequest =
+			_portal.getOriginalServletRequest(httpServletRequest);
+
+		HttpSession httpSession = originalHttpServletRequest.getSession();
+
+		CommerceOrder commerceOrder = (CommerceOrder)httpSession.getAttribute(
+			CommerceCheckoutWebKeys.COMMERCE_ORDER_ON_ACCOUNT_SELECTION);
+
+		if (commerceOrder != null) {
+			setCurrentCommerceAccount(
+				httpServletRequest, commerceChannelGroupId,
+				AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT);
+
+			return null;
+		}
+
 		int commerceSiteType = getCommerceSiteType(commerceChannelGroupId);
 
 		CommerceChannel commerceChannel =
@@ -326,7 +344,7 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 
 						accountEntry =
 							_accountEntryLocalService.addAccountEntry(
-								userId,
+								StringPool.BLANK, userId,
 								AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
 								user.getFullName(), null, null,
 								user.getEmailAddress(), null, StringPool.BLANK,
@@ -370,6 +388,28 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 				setCurrentCommerceAccount(
 					httpServletRequest, commerceChannelGroupId,
 					commerceChannelAccountEntryRel.getAccountEntryId());
+
+				return accountEntry;
+			}
+
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+
+			int count =
+				_commerceChannelAccountEntryRelLocalService.
+					getCommerceChannelAccountEntryRelsCount(
+						commerceChannel.getCommerceChannelId(), null,
+						CommerceChannelAccountEntryRelConstants.
+							TYPE_ELIGIBILITY);
+
+			if (permissionChecker.hasPermission(
+					commerceChannelGroupId, AccountEntry.class.getName(),
+					commerceChannel.getCompanyId(), ActionKeys.VIEW) &&
+				(count == 0)) {
+
+				setCurrentCommerceAccount(
+					httpServletRequest, commerceChannelGroupId,
+					accountEntry.getAccountEntryId());
 
 				return accountEntry;
 			}
@@ -538,50 +578,30 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 			return accountEntries;
 		}
 
-		List<AccountEntry> userAccountEntries = new ArrayList<>();
-
 		Set<Long> channelAccountEntryIds = new HashSet<>(
 			ListUtil.toList(
 				commerceChannelAccountEntryRels,
 				CommerceChannelAccountEntryRel::getAccountEntryId));
 
-		for (AccountEntry accountEntry : accountEntries) {
-			if (channelAccountEntryIds.contains(
-					accountEntry.getAccountEntryId())) {
+		return TransformUtil.transform(
+			accountEntries,
+			accountEntry -> {
+				if (channelAccountEntryIds.contains(
+						accountEntry.getAccountEntryId())) {
 
-				userAccountEntries.add(accountEntry);
-			}
-		}
+					return accountEntry;
+				}
 
-		return userAccountEntries;
+				return null;
+			});
 	}
 
 	private List<AccountEntry> _getCommerceChannelAccountEntries(
 			long userId, long commerceChannelId)
 		throws PortalException {
 
-		CommerceChannel commerceChannel =
-			_commerceChannelLocalService.getCommerceChannel(commerceChannelId);
-
-		List<AccountEntry> accountEntries = null;
-
-		User currentUser = _userLocalService.fetchUser(userId);
-
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		if ((currentUser != null) &&
-			permissionChecker.hasPermission(
-				null, AccountEntry.class.getName(),
-				commerceChannel.getCompanyId(), ActionKeys.VIEW)) {
-
-			accountEntries = _accountEntryLocalService.getAccountEntries(
-				commerceChannel.getCompanyId(),
-				WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS, null);
-		}
-		else {
-			accountEntries = _accountEntryLocalService.getUserAccountEntries(
+		List<AccountEntry> accountEntries =
+			_accountEntryLocalService.getUserAccountEntries(
 				userId, AccountConstants.PARENT_ACCOUNT_ENTRY_ID_DEFAULT, null,
 				new String[] {
 					AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS,
@@ -590,7 +610,6 @@ public class CommerceAccountHelperImpl implements CommerceAccountHelper {
 					AccountConstants.ACCOUNT_ENTRY_TYPE_SUPPLIER
 				},
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
-		}
 
 		return _filterAccountEntries(accountEntries, commerceChannelId);
 	}

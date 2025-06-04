@@ -24,6 +24,7 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.UnlocalizedValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.util.DDMFormFieldTemplateContextContributorUtil;
 import com.liferay.dynamic.data.mapping.util.NumericDDMFormFieldUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
@@ -68,7 +69,6 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.object.service.ObjectEntryServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.service.ObjectFieldSettingLocalServiceUtil;
 import com.liferay.object.service.ObjectLayoutLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.tree.Edge;
@@ -79,6 +79,7 @@ import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelpe
 import com.liferay.object.web.internal.security.permission.resource.util.ObjectDefinitionResourcePermissionUtil;
 import com.liferay.object.web.internal.util.ObjectEntryUtil;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -89,20 +90,26 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -113,6 +120,12 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.taglib.servlet.PipingServletResponseFactory;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.WindowState;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
+
 import java.sql.Timestamp;
 
 import java.text.DecimalFormat;
@@ -122,14 +135,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.WindowState;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
 
 /**
  * @author Marco Leo
@@ -567,6 +575,39 @@ public class ObjectEntryDisplayContextImpl
 	}
 
 	@Override
+	public String getURLSeparator() {
+		StringBundler sb = new StringBundler(4);
+
+		sb.append(_themeDisplay.getPortalURL());
+
+		Group group = GroupLocalServiceUtil.fetchGroup(_getGroupId());
+
+		if (group != null) {
+			sb.append(group.getPathFriendlyURL(false, _themeDisplay));
+			sb.append(group.getFriendlyURL());
+		}
+
+		ObjectDefinition objectDefinition = getObjectDefinition1();
+
+		String friendlyURLSeparator = StringUtil.quote(
+			objectDefinition.getFriendlyURLSeparator(), CharPool.SLASH);
+
+		FriendlyURLResolver friendlyURLResolver =
+			FriendlyURLResolverRegistryUtil.
+				getFriendlyURLResolverByDefaultURLSeparator(
+					friendlyURLSeparator);
+
+		if (friendlyURLResolver == null) {
+			sb.append(FriendlyURLResolverConstants.URL_SEPARATOR_OBJECT_ENTRY);
+		}
+		else {
+			sb.append(friendlyURLSeparator);
+		}
+
+		return sb.toString();
+	}
+
+	@Override
 	public boolean isGuestUser() {
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
@@ -635,6 +676,8 @@ public class ObjectEntryDisplayContextImpl
 
 		ddmFormRenderingContext.setContainerId("editObjectEntry");
 
+		Locale locale = _themeDisplay.getSiteDefaultLocale();
+
 		if (objectEntry != null) {
 			ddmFormRenderingContext.addProperty(
 				"objectEntryId", objectEntry.getId());
@@ -645,6 +688,9 @@ public class ObjectEntryDisplayContextImpl
 			if (ddmFormValues != null) {
 				ddmFormRenderingContext.setDDMFormValues(ddmFormValues);
 			}
+
+			locale = LocaleUtil.fromLanguageId(
+				objectEntry.getDefaultLanguageId());
 		}
 
 		ddmFormRenderingContext.setGroupId(_getGroupId());
@@ -653,7 +699,7 @@ public class ObjectEntryDisplayContextImpl
 		ddmFormRenderingContext.setHttpServletResponse(
 			PipingServletResponseFactory.createPipingServletResponse(
 				pageContext));
-		ddmFormRenderingContext.setLocale(_objectRequestHelper.getLocale());
+		ddmFormRenderingContext.setLocale(locale);
 
 		LiferayPortletResponse liferayPortletResponse =
 			_objectRequestHelper.getLiferayPortletResponse();
@@ -843,8 +889,15 @@ public class ObjectEntryDisplayContextImpl
 
 		DDMForm ddmForm = new DDMForm();
 
-		ddmForm.addAvailableLocale(_objectRequestHelper.getDefaultLocale());
-		ddmForm.setDefaultLocale(_objectRequestHelper.getDefaultLocale());
+		Locale defaultLocale = _objectRequestHelper.getDefaultLocale();
+
+		if (objectEntry != null) {
+			defaultLocale = LocaleUtil.fromLanguageId(
+				objectEntry.getDefaultLanguageId());
+		}
+
+		ddmForm.addAvailableLocale(defaultLocale);
+		ddmForm.setDefaultLocale(defaultLocale);
 
 		ObjectDefinition objectDefinition = getObjectDefinition1();
 
@@ -977,6 +1030,10 @@ public class ObjectEntryDisplayContextImpl
 			objectFieldBusinessType.getDDMFormFieldTypeName(
 				objectField.isLocalized()));
 
+		readOnly = _isReadOnly(objectEntry, objectField, readOnly);
+
+		objectField.setReadOnly(String.valueOf(readOnly));
+
 		Map<String, Object> properties = objectFieldBusinessType.getProperties(
 			objectField, _createObjectFieldRenderingContext(objectEntry));
 
@@ -998,6 +1055,17 @@ public class ObjectEntryDisplayContextImpl
 
 		properties.forEach(
 			(key, value) -> ddmFormField.setProperty(key, value));
+
+		if (objectEntry != null) {
+			ddmFormField.setProperty(
+				"defaultLocale",
+				JSONFactoryUtil.createJSONObject(
+					DDMFormFieldTemplateContextContributorUtil.
+						getLocalizationParameters(
+							ddmFormField,
+							LocaleUtil.fromLanguageId(
+								objectEntry.getDefaultLanguageId()))));
+		}
 
 		ddmFormField.setProperty(
 			"objectFieldId", String.valueOf(objectField.getObjectFieldId()));
@@ -1040,8 +1108,7 @@ public class ObjectEntryDisplayContextImpl
 				objectEntry.getExternalReferenceCode());
 		}
 
-		ddmFormField.setReadOnly(
-			_isReadOnly(objectEntry, objectField, readOnly));
+		ddmFormField.setReadOnly(readOnly);
 
 		ddmFormField.setRequired(objectField.isRequired());
 
@@ -1072,29 +1139,29 @@ public class ObjectEntryDisplayContextImpl
 			defaultMaxLength = 280;
 		}
 
-		if ((defaultMaxLength > 0) &&
-			GetterUtil.getBoolean(properties.get("showCounter"))) {
+		if ((defaultMaxLength <= 0) ||
+			!GetterUtil.getBoolean(properties.get("showCounter"))) {
 
-			DDMFormFieldValidation ddmFormFieldValidation =
-				new DDMFormFieldValidation();
-
-			DDMFormFieldValidationExpression ddmFormFieldValidationExpression =
-				new DDMFormFieldValidationExpression();
-
-			int maxLength = GetterUtil.getInteger(
-				properties.get("maxLength"), defaultMaxLength);
-
-			ddmFormFieldValidationExpression.setValue(
-				StringBundler.concat(
-					"length(", objectFieldName, ") <= ", maxLength));
-
-			ddmFormFieldValidation.setDDMFormFieldValidationExpression(
-				ddmFormFieldValidationExpression);
-
-			return ddmFormFieldValidation;
+			return null;
 		}
 
-		return null;
+		DDMFormFieldValidation ddmFormFieldValidation =
+			new DDMFormFieldValidation();
+
+		DDMFormFieldValidationExpression ddmFormFieldValidationExpression =
+			new DDMFormFieldValidationExpression();
+
+		int maxLength = GetterUtil.getInteger(
+			properties.get("maxLength"), defaultMaxLength);
+
+		ddmFormFieldValidationExpression.setValue(
+			StringBundler.concat(
+				"length(", objectFieldName, ") <= ", maxLength));
+
+		ddmFormFieldValidation.setDDMFormFieldValidationExpression(
+			ddmFormFieldValidationExpression);
+
+		return ddmFormFieldValidation;
 	}
 
 	private DDMFormValues _getDDMFormValues(
@@ -1342,9 +1409,8 @@ public class ObjectEntryDisplayContextImpl
 
 				existingValues.put(
 					objectField1.getName(),
-					ObjectFieldSettingUtil.getDefaultValueAsString(
-						null, objectField,
-						ObjectFieldSettingLocalServiceUtil.getService(), null));
+					ObjectFieldSettingUtil.getDefaultValue(
+						null, objectField, null));
 			}
 		}
 		else {
@@ -1407,13 +1473,11 @@ public class ObjectEntryDisplayContextImpl
 			}
 		}
 		else if (value instanceof ArrayList) {
+			JSONArray jsonArray = JSONFactoryUtil.createJSONArray(
+				(List<String>)value);
+
 			ddmFormFieldValue.setValue(
-				new UnlocalizedValue(
-					StringBundler.concat(
-						StringPool.OPEN_BRACKET,
-						StringUtil.merge(
-							(List<String>)value, StringPool.COMMA_AND_SPACE),
-						StringPool.CLOSE_BRACKET)));
+				new UnlocalizedValue(jsonArray.toString()));
 		}
 		else if (value instanceof FileEntry) {
 			FileEntry fileEntry = (FileEntry)value;

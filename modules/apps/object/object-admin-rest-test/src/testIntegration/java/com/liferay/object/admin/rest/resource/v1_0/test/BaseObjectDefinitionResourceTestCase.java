@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.object.admin.rest.client.dto.v1_0.ObjectDefinition;
 import com.liferay.object.admin.rest.client.http.HttpInvoker;
 import com.liferay.object.admin.rest.client.pagination.Page;
@@ -29,11 +32,17 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -43,12 +52,28 @@ import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
+
+import jakarta.annotation.Generated;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.PathSegment;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.net.URI;
+
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,13 +82,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -72,6 +94,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Javier Gamarra
@@ -82,12 +107,14 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 	@ClassRule
 	@Rule
-	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
-		new LiferayIntegrationTestRule();
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -101,14 +128,22 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 		_objectDefinitionResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		ObjectDefinitionResource.Builder builder =
-			ObjectDefinitionResource.builder();
+		objectDefinitionResource = ObjectDefinitionResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
 
-		objectDefinitionResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -177,6 +212,7 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		objectDefinition.setClassName(regex);
 		objectDefinition.setDefaultLanguageId(regex);
 		objectDefinition.setExternalReferenceCode(regex);
+		objectDefinition.setFriendlyURLSeparator(regex);
 		objectDefinition.setName(regex);
 		objectDefinition.setObjectFolderExternalReferenceCode(regex);
 		objectDefinition.setPanelAppOrder(regex);
@@ -198,6 +234,7 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		Assert.assertEquals(regex, objectDefinition.getClassName());
 		Assert.assertEquals(regex, objectDefinition.getDefaultLanguageId());
 		Assert.assertEquals(regex, objectDefinition.getExternalReferenceCode());
+		Assert.assertEquals(regex, objectDefinition.getFriendlyURLSeparator());
 		Assert.assertEquals(regex, objectDefinition.getName());
 		Assert.assertEquals(
 			regex, objectDefinition.getObjectFolderExternalReferenceCode());
@@ -210,6 +247,609 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		Assert.assertEquals(regex, objectDefinition.getScope());
 		Assert.assertEquals(regex, objectDefinition.getStorageType());
 		Assert.assertEquals(regex, objectDefinition.getTitleObjectFieldName());
+	}
+
+	@Test
+	public void testDeleteObjectDefinition() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ObjectDefinition objectDefinition =
+			testDeleteObjectDefinition_addObjectDefinition();
+
+		assertHttpResponseStatusCode(
+			204,
+			objectDefinitionResource.deleteObjectDefinitionHttpResponse(
+				objectDefinition.getId()));
+
+		assertHttpResponseStatusCode(
+			404,
+			objectDefinitionResource.getObjectDefinitionHttpResponse(
+				objectDefinition.getId()));
+		assertHttpResponseStatusCode(
+			404, objectDefinitionResource.getObjectDefinitionHttpResponse(0L));
+	}
+
+	protected ObjectDefinition testDeleteObjectDefinition_addObjectDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLDeleteObjectDefinition() throws Exception {
+
+		// No namespace
+
+		ObjectDefinition objectDefinition1 =
+			testGraphQLDeleteObjectDefinition_addObjectDefinition();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"deleteObjectDefinition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"objectDefinitionId",
+									objectDefinition1.getId());
+							}
+						})),
+				"JSONObject/data", "Object/deleteObjectDefinition"));
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectDefinition",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"objectDefinitionId",
+								objectDefinition1.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectDefinition objectDefinition2 =
+			testGraphQLDeleteObjectDefinition_addObjectDefinition();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectDefinition",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectDefinitionId",
+										objectDefinition2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectDefinition"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectDefinition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"objectDefinitionId",
+									objectDefinition2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
+	}
+
+	protected ObjectDefinition
+			testGraphQLDeleteObjectDefinition_addObjectDefinition()
+		throws Exception {
+
+		return testGraphQLObjectDefinition_addObjectDefinition();
+	}
+
+	@Test
+	public void testDeleteObjectDefinitionBatch() throws Exception {
+		ObjectDefinition objectDefinition1 =
+			testDeleteObjectDefinitionBatch_addObjectDefinition();
+
+		testDeleteObjectDefinitionBatch_deleteObjectDefinition(
+			"COMPLETED", null, objectDefinition1.getId());
+
+		assertHttpResponseStatusCode(
+			404,
+			objectDefinitionResource.getObjectDefinitionHttpResponse(
+				objectDefinition1.getId()));
+	}
+
+	protected ObjectDefinition
+			testDeleteObjectDefinitionBatch_addObjectDefinition()
+		throws Exception {
+
+		return testDeleteObjectDefinition_addObjectDefinition();
+	}
+
+	protected void testDeleteObjectDefinitionBatch_deleteObjectDefinition(
+			String expectedExecuteStatus, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			objectDefinitionResource.deleteObjectDefinitionBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testGetObjectDefinition() throws Exception {
+		ObjectDefinition postObjectDefinition =
+			testGetObjectDefinition_addObjectDefinition();
+
+		ObjectDefinition getObjectDefinition =
+			objectDefinitionResource.getObjectDefinition(
+				postObjectDefinition.getId());
+
+		assertEquals(postObjectDefinition, getObjectDefinition);
+		assertValid(getObjectDefinition);
+	}
+
+	@Test
+	public void testVulcanCRUDItemDelegateGetItem() throws Exception {
+		ObjectDefinition postObjectDefinition =
+			testGetObjectDefinition_addObjectDefinition();
+
+		ObjectDefinition getObjectDefinition =
+			objectDefinitionResource.getObjectDefinition(
+				postObjectDefinition.getId());
+
+		VulcanCRUDItemDelegate vulcanCRUDItemDelegate =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.object.admin.rest.dto.v1_0.ObjectDefinition"
+			).acceptLanguage(
+				new AcceptLanguage() {
+
+					@Override
+					public List<Locale> getLocales() {
+						return Arrays.asList(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public String getPreferredLanguageId() {
+						return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+					}
+
+					@Override
+					public Locale getPreferredLocale() {
+						return LocaleUtil.getDefault();
+					}
+
+				}
+			).groupLocalService(
+				_groupLocalService
+			).httpServletRequest(
+				testVulcanCRUDItemDelegate_getHttpServletRequest()
+			).httpServletResponse(
+				new MockHttpServletResponse()
+			).resourceActionLocalService(
+				_resourceActionLocalService
+			).resourcePermissionLocalService(
+				_resourcePermissionLocalService
+			).roleLocalService(
+				_roleLocalService
+			).scopeChecker(
+				_scopeChecker
+			).uriInfo(
+				testVulcanCRUDItemDelegate_getUriInfo()
+			).user(
+				testVulcanCRUDItemDelegate_getUser()
+			).build();
+
+		Object item = vulcanCRUDItemDelegate.getItem(
+			postObjectDefinition.getId());
+
+		assertEquals(
+			getObjectDefinition, ObjectDefinitionSerDes.toDTO(item.toString()));
+	}
+
+	protected HttpServletRequest
+		testVulcanCRUDItemDelegate_getHttpServletRequest() {
+
+		return new MockHttpServletRequest() {
+
+			@Override
+			public StringBuffer getRequestURL() {
+				return new StringBuffer(
+					StringBundler.concat(
+						"http://localhost:8080/o/v1.0/",
+						RandomTestUtil.randomString(), "/",
+						RandomTestUtil.randomString()));
+			}
+
+		};
+	}
+
+	protected UriInfo testVulcanCRUDItemDelegate_getUriInfo() {
+		String applicationPath = RandomTestUtil.randomString() + "/";
+		String resourcePath = RandomTestUtil.randomString();
+
+		return new UriInfo() {
+
+			@Override
+			public String getPath() {
+				return resourcePath;
+			}
+
+			@Override
+			public String getPath(boolean decode) {
+				return getPath();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<PathSegment> getPathSegments(boolean decode) {
+				return getPathSegments();
+			}
+
+			@Override
+			public URI getRequestUri() {
+				return URI.create(
+					"http://localhost:8080/o/" + applicationPath +
+						resourcePath);
+			}
+
+			@Override
+			public UriBuilder getRequestUriBuilder() {
+				return UriBuilder.fromUri(getRequestUri());
+			}
+
+			@Override
+			public URI getAbsolutePath() {
+				return getRequestUri();
+			}
+
+			@Override
+			public UriBuilder getAbsolutePathBuilder() {
+				return getRequestUriBuilder();
+			}
+
+			@Override
+			public URI getBaseUri() {
+				return URI.create("http://localhost:8080/o/" + applicationPath);
+			}
+
+			@Override
+			public UriBuilder getBaseUriBuilder() {
+				return UriBuilder.fromUri(getBaseUri());
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getPathParameters(
+				boolean decode) {
+
+				return getPathParameters();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters() {
+				return new MultivaluedHashMap<>();
+			}
+
+			@Override
+			public MultivaluedMap<String, String> getQueryParameters(
+				boolean decode) {
+
+				return getQueryParameters();
+			}
+
+			@Override
+			public List<String> getMatchedURIs() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public List<String> getMatchedURIs(boolean decode) {
+				return getMatchedURIs();
+			}
+
+			@Override
+			public List<Object> getMatchedResources() {
+				return Collections.emptyList();
+			}
+
+			@Override
+			public URI resolve(URI requestUri) {
+				return getBaseUri().resolve(requestUri);
+			}
+
+			@Override
+			public URI relativize(URI uri) {
+				return getBaseUri().relativize(uri);
+			}
+
+		};
+	}
+
+	protected com.liferay.portal.kernel.model.User
+		testVulcanCRUDItemDelegate_getUser() {
+
+		return _testCompanyAdminUser;
+	}
+
+	protected ObjectDefinition testGetObjectDefinition_addObjectDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetObjectDefinition() throws Exception {
+		ObjectDefinition objectDefinition =
+			testGraphQLGetObjectDefinition_addObjectDefinition();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				objectDefinition,
+				ObjectDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectDefinition",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"objectDefinitionId",
+											objectDefinition.getId());
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data", "Object/objectDefinition"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectDefinition,
+				ObjectDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectDefinition",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectDefinitionId",
+												objectDefinition.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectDefinition"))));
+	}
+
+	@Test
+	public void testGraphQLGetObjectDefinitionNotFound() throws Exception {
+		Long irrelevantObjectDefinitionId = RandomTestUtil.randomLong();
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectDefinition",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"objectDefinitionId",
+									irrelevantObjectDefinitionId);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectDefinition",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectDefinitionId",
+										irrelevantObjectDefinitionId);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ObjectDefinition
+			testGraphQLGetObjectDefinition_addObjectDefinition()
+		throws Exception {
+
+		return testGraphQLObjectDefinition_addObjectDefinition();
+	}
+
+	@Test
+	public void testGetObjectDefinitionByExternalReferenceCode()
+		throws Exception {
+
+		ObjectDefinition postObjectDefinition =
+			testGetObjectDefinitionByExternalReferenceCode_addObjectDefinition();
+
+		ObjectDefinition getObjectDefinition =
+			objectDefinitionResource.getObjectDefinitionByExternalReferenceCode(
+				postObjectDefinition.getExternalReferenceCode());
+
+		assertEquals(postObjectDefinition, getObjectDefinition);
+		assertValid(getObjectDefinition);
+	}
+
+	protected ObjectDefinition
+			testGetObjectDefinitionByExternalReferenceCode_addObjectDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetObjectDefinitionByExternalReferenceCode()
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			testGraphQLGetObjectDefinitionByExternalReferenceCode_addObjectDefinition();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				objectDefinition,
+				ObjectDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectDefinitionByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												objectDefinition.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/objectDefinitionByExternalReferenceCode"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectDefinition,
+				ObjectDefinitionSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectDefinitionByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													objectDefinition.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectDefinitionByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetObjectDefinitionByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectDefinitionByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectDefinitionByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected ObjectDefinition
+			testGraphQLGetObjectDefinitionByExternalReferenceCode_addObjectDefinition()
+		throws Exception {
+
+		return testGraphQLObjectDefinition_addObjectDefinition();
 	}
 
 	@Test
@@ -348,12 +988,12 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 	@Test
 	public void testGetObjectDefinitionsPageWithPagination() throws Exception {
-		Page<ObjectDefinition> objectDefinitionPage =
+		Page<ObjectDefinition> objectDefinitionsPage =
 			objectDefinitionResource.getObjectDefinitionsPage(
 				null, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			objectDefinitionPage.getTotalCount());
+			objectDefinitionsPage.getTotalCount());
 
 		ObjectDefinition objectDefinition1 =
 			testGetObjectDefinitionsPage_addObjectDefinition(
@@ -672,6 +1312,40 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 	}
 
 	@Test
+	public void testPatchObjectDefinition() throws Exception {
+		ObjectDefinition postObjectDefinition =
+			testPatchObjectDefinition_addObjectDefinition();
+
+		ObjectDefinition randomPatchObjectDefinition =
+			randomPatchObjectDefinition();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		ObjectDefinition patchObjectDefinition =
+			objectDefinitionResource.patchObjectDefinition(
+				postObjectDefinition.getId(), randomPatchObjectDefinition);
+
+		ObjectDefinition expectedPatchObjectDefinition =
+			postObjectDefinition.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchObjectDefinition, expectedPatchObjectDefinition);
+
+		ObjectDefinition getObjectDefinition =
+			objectDefinitionResource.getObjectDefinition(
+				patchObjectDefinition.getId());
+
+		assertEquals(expectedPatchObjectDefinition, getObjectDefinition);
+		assertValid(getObjectDefinition);
+	}
+
+	protected ObjectDefinition testPatchObjectDefinition_addObjectDefinition()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostObjectDefinition() throws Exception {
 		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
 
@@ -692,22 +1366,20 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testGetObjectDefinitionByExternalReferenceCode()
-		throws Exception {
+	public void testPostObjectDefinitionPublish() throws Exception {
+		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
 
 		ObjectDefinition postObjectDefinition =
-			testGetObjectDefinitionByExternalReferenceCode_addObjectDefinition();
+			testPostObjectDefinitionPublish_addObjectDefinition(
+				randomObjectDefinition);
 
-		ObjectDefinition getObjectDefinition =
-			objectDefinitionResource.getObjectDefinitionByExternalReferenceCode(
-				postObjectDefinition.getExternalReferenceCode());
-
-		assertEquals(postObjectDefinition, getObjectDefinition);
-		assertValid(getObjectDefinition);
+		assertEquals(randomObjectDefinition, postObjectDefinition);
+		assertValid(postObjectDefinition);
 	}
 
 	protected ObjectDefinition
-			testGetObjectDefinitionByExternalReferenceCode_addObjectDefinition()
+			testPostObjectDefinitionPublish_addObjectDefinition(
+				ObjectDefinition objectDefinition)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -715,116 +1387,32 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetObjectDefinitionByExternalReferenceCode()
-		throws Exception {
+	public void testPutObjectDefinition() throws Exception {
+		ObjectDefinition postObjectDefinition =
+			testPutObjectDefinition_addObjectDefinition();
 
-		ObjectDefinition objectDefinition =
-			testGraphQLGetObjectDefinitionByExternalReferenceCode_addObjectDefinition();
+		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
 
-		// No namespace
+		ObjectDefinition putObjectDefinition =
+			objectDefinitionResource.putObjectDefinition(
+				postObjectDefinition.getId(), randomObjectDefinition);
 
-		Assert.assertTrue(
-			equals(
-				objectDefinition,
-				ObjectDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"objectDefinitionByExternalReferenceCode",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"externalReferenceCode",
-											"\"" +
-												objectDefinition.
-													getExternalReferenceCode() +
-														"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/objectDefinitionByExternalReferenceCode"))));
+		assertEquals(randomObjectDefinition, putObjectDefinition);
+		assertValid(putObjectDefinition);
 
-		// Using the namespace objectAdmin_v1_0
+		ObjectDefinition getObjectDefinition =
+			objectDefinitionResource.getObjectDefinition(
+				putObjectDefinition.getId());
 
-		Assert.assertTrue(
-			equals(
-				objectDefinition,
-				ObjectDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"objectAdmin_v1_0",
-								new GraphQLField(
-									"objectDefinitionByExternalReferenceCode",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"externalReferenceCode",
-												"\"" +
-													objectDefinition.
-														getExternalReferenceCode() +
-															"\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
-						"Object/objectDefinitionByExternalReferenceCode"))));
+		assertEquals(randomObjectDefinition, getObjectDefinition);
+		assertValid(getObjectDefinition);
 	}
 
-	@Test
-	public void testGraphQLGetObjectDefinitionByExternalReferenceCodeNotFound()
+	protected ObjectDefinition testPutObjectDefinition_addObjectDefinition()
 		throws Exception {
 
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"objectDefinitionByExternalReferenceCode",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace objectAdmin_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"objectAdmin_v1_0",
-						new GraphQLField(
-							"objectDefinitionByExternalReferenceCode",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ObjectDefinition
-			testGraphQLGetObjectDefinitionByExternalReferenceCode_addObjectDefinition()
-		throws Exception {
-
-		return testGraphQLObjectDefinition_addObjectDefinition();
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -882,324 +1470,6 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 	protected ObjectDefinition
 			testPutObjectDefinitionByExternalReferenceCode_addObjectDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testDeleteObjectDefinition() throws Exception {
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectDefinition objectDefinition =
-			testDeleteObjectDefinition_addObjectDefinition();
-
-		assertHttpResponseStatusCode(
-			204,
-			objectDefinitionResource.deleteObjectDefinitionHttpResponse(
-				objectDefinition.getId()));
-
-		assertHttpResponseStatusCode(
-			404,
-			objectDefinitionResource.getObjectDefinitionHttpResponse(
-				objectDefinition.getId()));
-
-		assertHttpResponseStatusCode(
-			404, objectDefinitionResource.getObjectDefinitionHttpResponse(0L));
-	}
-
-	protected ObjectDefinition testDeleteObjectDefinition_addObjectDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLDeleteObjectDefinition() throws Exception {
-
-		// No namespace
-
-		ObjectDefinition objectDefinition1 =
-			testGraphQLDeleteObjectDefinition_addObjectDefinition();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"deleteObjectDefinition",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"objectDefinitionId",
-									objectDefinition1.getId());
-							}
-						})),
-				"JSONObject/data", "Object/deleteObjectDefinition"));
-
-		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"objectDefinition",
-					new HashMap<String, Object>() {
-						{
-							put(
-								"objectDefinitionId",
-								objectDefinition1.getId());
-						}
-					},
-					new GraphQLField("id"))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray1.length() > 0);
-
-		// Using the namespace objectAdmin_v1_0
-
-		ObjectDefinition objectDefinition2 =
-			testGraphQLDeleteObjectDefinition_addObjectDefinition();
-
-		Assert.assertTrue(
-			JSONUtil.getValueAsBoolean(
-				invokeGraphQLMutation(
-					new GraphQLField(
-						"objectAdmin_v1_0",
-						new GraphQLField(
-							"deleteObjectDefinition",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"objectDefinitionId",
-										objectDefinition2.getId());
-								}
-							}))),
-				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
-				"Object/deleteObjectDefinition"));
-
-		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
-			invokeGraphQLQuery(
-				new GraphQLField(
-					"objectAdmin_v1_0",
-					new GraphQLField(
-						"objectDefinition",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"objectDefinitionId",
-									objectDefinition2.getId());
-							}
-						},
-						new GraphQLField("id")))),
-			"JSONArray/errors");
-
-		Assert.assertTrue(errorsJSONArray2.length() > 0);
-	}
-
-	protected ObjectDefinition
-			testGraphQLDeleteObjectDefinition_addObjectDefinition()
-		throws Exception {
-
-		return testGraphQLObjectDefinition_addObjectDefinition();
-	}
-
-	@Test
-	public void testGetObjectDefinition() throws Exception {
-		ObjectDefinition postObjectDefinition =
-			testGetObjectDefinition_addObjectDefinition();
-
-		ObjectDefinition getObjectDefinition =
-			objectDefinitionResource.getObjectDefinition(
-				postObjectDefinition.getId());
-
-		assertEquals(postObjectDefinition, getObjectDefinition);
-		assertValid(getObjectDefinition);
-	}
-
-	protected ObjectDefinition testGetObjectDefinition_addObjectDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetObjectDefinition() throws Exception {
-		ObjectDefinition objectDefinition =
-			testGraphQLGetObjectDefinition_addObjectDefinition();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				objectDefinition,
-				ObjectDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"objectDefinition",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"objectDefinitionId",
-											objectDefinition.getId());
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data", "Object/objectDefinition"))));
-
-		// Using the namespace objectAdmin_v1_0
-
-		Assert.assertTrue(
-			equals(
-				objectDefinition,
-				ObjectDefinitionSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"objectAdmin_v1_0",
-								new GraphQLField(
-									"objectDefinition",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"objectDefinitionId",
-												objectDefinition.getId());
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
-						"Object/objectDefinition"))));
-	}
-
-	@Test
-	public void testGraphQLGetObjectDefinitionNotFound() throws Exception {
-		Long irrelevantObjectDefinitionId = RandomTestUtil.randomLong();
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"objectDefinition",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"objectDefinitionId",
-									irrelevantObjectDefinitionId);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace objectAdmin_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"objectAdmin_v1_0",
-						new GraphQLField(
-							"objectDefinition",
-							new HashMap<String, Object>() {
-								{
-									put(
-										"objectDefinitionId",
-										irrelevantObjectDefinitionId);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected ObjectDefinition
-			testGraphQLGetObjectDefinition_addObjectDefinition()
-		throws Exception {
-
-		return testGraphQLObjectDefinition_addObjectDefinition();
-	}
-
-	@Test
-	public void testPatchObjectDefinition() throws Exception {
-		ObjectDefinition postObjectDefinition =
-			testPatchObjectDefinition_addObjectDefinition();
-
-		ObjectDefinition randomPatchObjectDefinition =
-			randomPatchObjectDefinition();
-
-		@SuppressWarnings("PMD.UnusedLocalVariable")
-		ObjectDefinition patchObjectDefinition =
-			objectDefinitionResource.patchObjectDefinition(
-				postObjectDefinition.getId(), randomPatchObjectDefinition);
-
-		ObjectDefinition expectedPatchObjectDefinition =
-			postObjectDefinition.clone();
-
-		BeanTestUtil.copyProperties(
-			randomPatchObjectDefinition, expectedPatchObjectDefinition);
-
-		ObjectDefinition getObjectDefinition =
-			objectDefinitionResource.getObjectDefinition(
-				patchObjectDefinition.getId());
-
-		assertEquals(expectedPatchObjectDefinition, getObjectDefinition);
-		assertValid(getObjectDefinition);
-	}
-
-	protected ObjectDefinition testPatchObjectDefinition_addObjectDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPutObjectDefinition() throws Exception {
-		ObjectDefinition postObjectDefinition =
-			testPutObjectDefinition_addObjectDefinition();
-
-		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
-
-		ObjectDefinition putObjectDefinition =
-			objectDefinitionResource.putObjectDefinition(
-				postObjectDefinition.getId(), randomObjectDefinition);
-
-		assertEquals(randomObjectDefinition, putObjectDefinition);
-		assertValid(putObjectDefinition);
-
-		ObjectDefinition getObjectDefinition =
-			objectDefinitionResource.getObjectDefinition(
-				putObjectDefinition.getId());
-
-		assertEquals(randomObjectDefinition, getObjectDefinition);
-		assertValid(getObjectDefinition);
-	}
-
-	protected ObjectDefinition testPutObjectDefinition_addObjectDefinition()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testPostObjectDefinitionPublish() throws Exception {
-		ObjectDefinition randomObjectDefinition = randomObjectDefinition();
-
-		ObjectDefinition postObjectDefinition =
-			testPostObjectDefinitionPublish_addObjectDefinition(
-				randomObjectDefinition);
-
-		assertEquals(randomObjectDefinition, postObjectDefinition);
-		assertValid(postObjectDefinition);
-	}
-
-	protected ObjectDefinition
-			testPostObjectDefinitionPublish_addObjectDefinition(
-				ObjectDefinition objectDefinition)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -1358,6 +1628,14 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("creator", additionalAssertFieldName)) {
+				if (objectDefinition.getCreator() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"defaultLanguageId", additionalAssertFieldName)) {
 
@@ -1380,6 +1658,19 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 			if (Objects.equals("enableComments", additionalAssertFieldName)) {
 				if (objectDefinition.getEnableComments() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"enableFriendlyURLCustomization",
+					additionalAssertFieldName)) {
+
+				if (objectDefinition.getEnableFriendlyURLCustomization() ==
+						null) {
+
 					valid = false;
 				}
 
@@ -1427,9 +1718,29 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"enableObjectEntryVersioning", additionalAssertFieldName)) {
+
+				if (objectDefinition.getEnableObjectEntryVersioning() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"externalReferenceCode", additionalAssertFieldName)) {
 
 				if (objectDefinition.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"friendlyURLSeparator", additionalAssertFieldName)) {
+
+				if (objectDefinition.getFriendlyURLSeparator() == null) {
 					valid = false;
 				}
 
@@ -1462,6 +1773,16 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 
 			if (Objects.equals("objectActions", additionalAssertFieldName)) {
 				if (objectDefinition.getObjectActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"objectDefinitionSettings", additionalAssertFieldName)) {
+
+				if (objectDefinition.getObjectDefinitionSettings() == null) {
 					valid = false;
 				}
 
@@ -1814,6 +2135,17 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("creator", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						objectDefinition1.getCreator(),
+						objectDefinition2.getCreator())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("dateCreated", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						objectDefinition1.getDateCreated(),
@@ -1874,6 +2206,21 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"enableFriendlyURLCustomization",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.getEnableFriendlyURLCustomization(),
+						objectDefinition2.
+							getEnableFriendlyURLCustomization())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"enableIndexSearch", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
@@ -1926,11 +2273,37 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 			}
 
 			if (Objects.equals(
+					"enableObjectEntryVersioning", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.getEnableObjectEntryVersioning(),
+						objectDefinition2.getEnableObjectEntryVersioning())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
 					"externalReferenceCode", additionalAssertFieldName)) {
 
 				if (!Objects.deepEquals(
 						objectDefinition1.getExternalReferenceCode(),
 						objectDefinition2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"friendlyURLSeparator", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.getFriendlyURLSeparator(),
+						objectDefinition2.getFriendlyURLSeparator())) {
 
 					return false;
 				}
@@ -1985,6 +2358,19 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				if (!Objects.deepEquals(
 						objectDefinition1.getObjectActions(),
 						objectDefinition2.getObjectActions())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"objectDefinitionSettings", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						objectDefinition1.getObjectDefinitionSettings(),
+						objectDefinition2.getObjectDefinitionSettings())) {
 
 					return false;
 				}
@@ -2424,6 +2810,11 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("creator")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
 				Date date = objectDefinition.getDateCreated();
@@ -2433,13 +2824,11 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2449,8 +2838,7 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(
-					_dateFormat.format(objectDefinition.getDateCreated()));
+				sb.append(_format.format(objectDefinition.getDateCreated()));
 			}
 
 			return sb.toString();
@@ -2465,13 +2853,11 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
-				sb.append(
-					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
-				sb.append(
-					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(_format.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2481,8 +2867,7 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				sb.append(operator);
 				sb.append(" ");
 
-				sb.append(
-					_dateFormat.format(objectDefinition.getDateModified()));
+				sb.append(_format.format(objectDefinition.getDateModified()));
 			}
 
 			return sb.toString();
@@ -2544,6 +2929,11 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("enableFriendlyURLCustomization")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("enableIndexSearch")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2564,8 +2954,59 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("enableObjectEntryVersioning")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("externalReferenceCode")) {
 			Object object = objectDefinition.getExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("friendlyURLSeparator")) {
+			Object object = objectDefinition.getFriendlyURLSeparator();
 
 			String value = String.valueOf(object);
 
@@ -2672,6 +3113,11 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		}
 
 		if (entityFieldName.equals("objectActions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("objectDefinitionSettings")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
 		}
@@ -3155,11 +3601,15 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 					RandomTestUtil.randomString());
 				enableCategorization = RandomTestUtil.randomBoolean();
 				enableComments = RandomTestUtil.randomBoolean();
+				enableFriendlyURLCustomization = RandomTestUtil.randomBoolean();
 				enableIndexSearch = RandomTestUtil.randomBoolean();
 				enableLocalization = RandomTestUtil.randomBoolean();
 				enableObjectEntryDraft = RandomTestUtil.randomBoolean();
 				enableObjectEntryHistory = RandomTestUtil.randomBoolean();
+				enableObjectEntryVersioning = RandomTestUtil.randomBoolean();
 				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				friendlyURLSeparator = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				modifiable = RandomTestUtil.randomBoolean();
@@ -3199,7 +3649,30 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 		return randomObjectDefinition();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected ObjectDefinitionResource objectDefinitionResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -3400,10 +3873,34 @@ public abstract class BaseObjectDefinitionResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseObjectDefinitionResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.object.admin.rest.resource.v1_0.ObjectDefinitionResource
 		_objectDefinitionResource;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private ScopeChecker _scopeChecker;
+
+	@Inject
+	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }

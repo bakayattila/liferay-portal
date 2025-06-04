@@ -403,6 +403,28 @@ public interface ObjectDefinitionModel
 	public void setEnableComments(boolean enableComments);
 
 	/**
+	 * Returns the enable friendly url customization of this object definition.
+	 *
+	 * @return the enable friendly url customization of this object definition
+	 */
+	public boolean getEnableFriendlyURLCustomization();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable friendly url customization.
+	 *
+	 * @return <code>true</code> if this object definition is enable friendly url customization; <code>false</code> otherwise
+	 */
+	public boolean isEnableFriendlyURLCustomization();
+
+	/**
+	 * Sets whether this object definition is enable friendly url customization.
+	 *
+	 * @param enableFriendlyURLCustomization the enable friendly url customization of this object definition
+	 */
+	public void setEnableFriendlyURLCustomization(
+		boolean enableFriendlyURLCustomization);
+
+	/**
 	 * Returns the enable index search of this object definition.
 	 *
 	 * @return the enable index search of this object definition
@@ -485,6 +507,43 @@ public interface ObjectDefinitionModel
 	 * @param enableObjectEntryHistory the enable object entry history of this object definition
 	 */
 	public void setEnableObjectEntryHistory(boolean enableObjectEntryHistory);
+
+	/**
+	 * Returns the enable object entry versioning of this object definition.
+	 *
+	 * @return the enable object entry versioning of this object definition
+	 */
+	public boolean getEnableObjectEntryVersioning();
+
+	/**
+	 * Returns <code>true</code> if this object definition is enable object entry versioning.
+	 *
+	 * @return <code>true</code> if this object definition is enable object entry versioning; <code>false</code> otherwise
+	 */
+	public boolean isEnableObjectEntryVersioning();
+
+	/**
+	 * Sets whether this object definition is enable object entry versioning.
+	 *
+	 * @param enableObjectEntryVersioning the enable object entry versioning of this object definition
+	 */
+	public void setEnableObjectEntryVersioning(
+		boolean enableObjectEntryVersioning);
+
+	/**
+	 * Returns the friendly url separator of this object definition.
+	 *
+	 * @return the friendly url separator of this object definition
+	 */
+	@AutoEscape
+	public String getFriendlyURLSeparator();
+
+	/**
+	 * Sets the friendly url separator of this object definition.
+	 *
+	 * @param friendlyURLSeparator the friendly url separator of this object definition
+	 */
+	public void setFriendlyURLSeparator(String friendlyURLSeparator);
 
 	/**
 	 * Returns the label of this object definition.

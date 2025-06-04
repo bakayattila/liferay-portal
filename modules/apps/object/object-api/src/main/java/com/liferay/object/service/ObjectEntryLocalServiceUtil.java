@@ -39,12 +39,14 @@ public class ObjectEntryLocalServiceUtil {
 	 */
 	public static ObjectEntry addObjectEntry(
 			long userId, long groupId, long objectDefinitionId,
+			long objectEntryFolderId, String defaultLanguageId,
 			Map<String, Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addObjectEntry(
-			userId, groupId, objectDefinitionId, values, serviceContext);
+			userId, groupId, objectDefinitionId, objectEntryFolderId,
+			defaultLanguageId, values, serviceContext);
 	}
 
 	/**
@@ -63,11 +65,13 @@ public class ObjectEntryLocalServiceUtil {
 
 	public static ObjectEntry addObjectEntry(
 			String externalReferenceCode, long userId,
-			com.liferay.object.model.ObjectDefinition objectDefinition)
+			com.liferay.object.model.ObjectDefinition objectDefinition,
+			long objectEntryFolderId)
 		throws PortalException {
 
 		return getService().addObjectEntry(
-			externalReferenceCode, userId, objectDefinition);
+			externalReferenceCode, userId, objectDefinition,
+			objectEntryFolderId);
 	}
 
 	public static void addOrUpdateExtensionDynamicObjectDefinitionTableValues(
@@ -83,13 +87,14 @@ public class ObjectEntryLocalServiceUtil {
 
 	public static ObjectEntry addOrUpdateObjectEntry(
 			String externalReferenceCode, long userId, long groupId,
-			long objectDefinitionId, Map<String, Serializable> values,
+			long objectDefinitionId, long objectEntryFolderId,
+			Map<String, Serializable> values,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addOrUpdateObjectEntry(
-			externalReferenceCode, userId, groupId, objectDefinitionId, values,
-			serviceContext);
+			externalReferenceCode, userId, groupId, objectDefinitionId,
+			objectEntryFolderId, values, serviceContext);
 	}
 
 	/**
@@ -266,6 +271,15 @@ public class ObjectEntryLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
+	public static ObjectEntry expireObjectEntry(
+			long userId, long objectEntryId, int version,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().expireObjectEntry(
+			userId, objectEntryId, version, serviceContext);
+	}
+
 	public static ObjectEntry fetchManyToOneObjectEntry(
 			long groupId, long objectRelationshipId, long primaryKey)
 		throws PortalException {
@@ -276,6 +290,15 @@ public class ObjectEntryLocalServiceUtil {
 
 	public static ObjectEntry fetchObjectEntry(long objectEntryId) {
 		return getService().fetchObjectEntry(objectEntryId);
+	}
+
+	public static ObjectEntry fetchObjectEntry(
+		long groupId,
+		com.liferay.object.model.ObjectDefinition objectDefinition,
+		String urlTitle) {
+
+		return getService().fetchObjectEntry(
+			groupId, objectDefinition, urlTitle);
 	}
 
 	public static ObjectEntry fetchObjectEntry(
@@ -501,6 +524,20 @@ public class ObjectEntryLocalServiceUtil {
 		return getService().getObjectEntryByUuidAndGroupId(uuid, groupId);
 	}
 
+	public static List<ObjectEntry> getObjectEntryFolderObjectEntries(
+		long groupId, long objectEntryFolderId, int start, int end) {
+
+		return getService().getObjectEntryFolderObjectEntries(
+			groupId, objectEntryFolderId, start, end);
+	}
+
+	public static int getObjectEntryFolderObjectEntriesCount(
+		long groupId, long objectEntryFolderId) {
+
+		return getService().getObjectEntryFolderObjectEntriesCount(
+			groupId, objectEntryFolderId);
+	}
+
 	public static List<ObjectEntry> getOneToManyObjectEntries(
 			long groupId, long objectRelationshipId, long primaryKey,
 			boolean related, String search, int start, int end)
@@ -536,6 +573,18 @@ public class ObjectEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
+	}
+
+	public static List<Long> getPrimaryKeys(
+			long groupId, long companyId, long userId, long objectDefinitionId,
+			com.liferay.petra.sql.dsl.expression.Predicate predicate,
+			String search, int start, int end,
+			com.liferay.portal.kernel.search.Sort[] sorts)
+		throws PortalException {
+
+		return getService().getPrimaryKeys(
+			groupId, companyId, userId, objectDefinitionId, predicate, search,
+			start, end, sorts);
 	}
 
 	public static Map<String, Object> getSystemModelAttributes(
@@ -574,15 +623,14 @@ public class ObjectEntryLocalServiceUtil {
 
 	public static List<Map<String, Serializable>> getValuesList(
 			long groupId, long companyId, long userId, long objectDefinitionId,
-			String[] selectedObjectFieldNames,
 			com.liferay.petra.sql.dsl.expression.Predicate predicate,
 			String search, int start, int end,
 			com.liferay.portal.kernel.search.Sort[] sorts)
 		throws PortalException {
 
 		return getService().getValuesList(
-			groupId, companyId, userId, objectDefinitionId,
-			selectedObjectFieldNames, predicate, search, start, end, sorts);
+			groupId, companyId, userId, objectDefinitionId, predicate, search,
+			start, end, sorts);
 	}
 
 	public static int getValuesListCount(
@@ -602,6 +650,15 @@ public class ObjectEntryLocalServiceUtil {
 
 		getService().insertIntoOrUpdateExtensionTable(
 			userId, objectDefinitionId, primaryKey, values);
+	}
+
+	public static ObjectEntry partialUpdateObjectEntry(
+			long userId, long objectEntryId, Map<String, Serializable> values,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().partialUpdateObjectEntry(
+			userId, objectEntryId, values, serviceContext);
 	}
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
@@ -673,6 +730,18 @@ public class ObjectEntryLocalServiceUtil {
 
 		return getService().updateStatus(
 			userId, objectEntry, status, serviceContext);
+	}
+
+	public static void validate(
+			long groupId, ObjectEntry objectEntry,
+			List<String> objectValidationRuleExternalReferenceCodes,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext,
+			long userId)
+		throws PortalException {
+
+		getService().validate(
+			groupId, objectEntry, objectValidationRuleExternalReferenceCodes,
+			serviceContext, userId);
 	}
 
 	public static ObjectEntryLocalService getService() {

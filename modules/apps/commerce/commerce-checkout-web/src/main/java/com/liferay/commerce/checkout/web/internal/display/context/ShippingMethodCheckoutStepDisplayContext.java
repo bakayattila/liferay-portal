@@ -5,7 +5,6 @@
 
 package com.liferay.commerce.checkout.web.internal.display.context;
 
-import com.liferay.commerce.checkout.web.internal.util.CommerceOrderUtil;
 import com.liferay.commerce.checkout.web.internal.util.ShippingMethodCommerceCheckoutStep;
 import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
@@ -32,13 +31,13 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Andrea Di Giorgi
@@ -193,10 +192,6 @@ public class ShippingMethodCheckoutStepDisplayContext {
 		}
 
 		return commerceShippingOptions;
-	}
-
-	public boolean isCommerceOrderMultishipping() {
-		return CommerceOrderUtil.isCommerceOrderMultishipping(_commerceOrder);
 	}
 
 	public boolean isHideShippingPriceZero() throws PortalException {

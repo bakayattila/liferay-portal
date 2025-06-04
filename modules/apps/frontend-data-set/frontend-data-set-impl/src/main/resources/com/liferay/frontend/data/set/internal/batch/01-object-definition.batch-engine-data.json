@@ -13,6 +13,7 @@
 	},
 	"items": [
 		{
+			"defaultLanguageId": "en_US",
 			"externalReferenceCode": "L_DATA_SET",
 			"label": {
 				"en_US": "Data Set"
@@ -20,6 +21,23 @@
 			"modifiable": true,
 			"name": "DataSet",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "String",
 					"businessType": "Text",
@@ -151,6 +169,21 @@
 					},
 					"name": "listOfItemsPerPage",
 					"required": true,
+					"state": false,
+					"system": true,
+					"type": "String"
+				},
+				{
+					"DBType": "String",
+					"businessType": "Text",
+					"externalReferenceCode": "PROPS_TRANSFORMER",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Props Transformer"
+					},
+					"name": "propsTransformer",
+					"required": false,
 					"state": false,
 					"system": true,
 					"type": "String"
@@ -390,6 +423,7 @@
 			"titleObjectFieldName": "label"
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableLocalization": true,
 			"externalReferenceCode": "L_DATA_SET_ACTION",
 			"label": {
@@ -398,6 +432,23 @@
 			"modifiable": true,
 			"name": "DataSetAction",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "String",
 					"businessType": "Text",
@@ -636,6 +687,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"externalReferenceCode": "L_DATA_SET_CARDS_SECTION",
 			"label": {
 				"en_US": "Data Set Cards Section"
@@ -643,6 +695,23 @@
 			"modifiable": true,
 			"name": "DataSetCardsSection",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "String",
 					"businessType": "Text",
@@ -702,6 +771,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableLocalization": true,
 			"externalReferenceCode": "L_DATA_SET_CLIENT_EXTENSION_FILTER",
 			"label": {
@@ -710,6 +780,23 @@
 			"modifiable": true,
 			"name": "DataSetClientExtensionFilter",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "String",
 					"businessType": "Text",
@@ -772,6 +859,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableLocalization": true,
 			"externalReferenceCode": "L_DATA_SET_DATE_FILTER",
 			"label": {
@@ -780,6 +868,23 @@
 			"modifiable": true,
 			"name": "DataSetDateFilter",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "String",
 					"businessType": "Text",
@@ -874,6 +979,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"externalReferenceCode": "L_DATA_SET_LIST_SECTION",
 			"label": {
 				"en_US": "Data Set List Section"
@@ -881,6 +987,23 @@
 			"modifiable": true,
 			"name": "DataSetListSection",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "String",
 					"businessType": "Text",
@@ -940,6 +1063,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableLocalization": true,
 			"externalReferenceCode": "L_DATA_SET_SELECTION_FILTER",
 			"label": {
@@ -948,6 +1072,23 @@
 			"modifiable": true,
 			"name": "DataSetSelectionFilter",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "String",
 					"businessType": "Text",
@@ -1154,6 +1295,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableLocalization": true,
 			"externalReferenceCode": "L_DATA_SET_SORT",
 			"label": {
@@ -1162,6 +1304,23 @@
 			"modifiable": true,
 			"name": "DataSetSort",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "Boolean",
 					"businessType": "Boolean",
@@ -1240,6 +1399,7 @@
 			"system": true
 		},
 		{
+			"defaultLanguageId": "en_US",
 			"enableLocalization": true,
 			"externalReferenceCode": "L_DATA_SET_TABLE_SECTION",
 			"label": {
@@ -1248,6 +1408,23 @@
 			"modifiable": true,
 			"name": "DataSetTableSection",
 			"objectFields": [
+				{
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": true,
+					"externalReferenceCode": "ACTIVE",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Active"
+					},
+					"localized": false,
+					"name": "active",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Boolean"
+				},
 				{
 					"DBType": "String",
 					"businessType": "Text",

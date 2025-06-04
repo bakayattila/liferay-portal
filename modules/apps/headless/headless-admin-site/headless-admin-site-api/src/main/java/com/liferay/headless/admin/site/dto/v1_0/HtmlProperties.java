@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: (c) 2024 Liferay, Inc. https://liferay.com
+ * SPDX-FileCopyrightText: (c) 2025 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
@@ -19,7 +19,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -29,20 +33,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Rubén Pulido
  * @generated
  */
 @Generated("")
-@GraphQLName(
-	description = "The page section's html properties", value = "HtmlProperties"
-)
+@GraphQLName("HtmlProperties")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "HtmlProperties")
 public class HtmlProperties implements Serializable {
@@ -55,8 +51,8 @@ public class HtmlProperties implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(HtmlProperties.class, json);
 	}
 
+	@io.swagger.v3.oas.annotations.media.Schema
 	@JsonGetter("htmlTag")
-	@Schema
 	@Valid
 	public HtmlTag getHtmlTag() {
 		if (_htmlTagSupplier != null) {
@@ -157,8 +153,8 @@ public class HtmlProperties implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.HtmlProperties",
 		name = "x-class-name"
 	)
@@ -168,7 +164,7 @@ public class HtmlProperties implements Serializable {
 	public static enum HtmlTag {
 
 		ARTICLE("Article"), ASIDE("Aside"), DIV("Div"), FOOTER("Footer"),
-		HEADER("Header"), MAIN("Main"), NAV("Nav"), SECTION("Section");
+		HEADER("Header"), NAV("Nav"), SECTION("Section");
 
 		@JsonCreator
 		public static HtmlTag create(String value) {

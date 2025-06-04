@@ -198,11 +198,13 @@ interface ObjectDefinition {
 	defaultLanguageId: Liferay.Language.Locale;
 	enableCategorization: boolean;
 	enableComments: boolean;
+	enableFriendlyURLCustomization: boolean;
 	enableIndexSearch: boolean;
 	enableLocalization: boolean;
 	enableObjectEntryDraft: boolean;
 	enableObjectEntryHistory: boolean;
 	externalReferenceCode: string;
+	friendlyURLSeparator: string;
 	id: number;
 	label: LocalizedValue<string>;
 	modifiable?: boolean;
@@ -509,12 +511,13 @@ interface ShowObjectDefinitionsModals {
 	addObjectDefinition: boolean;
 	addObjectField: boolean;
 	addObjectFolder: boolean;
-	bindToRootObjectDefinition: boolean;
 	deleteObjectDefinition: boolean;
 	deleteObjectFolder: boolean;
 	editObjectFolder: boolean;
 	importModal: boolean;
 	moveObjectDefinition: boolean;
+	objectDefinitionOnRootModelDeletionNotAllowed: boolean;
 	objectFieldDeletionNotAllowed: boolean;
-	unbindFromRootObjectDefinition: boolean;
 }
+
+type SubmitError = string | null;

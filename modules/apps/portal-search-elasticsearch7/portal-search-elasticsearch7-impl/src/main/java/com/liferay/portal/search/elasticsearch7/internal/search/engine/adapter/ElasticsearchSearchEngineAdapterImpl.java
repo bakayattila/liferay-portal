@@ -82,12 +82,12 @@ public class ElasticsearchSearchEngineAdapterImpl
 			 documentRequest instanceof BulkDocumentRequest)) {
 
 			BulkDocumentRequest bulkDocumentRequest =
-				_bulkDocumentRequestThreadLocal.get();
+				_bulkDocumentRequest.get();
 
 			if (bulkDocumentRequest == null) {
 				bulkDocumentRequest = new BulkDocumentRequest();
 
-				_bulkDocumentRequestThreadLocal.set(bulkDocumentRequest);
+				_bulkDocumentRequest.set(bulkDocumentRequest);
 
 				BulkDocumentRequest finalBulkDocumentRequest =
 					bulkDocumentRequest;
@@ -111,7 +111,7 @@ public class ElasticsearchSearchEngineAdapterImpl
 							throw _getRuntimeException(runtimeException);
 						}
 						finally {
-							_bulkDocumentRequestThreadLocal.remove();
+							_bulkDocumentRequest.remove();
 						}
 
 						return null;
@@ -138,21 +138,21 @@ public class ElasticsearchSearchEngineAdapterImpl
 			List<BulkableDocumentRequest<?>> bulkableDocumentRequests =
 				bulkDocumentRequest.getBulkableDocumentRequests();
 
-			if (bulkableDocumentRequests.size() >= _HIBERNATE_JDBC_BATCH_SIZE) {
-				try {
-					S documentResponse = documentRequest.accept(
-						_documentRequestExecutor);
-
-					bulkableDocumentRequests.clear();
-
-					return documentResponse;
-				}
-				catch (RuntimeException runtimeException) {
-					throw _getRuntimeException(runtimeException);
-				}
+			if (bulkableDocumentRequests.size() < _HIBERNATE_JDBC_BATCH_SIZE) {
+				return null;
 			}
 
-			return null;
+			try {
+				S documentResponse = documentRequest.accept(
+					_documentRequestExecutor);
+
+				bulkableDocumentRequests.clear();
+
+				return documentResponse;
+			}
+			catch (RuntimeException runtimeException) {
+				throw _getRuntimeException(runtimeException);
+			}
 		}
 
 		try {
@@ -243,10 +243,10 @@ public class ElasticsearchSearchEngineAdapterImpl
 	private static final int _HIBERNATE_JDBC_BATCH_SIZE = GetterUtil.getInteger(
 		PropsUtil.get(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE));
 
-	private static final ThreadLocal<BulkDocumentRequest>
-		_bulkDocumentRequestThreadLocal = new CentralizedThreadLocal<>(
+	private static final ThreadLocal<BulkDocumentRequest> _bulkDocumentRequest =
+		new CentralizedThreadLocal<>(
 			ElasticsearchSearchEngineAdapterImpl.class.getName() +
-				"._bulkDocumentRequestThreadLocal");
+				"._bulkDocumentRequest");
 
 	@Reference(target = "(search.engine.impl=Elasticsearch)")
 	private CCRRequestExecutor _ccrRequestExecutor;

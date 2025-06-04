@@ -28,12 +28,11 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import jakarta.ws.rs.core.Response;
+
 import java.math.BigDecimal;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -130,12 +129,12 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 				commercePriceList.getCommercePriceListId(),
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commercePriceEntryService.getCommercePriceEntriesCount(
 				commercePriceList.getCommercePriceListId());
 
 		return Page.of(
-			_toPriceEntries(commercePriceEntries), pagination, totalItems);
+			_toPriceEntries(commercePriceEntries), pagination, totalCount);
 	}
 
 	@Override
@@ -155,11 +154,11 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 			_commercePriceEntryService.getCommercePriceEntries(
 				id, pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commercePriceEntryService.getCommercePriceEntriesCount(id);
 
 		return Page.of(
-			_toPriceEntries(commercePriceEntries), pagination, totalItems);
+			_toPriceEntries(commercePriceEntries), pagination, totalCount);
 	}
 
 	@Override
@@ -284,14 +283,10 @@ public class PriceEntryResourceImpl extends BasePriceEntryResourceImpl {
 			List<CommercePriceEntry> commercePriceEntries)
 		throws Exception {
 
-		List<PriceEntry> priceEntries = new ArrayList<>();
-
-		for (CommercePriceEntry commercePriceEntry : commercePriceEntries) {
-			priceEntries.add(
-				_toPriceEntry(commercePriceEntry.getCommercePriceEntryId()));
-		}
-
-		return priceEntries;
+		return transform(
+			commercePriceEntries,
+			commercePriceEntry -> _toPriceEntry(
+				commercePriceEntry.getCommercePriceEntryId()));
 	}
 
 	private PriceEntry _toPriceEntry(Long commercePriceEntryId)

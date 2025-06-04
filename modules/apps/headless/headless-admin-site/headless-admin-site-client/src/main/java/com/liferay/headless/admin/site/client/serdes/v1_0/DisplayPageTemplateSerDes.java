@@ -9,6 +9,8 @@ import com.liferay.headless.admin.site.client.dto.v1_0.DisplayPageTemplate;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -17,8 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -161,6 +161,17 @@ public class DisplayPageTemplateSerDes {
 			sb.append(_escape(displayPageTemplate.getExternalReferenceCode()));
 
 			sb.append("\"");
+		}
+
+		if (displayPageTemplate.getFriendlyUrlHistory() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyUrlHistory\": ");
+
+			sb.append(
+				String.valueOf(displayPageTemplate.getFriendlyUrlHistory()));
 		}
 
 		if (displayPageTemplate.getFriendlyUrlPath_i18n() != null) {
@@ -371,6 +382,15 @@ public class DisplayPageTemplateSerDes {
 				String.valueOf(displayPageTemplate.getExternalReferenceCode()));
 		}
 
+		if (displayPageTemplate.getFriendlyUrlHistory() == null) {
+			map.put("friendlyUrlHistory", null);
+		}
+		else {
+			map.put(
+				"friendlyUrlHistory",
+				String.valueOf(displayPageTemplate.getFriendlyUrlHistory()));
+		}
+
 		if (displayPageTemplate.getFriendlyUrlPath_i18n() == null) {
 			map.put("friendlyUrlPath_i18n", null);
 		}
@@ -486,6 +506,11 @@ public class DisplayPageTemplateSerDes {
 				return false;
 			}
 			else if (Objects.equals(
+						jsonParserFieldName, "friendlyUrlHistory")) {
+
+				return false;
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "friendlyUrlPath_i18n")) {
 
 				return true;
@@ -576,6 +601,15 @@ public class DisplayPageTemplateSerDes {
 				if (jsonParserFieldValue != null) {
 					displayPageTemplate.setExternalReferenceCode(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyUrlHistory")) {
+
+				if (jsonParserFieldValue != null) {
+					displayPageTemplate.setFriendlyUrlHistory(
+						FriendlyUrlHistorySerDes.toDTO(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(
@@ -686,6 +720,10 @@ public class DisplayPageTemplateSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

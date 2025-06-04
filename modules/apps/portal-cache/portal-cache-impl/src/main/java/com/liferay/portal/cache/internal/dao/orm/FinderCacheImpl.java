@@ -159,6 +159,8 @@ public class FinderCacheImpl
 		}
 
 		if (cacheValue == null) {
+			finderPath.touch();
+
 			PortalCache<Serializable, Serializable> portalCache =
 				_getPortalCache(finderPath.getCacheName());
 
@@ -246,7 +248,7 @@ public class FinderCacheImpl
 	@Override
 	public void putResult(FinderPath finderPath, Object[] args, Object result) {
 		if (!_valueObjectFinderCacheEnabled || !CacheRegistryUtil.isActive() ||
-			(result == null)) {
+			(result == null) || !finderPath.isTouched()) {
 
 			return;
 		}
@@ -661,7 +663,7 @@ public class FinderCacheImpl
 		}
 
 		boolean ctAware = false;
-		boolean sharded = false;
+		boolean sharded = DBPartition.isPartitionEnabled();
 
 		ArgumentsResolverHolder argumentsResolverHolder =
 			_serviceTrackerMap.getService(modelImplClassName);
@@ -726,6 +728,11 @@ public class FinderCacheImpl
 						argumentsResolver.getClassName());
 
 					ctAware = CTModel.class.isAssignableFrom(modelImplClass);
+
+					if (DBPartition.isPartitionEnabled()) {
+						sharded = DBPartition.isPartitionedModel(
+							modelImplClass);
+					}
 
 					if (ctAware) {
 						break;

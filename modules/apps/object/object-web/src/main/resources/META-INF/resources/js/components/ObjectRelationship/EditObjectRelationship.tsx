@@ -10,7 +10,8 @@ import {
 	openToast,
 	saveAndReload,
 } from '@liferay/object-js-components-web';
-import React from 'react';
+import {ILearnResourceContext} from 'frontend-js-components-web';
+import React, {FormEvent, useState} from 'react';
 
 import {EditObjectRelationshipContent} from './EditObjectRelationshipContent';
 import {useObjectRelationshipForm} from './useObjectRelationshipForm';
@@ -18,6 +19,7 @@ import {useObjectRelationshipForm} from './useObjectRelationshipForm';
 interface EditObjectRelationshipProps {
 	baseResourceURL: string;
 	hasUpdateObjectDefinitionPermission: boolean;
+	learnResources: ILearnResourceContext;
 	objectDefinitionExternalReferenceCode: string;
 	objectRelationship: ObjectRelationship;
 	objectRelationshipDeletionTypes: LabelValueObject[];
@@ -28,18 +30,26 @@ interface EditObjectRelationshipProps {
 export default function EditObjectRelationship({
 	baseResourceURL,
 	hasUpdateObjectDefinitionPermission,
+	learnResources,
 	objectDefinitionExternalReferenceCode,
 	objectRelationship: initialValues,
 	objectRelationshipDeletionTypes,
 	parameterRequired,
 	restContextPath,
 }: EditObjectRelationshipProps) {
-	const onSubmit = async (objectRelationship: ObjectRelationship) => {
-		try {
-			if (!Liferay.FeatureFlags['LPS-187142']) {
-				delete objectRelationship.edge;
-			}
+	const [submitError, setSubmitError] = useState<SubmitError>(null);
 
+	const {errors, handleChange, handleValidate, setValues, values} =
+		useObjectRelationshipForm({
+			initialValues,
+			onSubmit: () => {},
+			parameterRequired,
+		});
+
+	const onSubmit = async (
+		objectRelationship: Partial<ObjectRelationship> = values
+	) => {
+		try {
 			await API.putObjectRelationship(objectRelationship);
 			saveAndReload();
 
@@ -52,21 +62,52 @@ export default function EditObjectRelationship({
 		catch (error: unknown) {
 			const {message} = error as Error;
 
-			openToast({message, type: 'danger'});
+			if (!Liferay.FeatureFlags['LPD-34594']) {
+				openToast({message, type: 'danger'});
+			}
+			else {
+				setSubmitError(message);
+			}
 		}
 	};
 
-	const {errors, handleChange, handleSubmit, setValues, values} =
-		useObjectRelationshipForm({
-			initialValues,
-			onSubmit,
-			parameterRequired,
-		});
+	const handleSubmit = (event: FormEvent) => {
+		event.preventDefault();
+
+		const validationErrors = handleValidate();
+
+		if (!Object.keys(validationErrors).length) {
+			onSubmit(values);
+		}
+	};
 
 	const readOnly =
 		!hasUpdateObjectDefinitionPermission ||
 		values.reverse ||
 		initialValues.system;
+
+	const handleInheritanceCheckboxChange = ({
+		target,
+	}: React.ChangeEvent<HTMLInputElement>) => {
+		if (target.checked) {
+			setValues({
+				...values,
+				edge: true,
+			});
+		}
+		else {
+			const parentWindow = Liferay.Util.getOpener();
+
+			parentWindow.Liferay.fire('openModalDisableInheritance', {
+				handleDisable: async () => {
+					setValues({
+						...values,
+						edge: false,
+					});
+				},
+			});
+		}
+	};
 
 	return (
 		<SidePanelForm
@@ -85,16 +126,20 @@ export default function EditObjectRelationship({
 				containerWrapper={Card}
 				errors={errors}
 				handleChange={handleChange}
+				learnResources={learnResources}
 				objectDefinitionExternalReferenceCode={
 					objectDefinitionExternalReferenceCode
 				}
 				objectRelationshipDeletionTypes={
 					objectRelationshipDeletionTypes
 				}
+				onChangeInheritanceCheckbox={handleInheritanceCheckboxChange}
+				onSubmit={onSubmit}
 				parameterRequired={parameterRequired}
 				readOnly={readOnly}
 				restContextPath={restContextPath}
 				setValues={setValues}
+				submitError={submitError}
 				values={values}
 			/>
 		</SidePanelForm>

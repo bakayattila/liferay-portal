@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.order.content.web.internal.fragment.renderer;
 
+import com.liferay.account.constants.AccountListTypeConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
@@ -30,6 +31,7 @@ import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.account.configuration.manager.AccountEntryAddressSubtypeConfigurationManagerUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
@@ -60,6 +62,11 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -74,11 +81,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -199,7 +201,8 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 			httpServletRequest.setAttribute(
 				"liferay-commerce:info-box:fieldValue",
 				_getFieldValue(
-					commerceOrder, field, fragmentRendererContext.getLocale()));
+					commerceOrder, field, httpServletRequest,
+					fragmentRendererContext.getLocale()));
 			httpServletRequest.setAttribute(
 				"liferay-commerce:info-box:fieldValueType",
 				_getEditableFieldValueType(field));
@@ -256,6 +259,9 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 
 		if (field.equals("billingAddress")) {
 			return HashMapBuilder.<String, Object>put(
+				"addressSubtypeConfiguration",
+				_getAddressSubtypeConfiguration(commerceOrder.getCompanyId())
+			).put(
 				"hasManageAddressesPermission",
 				() -> {
 					CommerceContext commerceContext =
@@ -346,6 +352,9 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 		}
 		else if (field.equals("shippingAddress")) {
 			return HashMapBuilder.<String, Object>put(
+				"addressSubtypeConfiguration",
+				_getAddressSubtypeConfiguration(commerceOrder.getCompanyId())
+			).put(
 				"hasManageAddressesPermission",
 				() -> {
 					CommerceContext commerceContext =
@@ -411,10 +420,38 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 		).put(
 			"street1", commerceAddress.getStreet1()
 		).put(
+			"subtype", commerceAddress.getSubtype(locale)
+		).put(
 			"zip", commerceAddress.getZip()
 		);
 
 		return jsonObject.toString();
+	}
+
+	private Map<String, String> _getAddressSubtypeConfiguration(
+		long companyId) {
+
+		return HashMapBuilder.put(
+			"billing",
+			AccountEntryAddressSubtypeConfigurationManagerUtil.
+				getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+					companyId,
+					AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS_TYPE_BILLING)
+		).put(
+			"billingAndShipping",
+			AccountEntryAddressSubtypeConfigurationManagerUtil.
+				getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+					companyId,
+					AccountListTypeConstants.
+						ACCOUNT_ENTRY_ADDRESS_TYPE_BILLING_AND_SHIPPING)
+		).put(
+			"shipping",
+			AccountEntryAddressSubtypeConfigurationManagerUtil.
+				getAddressSubtypeListTypeDefinitionExternalReferenceCode(
+					companyId,
+					AccountListTypeConstants.
+						ACCOUNT_ENTRY_ADDRESS_TYPE_SHIPPING)
+		).build();
 	}
 
 	private String _getConfigurationValue(
@@ -440,13 +477,20 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 	}
 
 	private String _getFieldValue(
-			CommerceOrder commerceOrder, String field, Locale locale)
+			CommerceOrder commerceOrder, String field,
+			HttpServletRequest httpServletRequest, Locale locale)
 		throws PortalException {
 
 		if (field.equals("accountInfo")) {
 			AccountEntry accountEntry = commerceOrder.getAccountEntry();
 
-			if (accountEntry == null) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			if ((accountEntry == null) ||
+				(accountEntry.isGuestAccount() && themeDisplay.isSignedIn())) {
+
 				return StringPool.BLANK;
 			}
 
@@ -477,9 +521,6 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 			return dateFormat.format(commerceOrder.getOrderDate());
 		}
 		else if (field.equals("notes")) {
-			return StringPool.BLANK;
-		}
-		else if (field.equals("orderSummary")) {
 			return StringPool.BLANK;
 		}
 		else if (field.equals("orderType")) {
@@ -571,11 +612,7 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 		String layoutMode = ParamUtil.getString(
 			originalHttpServletRequest, "p_l_mode", Constants.VIEW);
 
-		if (layoutMode.equals(Constants.EDIT)) {
-			return true;
-		}
-
-		return false;
+		return layoutMode.equals(Constants.EDIT);
 	}
 
 	private void _printPortletMessageInfo(
@@ -607,7 +644,7 @@ public class InfoBoxFragmentRenderer implements FragmentRenderer {
 	}
 
 	private static final String[] _READ_ONLY_FIELDS = {
-		"accountInfo", "channelName", "orderDate", "orderSummary", "orderType"
+		"accountInfo", "channelName", "orderDate", "orderType"
 	};
 
 	private static final Log _log = LogFactoryUtil.getLog(

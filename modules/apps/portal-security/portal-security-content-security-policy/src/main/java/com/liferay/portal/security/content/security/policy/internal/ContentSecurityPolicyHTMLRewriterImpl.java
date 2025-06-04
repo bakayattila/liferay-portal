@@ -7,8 +7,11 @@ package com.liferay.portal.security.content.security.policy.internal;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyHTMLRewriter;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProvider;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +23,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Iván Zaera Avellón
@@ -29,10 +33,18 @@ public class ContentSecurityPolicyHTMLRewriterImpl
 	implements ContentSecurityPolicyHTMLRewriter {
 
 	@Override
-	public String rewriteInlineEventHandlers(
-		String html, String nonce, boolean recursive) {
+	public String rewriteInlineAttributes(
+		String html, HttpServletRequest httpServletRequest, boolean recursive) {
 
-		StringBundler sb = new StringBundler();
+		String nonce = _contentSecurityPolicyNonceProvider.getNonce(
+			httpServletRequest);
+
+		if (Validator.isBlank(nonce)) {
+			return html;
+		}
+
+		StringBundler scriptSB = new StringBundler();
+		StringBundler styleSB = new StringBundler();
 
 		Document document = Jsoup.parse(html);
 
@@ -41,24 +53,37 @@ public class ContentSecurityPolicyHTMLRewriterImpl
 		boolean containsBody = _containsBody(html);
 
 		if (containsBody) {
-			_extractInlineHandlers(bodyElement, recursive, sb);
+			_extractInlineHandlers(bodyElement, recursive, scriptSB);
+			_extractInlineStyles(bodyElement, recursive, styleSB);
 		}
 		else {
 			for (Element childElement : bodyElement.children()) {
-				_extractInlineHandlers(childElement, recursive, sb);
+				_extractInlineHandlers(childElement, recursive, scriptSB);
+				_extractInlineStyles(childElement, recursive, styleSB);
 			}
 		}
 
-		if (sb.length() == 0) {
+		if ((scriptSB.length() == 0) && (styleSB.length() == 0)) {
 			return html;
 		}
 
-		Element element = new Element("script");
+		if (scriptSB.length() != 0) {
+			Element element = new Element("script");
 
-		element.attr("nonce", nonce);
-		element.html(sb.toString());
+			element.attr("nonce", nonce);
+			element.html(scriptSB.toString());
 
-		bodyElement.appendChild(element);
+			bodyElement.appendChild(element);
+		}
+
+		if (styleSB.length() != 0) {
+			Element element = new Element("style");
+
+			element.attr("nonce", nonce);
+			element.html(styleSB.toString());
+
+			bodyElement.prependChild(element);
+		}
 
 		if (containsBody) {
 			return bodyElement.outerHtml();
@@ -123,5 +148,39 @@ public class ContentSecurityPolicyHTMLRewriterImpl
 			}
 		}
 	}
+
+	private void _extractInlineStyles(
+		Element element, boolean recursive, StringBundler sb) {
+
+		String style = element.attr("style");
+
+		if (!Validator.isBlank(style)) {
+			String id = element.attr("id");
+
+			if (Validator.isBlank(id)) {
+				id = StringUtil.randomId(8);
+
+				element.attr("id", id);
+			}
+
+			sb.append("#");
+			sb.append(id);
+			sb.append("{");
+			sb.append(style);
+			sb.append("}");
+
+			element.removeAttr("style");
+		}
+
+		if (recursive) {
+			for (Element childElement : element.children()) {
+				_extractInlineStyles(childElement, recursive, sb);
+			}
+		}
+	}
+
+	@Reference
+	private ContentSecurityPolicyNonceProvider
+		_contentSecurityPolicyNonceProvider;
 
 }

@@ -8,6 +8,9 @@ package com.liferay.journal.web.internal.display.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.model.JournalFolder;
+import com.liferay.journal.service.JournalFolderLocalService;
+import com.liferay.journal.test.util.JournalFolderFixture;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -17,6 +20,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstants;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -36,14 +40,18 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portlet.test.MockLiferayPortletContext;
 
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletURL;
+
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.Portlet;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,7 +69,9 @@ public class JournalDisplayContextTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -77,6 +87,20 @@ public class JournalDisplayContextTest {
 	}
 
 	@Test
+	public void testGetPortletURLWithHighlightedDDMStructureIdParameter()
+		throws Exception {
+
+		PortletURL portletURL = _getPortletURL("123456", "tab1");
+
+		Assert.assertNotNull(portletURL);
+
+		String portletURLString = portletURL.toString();
+
+		Assert.assertTrue(
+			portletURLString.contains("highlightedDDMStructureId=123456"));
+	}
+
+	@Test
 	public void testGetSearchContainer() throws Exception {
 		int count = 5;
 
@@ -87,6 +111,24 @@ public class JournalDisplayContextTest {
 		SearchContainer<Object> searchContainer = _getSearchContainer();
 
 		Assert.assertEquals(count, searchContainer.getTotal());
+	}
+
+	@Test
+	public void testGetSearchContainerWithJournalFolderFixture()
+		throws Exception {
+
+		JournalFolderFixture journalFolderFixture = new JournalFolderFixture(
+			_journalFolderLocalService);
+
+		for (int i = 1; i <= 21; i++) {
+			journalFolderFixture.addFolder(_group.getGroupId(), "Folder " + i);
+		}
+
+		SearchContainer<Object> searchContainer = _getSearchContainer();
+
+		List<Object> results = searchContainer.getResults();
+
+		Assert.assertEquals(results.toString(), 20, results.size());
 	}
 
 	@Test
@@ -105,6 +147,25 @@ public class JournalDisplayContextTest {
 			"Example", 1, 4);
 
 		Assert.assertEquals(count, searchContainer.getTotal());
+	}
+
+	@Test
+	public void testIsShowBreadcrumb() throws Exception {
+		JournalFolderFixture journalFolderFixture = new JournalFolderFixture(
+			_journalFolderLocalService);
+
+		Assert.assertFalse(
+			_isShowBreadcrumb(
+				"",
+				journalFolderFixture.addFolder(
+					_group.getGroupId(), RandomTestUtil.randomString())));
+
+		Assert.assertFalse(_isShowBreadcrumb("test", null));
+		Assert.assertTrue(
+			_isShowBreadcrumb(
+				"test",
+				journalFolderFixture.addFolder(
+					_group.getGroupId(), RandomTestUtil.randomString())));
 	}
 
 	private void _addJournalArticle(String title) throws Exception {
@@ -151,6 +212,23 @@ public class JournalDisplayContextTest {
 		return mockLiferayPortletRenderRequest;
 	}
 
+	private PortletURL _getPortletURL(
+			String highlightedDDMStructureId, String tab)
+		throws Exception {
+
+		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
+			_renderPortlet();
+
+		mockLiferayPortletRenderRequest.setParameter(
+			"highlightedDDMStructureId", highlightedDDMStructureId);
+
+		return ReflectionTestUtil.invoke(
+			mockLiferayPortletRenderRequest.getAttribute(
+				"com.liferay.journal.web.internal.display.context." +
+					"JournalDisplayContext"),
+			"getPortletURL", new Class<?>[] {String.class}, tab);
+	}
+
 	private SearchContainer<Object> _getSearchContainer() throws Exception {
 		return _getSearchContainer(
 			StringPool.BLANK, SearchContainer.DEFAULT_CUR,
@@ -168,6 +246,9 @@ public class JournalDisplayContextTest {
 			SearchContainer.DEFAULT_CUR_PARAM, String.valueOf(cur));
 		mockLiferayPortletRenderRequest.setParameter(
 			SearchContainer.DEFAULT_DELTA_PARAM, String.valueOf(delta));
+
+		mockLiferayPortletRenderRequest.setParameter(
+			Field.STATUS, String.valueOf(WorkflowConstants.STATUS_APPROVED));
 
 		if (Validator.isNotNull(keywords)) {
 			mockLiferayPortletRenderRequest.setParameter("keywords", keywords);
@@ -194,6 +275,23 @@ public class JournalDisplayContextTest {
 		return themeDisplay;
 	}
 
+	private boolean _isShowBreadcrumb(
+			String keywords, JournalFolder journalFolder)
+		throws Exception {
+
+		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
+			_renderPortlet();
+
+		mockLiferayPortletRenderRequest.setParameter("keywords", keywords);
+
+		return ReflectionTestUtil.invoke(
+			mockLiferayPortletRenderRequest.getAttribute(
+				"com.liferay.journal.web.internal.display.context." +
+					"JournalDisplayContext"),
+			"isShowBreadcrumb", new Class<?>[] {JournalFolder.class},
+			journalFolder);
+	}
+
 	private MockLiferayPortletRenderRequest _renderPortlet() throws Exception {
 		MockLiferayPortletRenderRequest mockLiferayPortletRenderRequest =
 			_getMockLiferayPortletRenderRequest();
@@ -214,6 +312,9 @@ public class JournalDisplayContextTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private JournalFolderLocalService _journalFolderLocalService;
 
 	@Inject(
 		filter = "component.name=com.liferay.journal.web.internal.portlet.JournalPortlet"

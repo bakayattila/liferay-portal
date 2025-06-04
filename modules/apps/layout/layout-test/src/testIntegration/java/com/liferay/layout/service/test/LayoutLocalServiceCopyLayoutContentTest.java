@@ -38,7 +38,12 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
 import com.liferay.layout.provider.LayoutStructureProvider;
+import com.liferay.layout.seo.model.LayoutSEOEntry;
+import com.liferay.layout.seo.model.LayoutSEOEntryCustomMetaTag;
+import com.liferay.layout.seo.model.LayoutSEOEntryCustomMetaTagProperty;
+import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.layout.test.constants.LayoutPortletKeys;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
@@ -103,7 +108,12 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
+import com.liferay.segments.test.util.SegmentsTestUtil;
+
+import jakarta.portlet.Portlet;
+import jakarta.portlet.PortletPreferences;
 
 import java.awt.image.BufferedImage;
 
@@ -111,6 +121,7 @@ import java.io.ByteArrayOutputStream;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -118,9 +129,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
-
-import javax.portlet.Portlet;
-import javax.portlet.PortletPreferences;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -253,6 +261,57 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 			ListUtil.isNotEmpty(
 				_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
 					_group.getGroupId(), targetLayout.getPlid())));
+	}
+
+	@Test
+	public void testCopyContentLayoutStructureWithSegmentsExperiences()
+		throws Exception {
+
+		Layout targetLayout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout sourceLayout = targetLayout.fetchDraftLayout();
+
+		LayoutPageTemplateStructure layoutPageTemplateStructure =
+			_layoutPageTemplateStructureLocalService.
+				fetchLayoutPageTemplateStructure(
+					_group.getGroupId(), sourceLayout.getPlid());
+
+		SegmentsExperience segmentsExperience1 =
+			SegmentsTestUtil.addSegmentsExperience(
+				_group.getGroupId(), sourceLayout.getPlid());
+
+		_layoutPageTemplateStructureRelLocalService.
+			addLayoutPageTemplateStructureRel(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				layoutPageTemplateStructure.getLayoutPageTemplateStructureId(),
+				segmentsExperience1.getSegmentsExperienceId(),
+				layoutPageTemplateStructure.getDefaultSegmentsExperienceData(),
+				ServiceContextTestUtil.getServiceContext(
+					_group.getGroupId(), TestPropsValues.getUserId()));
+
+		SegmentsExperience segmentsExperience2 =
+			SegmentsTestUtil.addSegmentsExperience(
+				_group.getGroupId(), sourceLayout.getPlid());
+
+		_layoutPageTemplateStructureRelLocalService.
+			addLayoutPageTemplateStructureRel(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				layoutPageTemplateStructure.getLayoutPageTemplateStructureId(),
+				segmentsExperience2.getSegmentsExperienceId(),
+				layoutPageTemplateStructure.getDefaultSegmentsExperienceData(),
+				ServiceContextTestUtil.getServiceContext(
+					_group.getGroupId(), TestPropsValues.getUserId()));
+
+		_layoutLocalService.copyLayoutContent(sourceLayout, targetLayout);
+
+		_assertSegmentsExperiences(sourceLayout, targetLayout, 3);
+
+		_segmentsExperienceLocalService.updateSegmentsExperiencePriority(
+			segmentsExperience2.getSegmentsExperienceId(), 1);
+
+		_layoutLocalService.copyLayoutContent(sourceLayout, targetLayout);
+
+		_assertSegmentsExperiences(sourceLayout, targetLayout, 3);
 	}
 
 	@Test
@@ -649,7 +708,10 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 		_layoutLocalService.copyLayoutContent(
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				sourceLayout.getPlid()),
-			sourceLayout, targetLayout);
+			sourceLayout,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				targetLayout.getPlid()),
+			targetLayout);
 
 		resourcePermissions =
 			_resourcePermissionLocalService.getResourcePermissions(
@@ -767,12 +829,82 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 	}
 
 	@Test
+	public void testCopyLayoutSEOEntryWithLayoutSEOEntryCustomMetaTags()
+		throws Exception {
+
+		Layout sourceLayout = LayoutTestUtil.addTypePortletLayout(
+			_group.getGroupId(), StringPool.BLANK);
+
+		_layoutSEOEntryLocalService.updateLayoutSEOEntry(
+			sourceLayout.getUserId(), sourceLayout.getGroupId(),
+			sourceLayout.isPrivateLayout(), sourceLayout.getLayoutId(), false,
+			Collections.emptyMap(),
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId()));
+
+		_layoutSEOEntryLocalService.updateCustomMetaTags(
+			TestPropsValues.getUserId(), sourceLayout.getGroupId(), false,
+			sourceLayout.getLayoutId(),
+			Arrays.asList(
+				new LayoutSEOEntryCustomMetaTagProperty(
+					Collections.singletonMap(
+						LocaleUtil.getSiteDefault(), "content1"),
+					"property1"),
+				new LayoutSEOEntryCustomMetaTagProperty(
+					Collections.singletonMap(
+						LocaleUtil.getSiteDefault(), "content2"),
+					"property2")),
+			ServiceContextTestUtil.getServiceContext(
+				sourceLayout.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout targetLayout = LayoutTestUtil.addTypePortletLayout(
+			_group.getGroupId(), StringPool.BLANK);
+
+		_layoutLocalService.copyLayoutContent(sourceLayout, targetLayout);
+
+		LayoutSEOEntry targetLayoutSEOEntry =
+			_layoutSEOEntryLocalService.fetchLayoutSEOEntry(
+				targetLayout.getGroupId(), targetLayout.isPrivateLayout(),
+				targetLayout.getLayoutId());
+
+		List<LayoutSEOEntryCustomMetaTag> layoutSEOEntryCustomMetaTags =
+			_layoutSEOEntryLocalService.getLayoutSEOEntryCustomMetaTags(
+				targetLayoutSEOEntry.getGroupId(),
+				targetLayoutSEOEntry.getLayoutSEOEntryId());
+
+		Assert.assertFalse(layoutSEOEntryCustomMetaTags.isEmpty());
+		Assert.assertEquals(
+			layoutSEOEntryCustomMetaTags.toString(), 2,
+			layoutSEOEntryCustomMetaTags.size());
+
+		LayoutSEOEntryCustomMetaTag firstLayoutSEOEntryCustomMetaTag =
+			layoutSEOEntryCustomMetaTags.get(0);
+
+		Assert.assertEquals(
+			"property1", firstLayoutSEOEntryCustomMetaTag.getProperty());
+		Assert.assertEquals(
+			"content1",
+			firstLayoutSEOEntryCustomMetaTag.getContent(
+				LocaleUtil.getSiteDefault()));
+
+		LayoutSEOEntryCustomMetaTag secondLayoutSEOEntryCustomMetaTag =
+			layoutSEOEntryCustomMetaTags.get(1);
+
+		Assert.assertEquals(
+			"property2", secondLayoutSEOEntryCustomMetaTag.getProperty());
+		Assert.assertEquals(
+			"content2",
+			secondLayoutSEOEntryCustomMetaTag.getContent(
+				LocaleUtil.getSiteDefault()));
+	}
+
+	@Test
 	public void testCopyMasterLayoutContentWithOrphanPortletPreferences()
 		throws Exception {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, null,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
@@ -955,7 +1087,7 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				null, _group.getGroupId(), 0,
+				null, _group.getGroupId(), 0, null,
 				_portal.getClassNameId(AssetCategory.class.getName()), 0,
 				RandomTestUtil.randomString(), 0,
 				WorkflowConstants.STATUS_DRAFT, serviceContext);
@@ -1020,7 +1152,7 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), null,
 			RandomTestUtil.randomString(), null, html, null, false, null, null,
-			0, false, FragmentConstants.TYPE_COMPONENT, null,
+			0, false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -1211,6 +1343,34 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 		}
 	}
 
+	private void _assertSegmentsExperiences(
+		Layout sourceLayout, Layout targetLayout, int totalCount) {
+
+		Assert.assertEquals(
+			totalCount,
+			_segmentsExperienceLocalService.getSegmentsExperiencesCount(
+				_group.getGroupId(), sourceLayout.getPlid()));
+		Assert.assertEquals(
+			totalCount,
+			_segmentsExperienceLocalService.getSegmentsExperiencesCount(
+				_group.getGroupId(), targetLayout.getPlid()));
+
+		for (SegmentsExperience sourceSegmentsExperience :
+				_segmentsExperienceLocalService.getSegmentsExperiences(
+					_group.getGroupId(), sourceLayout.getPlid())) {
+
+			SegmentsExperience targetSegmentsExperience =
+				_segmentsExperienceLocalService.fetchSegmentsExperience(
+					_group.getGroupId(),
+					sourceSegmentsExperience.getSegmentsExperienceKey(),
+					targetLayout.getPlid());
+
+			Assert.assertEquals(
+				targetSegmentsExperience.getPriority(),
+				sourceSegmentsExperience.getPriority());
+		}
+	}
+
 	private String _getLayoutContent(Layout layout, Locale locale)
 		throws Exception {
 
@@ -1288,6 +1448,13 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject
+	private LayoutPageTemplateStructureRelLocalService
+		_layoutPageTemplateStructureRelLocalService;
+
+	@Inject
+	private LayoutSEOEntryLocalService _layoutSEOEntryLocalService;
+
+	@Inject
 	private LayoutServiceContextHelper _layoutServiceContextHelper;
 
 	@Inject
@@ -1300,7 +1467,7 @@ public class LayoutLocalServiceCopyLayoutContentTest {
 	private Portal _portal;
 
 	@Inject(
-		filter = "javax.portlet.name=" + LayoutPortletKeys.LAYOUT_TEST_PORTLET
+		filter = "jakarta.portlet.name=" + LayoutPortletKeys.LAYOUT_TEST_PORTLET
 	)
 	private final Portlet _portlet = null;
 

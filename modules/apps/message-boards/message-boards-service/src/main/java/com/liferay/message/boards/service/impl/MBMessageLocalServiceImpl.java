@@ -139,6 +139,10 @@ import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.social.kernel.model.SocialActivityConstants;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
+import jakarta.portlet.PortletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -154,10 +158,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.portlet.PortletRequest;
-
-import javax.servlet.http.HttpServletRequest;
 
 import net.htmlparser.jericho.Source;
 import net.htmlparser.jericho.StartTag;
@@ -2358,12 +2358,23 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			return uniqueUrlSubject;
 		}
 
-		if (!StringUtil.endsWith(uniqueUrlSubject, StringPool.DASH)) {
-			urlSubject = urlSubject + StringPool.DASH;
-		}
+		int maxLength = ModelHintsUtil.getMaxLength(
+			MBMessage.class.getName(), "urlSubject");
 
 		for (int i = 1; mbMessage != null; i++) {
-			uniqueUrlSubject = urlSubject + i;
+			String suffix = StringPool.DASH + i;
+
+			if (urlSubject.length() > (maxLength - suffix.length())) {
+				urlSubject = urlSubject.substring(
+					0, maxLength - suffix.length());
+			}
+
+			if (urlSubject.endsWith(StringPool.DASH)) {
+				uniqueUrlSubject = urlSubject + i;
+			}
+			else {
+				uniqueUrlSubject = urlSubject + suffix;
+			}
 
 			mbMessage = mbMessagePersistence.fetchByG_US(
 				groupId, uniqueUrlSubject);

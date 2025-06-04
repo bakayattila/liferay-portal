@@ -16,12 +16,12 @@ export class AssetPublisherPage {
 		this.page = page;
 
 		this.configurationIframe = this.page.frameLocator(
-			'iframe[title*="Asset Publisher"]'
+			'iframe[title*="Configuration"]'
 		);
 	}
 
 	async changeAssetSelection(type: 'Collection' | 'Dynamic' | 'Manual') {
-		await this.configurationIframe.getByLabel(type, {exact: true}).click();
+		await this.configurationIframe.getByLabel(type).click();
 
 		await waitForAlert(
 			this.configurationIframe,
@@ -46,6 +46,33 @@ export class AssetPublisherPage {
 		await waitForAlert(
 			this.configurationIframe,
 			'Success:The collection was created successfully.'
+		);
+	}
+
+	async addFileFromAssetPublisher(fileName: string) {
+		await this.page.getByLabel('Title Required').fill(fileName);
+
+		await this.page.getByRole('button', {name: 'Publish'}).click();
+
+		// Using first() locator instance of this one until LPD-41787 is fixed
+		// await waitForAlert(this.page);
+
+		await this.page
+			.locator('.alert-success', {
+				hasText: 'Success:Your request completed successfully.',
+			})
+			.first()
+			.waitFor();
+	}
+
+	async saveConfiguration() {
+		await this.configurationIframe
+			.getByRole('button', {name: 'Save'})
+			.click();
+
+		await waitForAlert(
+			this.configurationIframe,
+			'Success:You have successfully updated the setup.'
 		);
 	}
 }

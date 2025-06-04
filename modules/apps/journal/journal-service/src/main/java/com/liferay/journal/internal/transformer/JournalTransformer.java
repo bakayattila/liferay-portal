@@ -61,6 +61,7 @@ import com.liferay.portal.kernel.templateparser.TransformerListener;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -72,6 +73,11 @@ import com.liferay.portal.kernel.xml.Attribute;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.DocumentException;
 import com.liferay.portal.kernel.xml.Element;
+
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 
@@ -85,11 +91,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Brian Wing Shun Chan
@@ -112,8 +113,7 @@ public class JournalTransformer {
 			String script, ThemeDisplay themeDisplay, String viewMode)
 		throws Exception {
 
-		Set<String> transformedArticleIds =
-			_transformedArticleIdsThreadLocal.get();
+		Set<String> transformedArticleIds = _transformedArticleIds.get();
 
 		String articleId = article.getArticleId();
 
@@ -499,6 +499,9 @@ public class JournalTransformer {
 			if (dataJSONArray.length() != 0) {
 				data = JSONUtil.toString(dataJSONArray);
 			}
+		}
+		else if (type.equals(DDMFormFieldTypeConstants.TEXT)) {
+			data = HtmlUtil.escape(data);
 		}
 
 		if (dynamicContentElement != null) {
@@ -1080,10 +1083,9 @@ public class JournalTransformer {
 		JournalTransformer.class.getName() + ".XmlAfterListener");
 	private static final Log _logXmlBeforeListener = LogFactoryUtil.getLog(
 		JournalTransformer.class.getName() + ".XmlBeforeListener");
-	private static final ThreadLocal<Set<String>>
-		_transformedArticleIdsThreadLocal = new CentralizedThreadLocal<>(
-			JournalTransformer.class.getName() +
-				"._transformedArticleIdsThreadLocal",
+	private static final ThreadLocal<Set<String>> _transformedArticleIds =
+		new CentralizedThreadLocal<>(
+			JournalTransformer.class.getName() + "._transformedArticleIds",
 			HashSet::new);
 
 }

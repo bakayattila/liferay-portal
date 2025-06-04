@@ -38,8 +38,6 @@ import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -51,18 +49,18 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -217,23 +215,11 @@ public class InfoFieldItemSelectorViewDescriptor
 			SegmentsExperienceLocalServiceUtil.fetchSegmentsExperience(
 				_segmentsExperienceId);
 
-		if (segmentsExperience == null) {
-			return Collections.emptyList();
-		}
-
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(
-			segmentsExperience.getPlid());
-
-		if (layout == null) {
-			return Collections.emptyList();
-		}
-
-		Layout draftLayout = layout.fetchDraftLayout();
-
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			LayoutPageTemplateStructureLocalServiceUtil.
 				fetchLayoutPageTemplateStructure(
-					draftLayout.getGroupId(), draftLayout.getPlid());
+					segmentsExperience.getGroupId(),
+					segmentsExperience.getPlid());
 
 		if (layoutPageTemplateStructure == null) {
 			return Collections.emptyList();

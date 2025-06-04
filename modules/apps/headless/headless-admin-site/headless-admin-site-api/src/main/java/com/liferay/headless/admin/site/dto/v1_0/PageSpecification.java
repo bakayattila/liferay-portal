@@ -21,7 +21,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -31,19 +35,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Rubén Pulido
  * @generated
  */
 @Generated("")
 @GraphQLName(
-	description = "A page specification of a content page, content page template, widget page, or widget page template. A content page may contain 0 or 1 page specifications in draft status and 0 or 1 page specifications in published status. A widget page contains only 1 page specification in published status.",
+	description = "A page specification of a content page, content page template, widget page, or widget page template. A content page will contain 1 page specifications for its draft layout and 1 page specifications for its published layout. A widget page contains only 1 page specification for its published layout.",
 	value = "PageSpecification"
 )
 @JsonFilter("Liferay.Vulcan")
@@ -74,7 +72,7 @@ public abstract class PageSpecification implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(PageSpecification.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The page specification's external reference code, unique per site."
 	)
 	public String getExternalReferenceCode() {
@@ -119,7 +117,7 @@ public abstract class PageSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<String> _externalReferenceCodeSupplier;
 
-	@Schema
+	@io.swagger.v3.oas.annotations.media.Schema
 	@Valid
 	public Settings getSettings() {
 		if (_settingsSupplier != null) {
@@ -161,8 +159,66 @@ public abstract class PageSpecification implements Serializable {
 	@JsonIgnore
 	private Supplier<Settings> _settingsSupplier;
 
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The status of the page specification."
+	)
+	@JsonGetter("status")
+	@Valid
+	public Status getStatus() {
+		if (_statusSupplier != null) {
+			status = _statusSupplier.get();
+
+			_statusSupplier = null;
+		}
+
+		return status;
+	}
+
+	@JsonIgnore
+	public String getStatusAsString() {
+		Status status = getStatus();
+
+		if (status == null) {
+			return null;
+		}
+
+		return status.toString();
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+
+		_statusSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setStatus(
+		UnsafeSupplier<Status, Exception> statusUnsafeSupplier) {
+
+		_statusSupplier = () -> {
+			try {
+				return statusUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The status of the page specification.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Status status;
+
+	@JsonIgnore
+	private Supplier<Status> _statusSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The type of the page specification."
+	)
 	@JsonGetter("type")
-	@Schema(description = "The type of the page specification.")
 	@Valid
 	public Type getType() {
 		if (_typeSupplier != null) {
@@ -268,6 +324,22 @@ public abstract class PageSpecification implements Serializable {
 			sb.append(String.valueOf(settings));
 		}
 
+		Status status = getStatus();
+
+		if (status != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append("\"");
+
+			sb.append(status);
+
+			sb.append("\"");
+		}
+
 		Type type = getType();
 
 		if (type != null) {
@@ -289,12 +361,50 @@ public abstract class PageSpecification implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.PageSpecification",
 		name = "x-class-name"
 	)
 	public String xClassName;
+
+	@GraphQLName("Status")
+	public static enum Status {
+
+		APPROVED("Approved"), DRAFT("Draft");
+
+		@JsonCreator
+		public static Status create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
+			for (Status status : values()) {
+				if (Objects.equals(status.getValue(), value)) {
+					return status;
+				}
+			}
+
+			throw new IllegalArgumentException("Invalid enum value: " + value);
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private Status(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
 
 	@GraphQLName("Type")
 	public static enum Type {

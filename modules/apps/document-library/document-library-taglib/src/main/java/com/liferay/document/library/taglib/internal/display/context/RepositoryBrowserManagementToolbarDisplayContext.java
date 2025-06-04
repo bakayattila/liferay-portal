@@ -26,10 +26,10 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.List;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Adolfo Pérez
@@ -69,11 +69,7 @@ public class RepositoryBrowserManagementToolbarDisplayContext
 
 				User user = _themeDisplay.getUser();
 
-				if (user.isGuestUser()) {
-					return false;
-				}
-
-				return true;
+				return !user.isGuestUser();
 			},
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteEntries");
@@ -154,11 +150,7 @@ public class RepositoryBrowserManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isSelectable() {
-		if (_actions.isEmpty()) {
-			return false;
-		}
-
-		return true;
+		return !_actions.isEmpty();
 	}
 
 	@Override

@@ -9,13 +9,13 @@ import com.liferay.headless.admin.site.client.dto.v1_0.WidgetPageSection;
 import com.liferay.headless.admin.site.client.dto.v1_0.WidgetPageSpecification;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -102,6 +102,20 @@ public class WidgetPageSpecificationSerDes {
 			sb.append(String.valueOf(widgetPageSpecification.getSettings()));
 		}
 
+		if (widgetPageSpecification.getStatus() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"status\": ");
+
+			sb.append("\"");
+
+			sb.append(widgetPageSpecification.getStatus());
+
+			sb.append("\"");
+		}
+
 		if (widgetPageSpecification.getType() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -166,6 +180,14 @@ public class WidgetPageSpecificationSerDes {
 				String.valueOf(widgetPageSpecification.getSettings()));
 		}
 
+		if (widgetPageSpecification.getStatus() == null) {
+			map.put("status", null);
+		}
+		else {
+			map.put(
+				"status", String.valueOf(widgetPageSpecification.getStatus()));
+		}
+
 		if (widgetPageSpecification.getType() == null) {
 			map.put("type", null);
 		}
@@ -200,6 +222,9 @@ public class WidgetPageSpecificationSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "settings")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "type")) {
@@ -244,6 +269,13 @@ public class WidgetPageSpecificationSerDes {
 				if (jsonParserFieldValue != null) {
 					widgetPageSpecification.setSettings(
 						SettingsSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				if (jsonParserFieldValue != null) {
+					widgetPageSpecification.setStatus(
+						WidgetPageSpecification.Status.create(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "type")) {
@@ -298,6 +330,10 @@ public class WidgetPageSpecificationSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

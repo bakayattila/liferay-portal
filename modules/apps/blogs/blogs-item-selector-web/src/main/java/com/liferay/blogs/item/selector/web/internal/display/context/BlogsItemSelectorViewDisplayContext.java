@@ -6,7 +6,7 @@
 package com.liferay.blogs.item.selector.web.internal.display.context;
 
 import com.liferay.blogs.configuration.BlogsFileUploadsConfiguration;
-import com.liferay.blogs.item.selector.criterion.BlogsItemSelectorCriterion;
+import com.liferay.blogs.item.selector.BlogsItemSelectorCriterion;
 import com.liferay.blogs.item.selector.web.internal.BlogsItemSelectorView;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
@@ -29,14 +29,14 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortletKeys;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Roberto Díaz
@@ -154,14 +154,10 @@ public class BlogsItemSelectorViewDisplayContext {
 			return true;
 		}
 
-		if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(
+		return !WorkflowDefinitionLinkLocalServiceUtil.
+			hasWorkflowDefinitionLink(
 				themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
-				BlogsEntry.class.getName())) {
-
-			return false;
-		}
-
-		return true;
+				BlogsEntry.class.getName());
 	}
 
 	private BlogsFileUploadsConfiguration _getBlogsFileUploadsConfiguration()

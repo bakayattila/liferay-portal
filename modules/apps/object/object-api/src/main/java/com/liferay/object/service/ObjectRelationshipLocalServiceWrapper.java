@@ -579,6 +579,16 @@ public class ObjectRelationshipLocalServiceWrapper
 			getObjectRelationshipsByObjectDefinitionId2(objectDefinitionId2);
 	}
 
+	@Override
+	public java.util.List<com.liferay.object.model.ObjectRelationship>
+		getObjectRelationshipsByObjectDefinitionId2(
+			long objectDefinitionId2, String type) {
+
+		return _objectRelationshipLocalService.
+			getObjectRelationshipsByObjectDefinitionId2(
+				objectDefinitionId2, type);
+	}
+
 	/**
 	 * Returns the number of object relationships.
 	 *
@@ -587,6 +597,15 @@ public class ObjectRelationshipLocalServiceWrapper
 	@Override
 	public int getObjectRelationshipsCount() {
 		return _objectRelationshipLocalService.getObjectRelationshipsCount();
+	}
+
+	@Override
+	public java.util.Map
+		<Long, java.util.List<com.liferay.object.model.ObjectRelationship>>
+			getObjectRelationshipsMap(long companyId) {
+
+		return _objectRelationshipLocalService.getObjectRelationshipsMap(
+			companyId);
 	}
 
 	/**
@@ -613,11 +632,14 @@ public class ObjectRelationshipLocalServiceWrapper
 	@Override
 	public void registerObjectRelationshipsRelatedInfoCollectionProviders(
 		com.liferay.object.model.ObjectDefinition objectDefinition1,
-		ObjectDefinitionLocalService objectDefinitionLocalService) {
+		ObjectDefinitionLocalService objectDefinitionLocalService,
+		java.util.List<com.liferay.object.model.ObjectRelationship>
+			objectRelationships) {
 
 		_objectRelationshipLocalService.
 			registerObjectRelationshipsRelatedInfoCollectionProviders(
-				objectDefinition1, objectDefinitionLocalService);
+				objectDefinition1, objectDefinitionLocalService,
+				objectRelationships);
 	}
 
 	/**
@@ -649,6 +671,14 @@ public class ObjectRelationshipLocalServiceWrapper
 		return _objectRelationshipLocalService.updateObjectRelationship(
 			externalReferenceCode, objectRelationshipId, parameterObjectFieldId,
 			deletionType, edge, labelMap, objectField);
+	}
+
+	@Override
+	public void updateUserId(long companyId, long oldUserId, long newUserId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_objectRelationshipLocalService.updateUserId(
+			companyId, oldUserId, newUserId);
 	}
 
 	@Override

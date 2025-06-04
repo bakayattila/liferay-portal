@@ -4,14 +4,18 @@
  */
 
 import ClayModal, {useModal} from '@clayui/modal';
-import {FeatureIndicator} from 'frontend-js-components-web';
 import React from 'react';
+
+import {useSelector} from '../contexts/StoreContext';
+import selectCanManageFragmentEntries from '../selectors/selectCanManageFragmentEntries';
 
 const KEY_LABEL = Liferay.Browser?.isMac() ? '⌘' : 'Ctrl';
 const OPTION_KEY_LABEL = Liferay.Browser?.isMac() ? '⌥' : 'Alt';
 
 export default function ShortcutModal({onCloseModal}) {
 	const {observer} = useModal({onClose: () => onCloseModal()});
+
+	const canManageFragments = useSelector(selectCanManageFragmentEntries);
 
 	return (
 		<ClayModal
@@ -38,12 +42,14 @@ export default function ShortcutModal({onCloseModal}) {
 					keyCombinations={['⌫']}
 				/>
 
-				<KeyboardShortcut
-					description={Liferay.Language.get(
-						'save-composition-for-containers-and-grids'
-					)}
-					keyCombinations={[KEY_LABEL, 'S']}
-				/>
+				{canManageFragments ? (
+					<KeyboardShortcut
+						description={Liferay.Language.get(
+							'save-composition-for-containers-and-grids'
+						)}
+						keyCombinations={[KEY_LABEL, 'S']}
+					/>
+				) : null}
 
 				<KeyboardShortcut
 					description={Liferay.Language.get('show-hide-fragment')}
@@ -55,29 +61,20 @@ export default function ShortcutModal({onCloseModal}) {
 					keyCombinations={[KEY_LABEL, OPTION_KEY_LABEL, 'R']}
 				/>
 
-				{Liferay.FeatureFlags['LPD-18221'] ? (
-					<KeyboardShortcut
-						betaFeatureIndicator
-						description={Liferay.Language.get('cut')}
-						keyCombinations={[KEY_LABEL, 'X']}
-					/>
-				) : null}
+				<KeyboardShortcut
+					description={Liferay.Language.get('cut')}
+					keyCombinations={[KEY_LABEL, 'X']}
+				/>
 
-				{Liferay.FeatureFlags['LPD-18221'] ? (
-					<KeyboardShortcut
-						betaFeatureIndicator
-						description={Liferay.Language.get('copy')}
-						keyCombinations={[KEY_LABEL, 'C']}
-					/>
-				) : null}
+				<KeyboardShortcut
+					description={Liferay.Language.get('copy')}
+					keyCombinations={[KEY_LABEL, 'C']}
+				/>
 
-				{Liferay.FeatureFlags['LPD-18221'] ? (
-					<KeyboardShortcut
-						betaFeatureIndicator
-						description={Liferay.Language.get('paste')}
-						keyCombinations={[KEY_LABEL, 'V']}
-					/>
-				) : null}
+				<KeyboardShortcut
+					description={Liferay.Language.get('paste')}
+					keyCombinations={[KEY_LABEL, 'V']}
+				/>
 
 				<p className="sheet-subtitle text-secondary">
 					{Liferay.Language.get('selection')}
@@ -88,27 +85,17 @@ export default function ShortcutModal({onCloseModal}) {
 					keyCombinations={['⇧', 'Enter']}
 				/>
 
-				{Liferay.FeatureFlags['LPD-18221'] ? (
-					<>
-						<KeyboardShortcut
-							betaFeatureIndicator
-							description={Liferay.Language.get(
-								'range-selection'
-							)}
-							keyCombinations={['⇧', 'Arrows']}
-						/>
-					</>
-				) : null}
+				<KeyboardShortcut
+					description={Liferay.Language.get('range-selection')}
+					keyCombinations={['⇧', 'Arrows']}
+				/>
 
-				{Liferay.FeatureFlags['LPD-18221'] ? (
-					<KeyboardShortcut
-						betaFeatureIndicator
-						description={Liferay.Language.get(
-							'noncontinuous-selection'
-						)}
-						keyCombinations={[KEY_LABEL, 'Enter']}
-					/>
-				) : null}
+				<KeyboardShortcut
+					description={Liferay.Language.get(
+						'noncontinuous-selection'
+					)}
+					keyCombinations={[KEY_LABEL, 'Enter']}
+				/>
 
 				<p className="sheet-subtitle text-secondary">
 					{Liferay.Language.get('view')}
@@ -123,11 +110,7 @@ export default function ShortcutModal({onCloseModal}) {
 	);
 }
 
-function KeyboardShortcut({
-	betaFeatureIndicator = false,
-	description,
-	keyCombinations,
-}) {
+function KeyboardShortcut({description, keyCombinations}) {
 	return (
 		<div className="align-items-center d-flex mb-3">
 			<div className="page-editor__shortcut-modal__shortcut text-right">
@@ -147,8 +130,6 @@ function KeyboardShortcut({
 			<p className="mb-0 ml-3 mr-2 page-editor__shortcut-modal__shortcut-description text-3 text-weight-semi-bold">
 				{description}
 			</p>
-
-			{betaFeatureIndicator ? <FeatureIndicator type="beta" /> : null}
 		</div>
 	);
 }

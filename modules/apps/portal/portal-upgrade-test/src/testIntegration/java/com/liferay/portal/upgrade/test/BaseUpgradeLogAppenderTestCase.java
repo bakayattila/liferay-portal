@@ -770,11 +770,11 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 				"Portal initial build number: 7100\n",
 				"Portal initial schema version: 1.0.0\n",
 				"Portal final build number: ", ReleaseInfo.getBuildNumber(),
-				StringPool.NEW_LINE, "Portal final schema version: ",
-				latestSchemaVersion, StringPool.NEW_LINE,
-				"Portal expected build number: ", ReleaseInfo.getBuildNumber(),
-				StringPool.NEW_LINE, "Portal expected schema version: ",
-				latestSchemaVersion, StringPool.NEW_LINE));
+				"\nPortal final schema version: ", latestSchemaVersion,
+				"\nPortal expected build number: ",
+				ReleaseInfo.getBuildNumber(),
+				"\nPortal expected schema version: ", latestSchemaVersion,
+				StringPool.NEW_LINE));
 	}
 
 	@Test
@@ -943,8 +943,9 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 
 	@Test
 	public void testUpgradeReportDisabled() throws Exception {
-		boolean originalUpgradeEnable = ReflectionTestUtil.getAndSetFieldValue(
-			PropsValues.class, "UPGRADE_REPORT_ENABLED", false);
+		boolean originalUpgradeReportEnabled =
+			ReflectionTestUtil.getAndSetFieldValue(
+				PropsValues.class, "UPGRADE_REPORT_ENABLED", false);
 
 		try {
 			_appender.start();
@@ -962,7 +963,7 @@ public abstract class BaseUpgradeLogAppenderTestCase {
 		finally {
 			ReflectionTestUtil.setFieldValue(
 				PropsValues.class, "UPGRADE_REPORT_ENABLED",
-				originalUpgradeEnable);
+				originalUpgradeReportEnabled);
 		}
 	}
 

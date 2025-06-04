@@ -5,16 +5,28 @@
 
 package com.liferay.marketplace;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
 import com.liferay.headless.admin.user.client.dto.v1_0.Account;
 import com.liferay.headless.admin.user.client.resource.v1_0.AccountResource;
-import com.liferay.headless.commerce.admin.catalog.client.pagination.Pagination;
+import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Product;
 import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.SkuResource;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.Order;
 import com.liferay.headless.commerce.admin.order.client.dto.v1_0.OrderItem;
 import com.liferay.headless.commerce.admin.order.client.pagination.Page;
+import com.liferay.headless.commerce.admin.order.client.pagination.Pagination;
 import com.liferay.marketplace.constants.MarketplaceConstants;
 import com.liferay.marketplace.service.KoroneikiService;
 import com.liferay.marketplace.service.MarketplaceService;
+import com.liferay.marketplace.util.MarketplaceUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
+
+import java.net.URL;
+
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 import java.util.Map;
 import java.util.Objects;
@@ -22,7 +34,6 @@ import java.util.Objects;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,8 +65,12 @@ public class MarketplaceRestController extends BaseRestController {
 		JSONObject commerceOrderJSONObject = jsonObject.getJSONObject(
 			"commerceOrder");
 
-		if (commerceOrderJSONObject.getInt("paymentStatus") !=
-				MarketplaceConstants.ORDER_PAYMENT_STATUS_COMPLETED) {
+		int paymentStatus = commerceOrderJSONObject.getInt("paymentStatus");
+
+		if ((paymentStatus !=
+				MarketplaceConstants.ORDER_PAYMENT_STATUS_COMPLETED) &&
+			(paymentStatus !=
+				MarketplaceConstants.ORDER_PAYMENT_STATUS_NOT_REQUIRED)) {
 
 			if (_log.isInfoEnabled()) {
 				_log.info(
@@ -76,15 +91,29 @@ public class MarketplaceRestController extends BaseRestController {
 		Page<OrderItem> orderItemPage =
 			_marketplaceService.getOrderItemResource(
 			).getOrderIdOrderItemsPage(
-				order.getId(),
-				com.liferay.headless.commerce.admin.order.client.pagination.
-					Pagination.of(1, 10)
+				order.getId(), Pagination.of(1, 10)
 			);
 
 		if (Objects.equals(
+				order.getOrderTypeExternalReferenceCode(),
+				"CLIENT_EXTENSION") ||
+			Objects.equals(
 				order.getOrderTypeExternalReferenceCode(), "CLOUDAPP")) {
 
 			_setUpCloudProductPurchase(order, orderItemPage);
+		}
+
+		if (Objects.equals(
+				order.getOrderTypeExternalReferenceCode(), "COMPOSITE_APP") ||
+			Objects.equals(
+				order.getOrderTypeExternalReferenceCode(),
+				"LOW_CODE_CONFIGURATION") ||
+			Objects.equals(
+				order.getOrderTypeExternalReferenceCode(), "OTHER")) {
+
+			_marketplaceService.updateOrder(
+				null, order.getId(),
+				MarketplaceConstants.ORDER_STATUS_COMPLETED);
 		}
 
 		if (Objects.equals(
@@ -94,34 +123,75 @@ public class MarketplaceRestController extends BaseRestController {
 		}
 	}
 
+	@PostMapping("product/submit")
+	public void postProductSubmit(
+			@AuthenticationPrincipal Jwt jwt, @RequestBody String json)
+		throws Exception {
+
+		if (_log.isInfoEnabled()) {
+			_log.info("POST product submit " + json);
+		}
+
+		JSONObject jsonObject = new JSONObject(json);
+
+		JSONObject modelCPDefinitionJSONObject = jsonObject.getJSONObject(
+			"modelCPDefinition");
+
+		Product product = _marketplaceService.getProduct(
+			modelCPDefinitionJSONObject.getLong("CProductId"));
+
+		_marketplaceService.postNotificationQueueEntry(
+			"marketplace-admin@liferay.com",
+			"MARKETPLACE-PRODUCT-SUBMIT-TEMPLATE",
+			new HashMapBuilder<String, Object>().put(
+				"[%CPDEFINITION_NAME%]",
+				product.getName(
+				).get(
+					modelCPDefinitionJSONObject.getString("defaultLanguageId")
+				)
+			).put(
+				"[%CPDEFINITION_THUMBNAIL%]",
+				new URL(
+					"http://" + lxcDXPMainDomain + product.getThumbnail()
+				).toString()
+			).put(
+				"[%CPDEFINITION_DEVELOPER_NAME%]",
+				_marketplaceService.getCatalog(
+					product.getCatalogId()
+				).getName()
+			).put(
+				"[%CPDEFINITION_URL%]",
+				new URL(
+					StringBundler.concat(
+						lxcDXPServerProtocol, "://", lxcDXPMainDomain,
+						"/web/marketplace/administrator-dashboard#/apps/",
+						modelCPDefinitionJSONObject.getLong("CPDefinitionId"))
+				).toString()
+			).put(
+				"[%CPDEFINITION_CREATEDATE%]",
+				ZonedDateTime.ofInstant(
+					product.getCreateDate(
+					).toInstant(),
+					ZoneOffset.UTC
+				).format(
+					DateTimeFormatter.ofPattern(
+						"MMMM d, yyyy", LocaleUtil.ENGLISH)
+				)
+			).build());
+	}
+
 	private void _setUpCloudProductPurchase(
 			Order order, Page<OrderItem> orderItemPage)
 		throws Exception {
 
-		JSONArray jsonArray = new JSONArray();
-
-		for (OrderItem orderItem : orderItemPage.getItems()) {
-			jsonArray.put(
-				new JSONObject(
-				).put(
-					"deployments", new JSONArray()
-				).put(
-					"orderItemId", orderItem.getId()
-				).put(
-					"sku", orderItem.getSku()
-				).put(
-					"shippedQuantity", 0
-				).put(
-					"quantity",
-					orderItem.getQuantity(
-					).intValue()
-				));
-		}
-
 		Map<String, String> customFields =
 			(Map<String, String>)order.getCustomFields();
 
-		customFields.put("cloud-provisioning", jsonArray.toString());
+		customFields.put(
+			"cloud-provisioning",
+			MarketplaceUtil.createCloudProvisioningJSONArray(
+				orderItemPage
+			).toString());
 
 		_marketplaceService.updateOrder(
 			customFields, order.getId(),

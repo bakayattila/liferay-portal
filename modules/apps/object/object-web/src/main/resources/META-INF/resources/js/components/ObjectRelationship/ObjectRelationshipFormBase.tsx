@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import {
 	API,
 	FormError,
@@ -10,22 +11,31 @@ import {
 	SingleSelect,
 	stringUtils,
 } from '@liferay/object-js-components-web';
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import {createResourceURL} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
 
 import CurrentObjectDefinition from './CurrentObjectDefinition';
+import {ObjectRelationshipInheritanceCheckbox} from './ObjectRelationshipInheritanceCheckbox';
 import SelectObjectDefinition from './SelectObjectDefinition';
 
 interface ObjectRelationshipFormBaseProps {
 	baseResourceURL: string;
+	children?: JSX.Element;
 	className?: string;
 	errors: FormError<ObjectRelationship>;
 	handleChange: React.ChangeEventHandler<HTMLInputElement>;
 	hasDefinedObjectDefinitionTarget?: boolean;
+	learnResources: ILearnResourceContext;
 	objectDefinitionExternalReferenceCode1: string;
 	objectDefinitionExternalReferenceCode2?: string;
+	onChangeInheritanceCheckbox: (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => Promise<void> | void;
+	onSubmit?: (values?: Partial<ObjectRelationship>) => Promise<void>;
 	readonly?: boolean;
 	setValues: (values: Partial<ObjectRelationship>) => void;
+	submitError?: SubmitError;
 	values: Partial<ObjectRelationship>;
 }
 
@@ -77,14 +87,18 @@ export const OBJECT_RELATIONSHIP_TYPES = [
 
 export function ObjectRelationshipFormBase({
 	baseResourceURL,
+	children,
 	className,
 	errors,
 	handleChange,
 	hasDefinedObjectDefinitionTarget,
+	learnResources,
 	objectDefinitionExternalReferenceCode1,
 	objectDefinitionExternalReferenceCode2,
+	onChangeInheritanceCheckbox,
 	readonly,
 	setValues,
+	submitError,
 	values,
 }: ObjectRelationshipFormBaseProps) {
 	const [creationLanguageId, setCreationLanguageId] =
@@ -239,21 +253,7 @@ export function ObjectRelationshipFormBase({
 			setObjectDefinitions(objectDefinitions);
 		};
 
-		if (readonly) {
-			setObjectDefinitions([
-				{
-					externalReferenceCode:
-						values.objectDefinitionExternalReferenceCode2 as string,
-					id: values.objectDefinitionId2 as number,
-					label: values.label as LocalizedValue<string>,
-					name: values.objectDefinitionName2 as string,
-					system: false,
-				},
-			]);
-		}
-		else {
-			fetchObjectDefinitions();
-		}
+		fetchObjectDefinitions();
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionExternalReferenceCode1, readonly]);
@@ -340,11 +340,12 @@ export function ObjectRelationshipFormBase({
 								name="currentObjectInput"
 								readOnly={true}
 								required
-								value={stringUtils.getLocalizableLabel(
-									objectDefinition2?.defaultLanguageId as Liferay.Language.Locale,
-									objectDefinition2?.label,
-									objectDefinition2?.name
-								)}
+								value={stringUtils.getLocalizableLabel({
+									fallbackLabel: objectDefinition2?.name,
+									fallbackLanguageId:
+										objectDefinition2?.defaultLanguageId as Liferay.Language.Locale,
+									labels: objectDefinition2?.label,
+								})}
 							/>
 						) : (
 							<SelectObjectDefinition
@@ -383,11 +384,12 @@ export function ObjectRelationshipFormBase({
 								name="currentObjectInput"
 								readOnly={true}
 								required
-								value={stringUtils.getLocalizableLabel(
-									objectDefinition1?.defaultLanguageId as Liferay.Language.Locale,
-									objectDefinition1?.label,
-									objectDefinition1?.name
-								)}
+								value={stringUtils.getLocalizableLabel({
+									fallbackLabel: objectDefinition1?.name,
+									fallbackLanguageId:
+										objectDefinition1?.defaultLanguageId as Liferay.Language.Locale,
+									labels: objectDefinition1?.label,
+								})}
 							/>
 						) : (
 							<SelectObjectDefinition
@@ -429,6 +431,27 @@ export function ObjectRelationshipFormBase({
 						/>
 					</>
 				))}
+
+			{children}
+
+			{onChangeInheritanceCheckbox &&
+				values.type === 'oneToMany' &&
+				Liferay.FeatureFlags['LPD-34594'] && (
+					<ObjectRelationshipInheritanceCheckbox
+						learnResources={learnResources}
+						onChange={onChangeInheritanceCheckbox}
+						values={values}
+					/>
+				)}
+
+			{submitError && (
+				<ClayAlert
+					displayType="danger"
+					title={`${Liferay.Language.get('error')}:`}
+				>
+					{submitError}
+				</ClayAlert>
+			)}
 		</>
 	);
 }

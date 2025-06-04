@@ -29,7 +29,6 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -77,14 +76,14 @@ public class PriceModifierProductResourceImpl
 				CPDefinition.class.getName(), pagination.getStartPosition(),
 				pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierRelService.getCommercePriceModifierRelsCount(
 				commercePriceModifier.getCommercePriceModifierId(),
 				CPDefinition.class.getName());
 
 		return Page.of(
 			_toPriceModifierProducts(commercePriceModifierRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@NestedField(
@@ -107,14 +106,14 @@ public class PriceModifierProductResourceImpl
 					id, search, languageId, pagination.getStartPosition(),
 					pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierRelService.
 				getCPDefinitionsCommercePriceModifierRelsCount(
 					id, search, languageId);
 
 		return Page.of(
 			_toPriceModifierProducts(commercePriceModifierRels), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -196,17 +195,10 @@ public class PriceModifierProductResourceImpl
 			List<CommercePriceModifierRel> commercePriceModifierRels)
 		throws Exception {
 
-		List<PriceModifierProduct> priceModifierProducts = new ArrayList<>();
-
-		for (CommercePriceModifierRel commercePriceModifierRel :
-				commercePriceModifierRels) {
-
-			priceModifierProducts.add(
-				_toPriceModifierProduct(
-					commercePriceModifierRel.getCommercePriceModifierRelId()));
-		}
-
-		return priceModifierProducts;
+		return transform(
+			commercePriceModifierRels,
+			commercePriceModifierRel -> _toPriceModifierProduct(
+				commercePriceModifierRel.getCommercePriceModifierRelId()));
 	}
 
 	@Reference(

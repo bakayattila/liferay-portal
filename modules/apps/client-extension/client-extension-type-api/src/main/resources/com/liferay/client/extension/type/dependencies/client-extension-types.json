@@ -252,6 +252,11 @@
 				"type": "CETProperty.Type.String"
 			},
 			{
+				"default": "layout",
+				"name": "scope",
+				"type": "CETProperty.Type.String"
+			},
+			{
 				"default": "https://www.liferay.com",
 				"name": "sourceCodeURL",
 				"type": "CETProperty.Type.String"
@@ -280,7 +285,7 @@
 				"type": "CETProperty.Type.String"
 			},
 			{
-				"default": "page",
+				"default": "layout",
 				"name": "scope",
 				"type": "CETProperty.Type.String"
 			},
@@ -449,6 +454,11 @@
 			},
 			{
 				"name": "name",
+				"type": "CETProperty.Type.String"
+			},
+			{
+				"default": "layout",
+				"name": "scope",
 				"type": "CETProperty.Type.String"
 			},
 			{

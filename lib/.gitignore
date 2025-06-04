@@ -1,5 +1,4 @@
 /development/activation.jar
-/development/alloy-taglib.jar
 /development/ant-apache-bsf.jar
 /development/ant-compress.jar
 /development/asm-commons.jar
@@ -26,7 +25,6 @@
 /development/dtddoc.jar
 /development/dtdparser.jar
 /development/dumbster.jar
-/development/error-prone-ant.jar
 /development/freemarker.jar
 /development/guava.jar
 /development/hamcrest-core.jar
@@ -65,13 +63,12 @@
 /development/osgi-service-component.jar
 /development/osgi-service-log.jar
 /development/p6spy.jar
-/development/portletmvc4spring-test.jar
+/development/portlet.jar
 /development/postgresql.jar
 /development/qdox.jar
 /development/reflections.jar
 /development/saxpath.jar
 /development/sdk-addon-api-0.2.jar
-/development/slf4j-simple.jar
 /development/sling-commons-osgi.jar
 /development/sling-testing-osgi-mock-core.jar
 /development/smtp.jar
@@ -95,7 +92,6 @@
 /development/tomcat-websocket-api.jar
 /development/velocity-tools.jar
 /development/velocity.jar
-/development/xmlresolver.jar
 /portal/activation.jar
 /portal/commons-configuration.jar
 /portal/commons-lang.jar
@@ -106,8 +102,8 @@
 /portal/isoparser.jar
 /portal/istack-commons-runtime.jar
 /portal/jabsorb.jar
-/portal/javassist.jar
 /portal/jaxb-api.jar
+/portal/jaxb-core.jar
 /portal/jaxb-runtime.jar
 /portal/jaxen.jar
 /portal/jaxws-api.jar
@@ -120,7 +116,6 @@
 /portal/log4j-api.jar
 /portal/log4j-core.jar
 /portal/persistence.jar
-/portal/portlet.jar
 /portal/simplecaptcha.jar
 /portal/slf4j-api.jar
 /portal/soap-api.jar
@@ -135,5 +130,6 @@
 /portal/spring-web.jar
 /portal/stax-ex.jar
 /portal/transaction.jar
+/portal/txw2.jar
 /portal/xercesImpl.jar
 /portal/xml-apis.jar

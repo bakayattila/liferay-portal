@@ -209,6 +209,17 @@
 					"allOf": [
 						{
 							"$ref": "#/definitions/propertySets/properties/url"
+						},
+						{
+							"properties": {
+								"scope": {
+									"default": "layout",
+									"enum": [
+										"company",
+										"layout"
+									]
+								}
+							}
 						}
 					],
 					"description": "Description for globalCSS"
@@ -221,8 +232,11 @@
 						{
 							"properties": {
 								"scope": {
-									"description": "",
-									"type": "string"
+									"default": "layout",
+									"enum": [
+										"company",
+										"layout"
+									]
 								},
 								"scriptElementAttributes": {
 									"additionalProperties": {
@@ -403,6 +417,13 @@
 								},
 								"mainURL": {
 									"type": "string"
+								},
+								"scope": {
+									"default": "layout",
+									"enum": [
+										"controlPanel",
+										"layout"
+									]
 								}
 							},
 							"type": "object"

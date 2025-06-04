@@ -4,7 +4,6 @@
  */
 
 import {
-	fireEvent,
 	render,
 	screen,
 	waitFor,
@@ -179,7 +178,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -212,7 +211,7 @@ describe('ExperienceToolbarSection', () => {
 			'.page-editor__toolbar-experience'
 		);
 
-		userEvent.click(dropDownButtonLabel);
+		await userEvent.click(dropDownButtonLabel);
 
 		await findByRole('list');
 
@@ -255,7 +254,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -324,7 +323,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -342,7 +341,7 @@ describe('ExperienceToolbarSection', () => {
 
 		document.activeElement.blur = () => {};
 
-		userEvent.click(lockIcon);
+		await userEvent.click(lockIcon);
 
 		getByText('experience-locked');
 		getByText('edit-is-not-allowed-for-this-experience');
@@ -369,7 +368,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -401,7 +400,7 @@ describe('ExperienceToolbarSection', () => {
 		 */
 		expect(bottomExperiencePriorityButton.disabled).toBe(false);
 
-		userEvent.click(bottomExperiencePriorityButton);
+		await userEvent.click(bottomExperiencePriorityButton);
 
 		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
 
@@ -443,7 +442,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -475,7 +474,7 @@ describe('ExperienceToolbarSection', () => {
 		 */
 		expect(bottomExperiencePriorityButton.disabled).toBe(false);
 
-		userEvent.click(topExperiencePriorityButton);
+		await userEvent.click(topExperiencePriorityButton);
 
 		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
 
@@ -531,7 +530,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -547,7 +546,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const newExperienceButton = getByText('new-experience');
 
-		userEvent.click(newExperienceButton);
+		await userEvent.click(newExperienceButton);
 
 		await findByLabelText('name');
 
@@ -559,14 +558,14 @@ describe('ExperienceToolbarSection', () => {
 		const nameInput = getByLabelText('name');
 		const audienceInput = getByLabelText('audience');
 
-		userEvent.type(nameInput, 'New Experience #1');
+		await userEvent.type(nameInput, 'New Experience #1');
 
-		userEvent.selectOptions(audienceInput, 'A segment #1');
+		await userEvent.selectOptions(audienceInput, 'A segment 0');
 
 		// Grab parentElement here to work around jsdom v13 issue.
 		// "TypeError: Cannot read property '_defaultView' of undefined"
 
-		userEvent.click(getByText('save').parentElement);
+		await userEvent.click(getByText('save').parentElement);
 
 		await waitForElementToBeRemoved(modal).then(() =>
 			expect(modal).not.toBeInTheDocument()
@@ -624,7 +623,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -642,7 +641,7 @@ describe('ExperienceToolbarSection', () => {
 
 		expect(editExperienceButton.disabled).toBe(false);
 
-		userEvent.click(editExperienceButton);
+		await userEvent.click(editExperienceButton);
 
 		await findByLabelText('name');
 
@@ -652,8 +651,9 @@ describe('ExperienceToolbarSection', () => {
 		expect(nameInput.value).toBe('Experience #1');
 		expect(segmentSelect.value).toBe('test-segment-id-00');
 
-		userEvent.type(nameInput, 'New Experience #1');
-		userEvent.selectOptions(segmentSelect, 'A segment 0');
+		await userEvent.clear(nameInput);
+		await userEvent.type(nameInput, 'New Experience #1');
+		await userEvent.selectOptions(segmentSelect, 'A segment 0');
 
 		expect(nameInput.value).toBe('New Experience #1');
 		expect(segmentSelect.value).toBe('test-segment-id-00');
@@ -661,7 +661,7 @@ describe('ExperienceToolbarSection', () => {
 		// Grab parentElement here to work around jsdom v13 issue.
 		// "TypeError: Cannot read property '_defaultView' of undefined"
 
-		userEvent.click(getByText('save').parentElement);
+		await userEvent.click(getByText('save').parentElement);
 
 		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(1));
 
@@ -789,7 +789,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -805,7 +805,7 @@ describe('ExperienceToolbarSection', () => {
 			'delete-experience'
 		);
 
-		userEvent.click(deleteExperienceButton);
+		await userEvent.click(deleteExperienceButton);
 
 		await waitFor(() => expect(window.confirm).toHaveBeenCalledTimes(1));
 
@@ -857,7 +857,7 @@ describe('ExperienceToolbarSection', () => {
 
 		const dropDownButton = getByLabelText('experience', {exact: false});
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -873,7 +873,7 @@ describe('ExperienceToolbarSection', () => {
 			'duplicate-experience'
 		);
 
-		userEvent.click(duplicateExperienceButton);
+		await userEvent.click(duplicateExperienceButton);
 
 		await waitFor(() => expect(serviceFetch).toHaveBeenCalledTimes(2));
 
@@ -903,7 +903,7 @@ describe('ExperienceToolbarSection', () => {
 
 		// ESC
 
-		userEvent.click(dropDownButton);
+		await userEvent.click(dropDownButton);
 
 		await findByRole('list');
 
@@ -913,19 +913,14 @@ describe('ExperienceToolbarSection', () => {
 
 		expect(dropdownElement).toBeInTheDocument();
 
-		fireEvent.keyDown(document, {
-			charCode: 27,
-			code: 'Escape',
-			key: 'Escape',
-			keyCode: 27,
-		});
+		await userEvent.keyboard('{Escape}');
 
-		await waitForElementToBeRemoved(dropdownElement);
+		await waitForElementToBeRemoved(dropdownElement, {timeout: 2000});
 		expect(dropdownElement).not.toBeInTheDocument();
 
 		// clickoutside
 
-		userEvent.click(dropDownButton, {exact: false});
+		await userEvent.click(dropDownButton, {exact: false});
 
 		await findByRole('list');
 
@@ -935,18 +930,10 @@ describe('ExperienceToolbarSection', () => {
 
 		expect(dropdownElement2).toBeInTheDocument();
 
-		const outerDiv = document.querySelector('body > div');
+		await userEvent.click(document.querySelector('body > div'));
 
-		fireEvent(
-			outerDiv,
-			new MouseEvent('click', {
-				bubbles: true,
-				cancelable: true,
-			})
-		);
+		await waitForElementToBeRemoved(dropdownElement2, {timeout: 2000});
 
-		waitForElementToBeRemoved(dropdownElement2).then(() => {
-			expect(dropdownElement2).not.toBeInTheDocument();
-		});
+		expect(dropdownElement2).not.toBeInTheDocument();
 	});
 });

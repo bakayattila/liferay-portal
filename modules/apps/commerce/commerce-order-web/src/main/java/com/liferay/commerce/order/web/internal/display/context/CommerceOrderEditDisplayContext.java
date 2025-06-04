@@ -63,6 +63,9 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webserver.WebServerServletTokenUtil;
 
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderRequest;
+
 import java.math.BigDecimal;
 
 import java.text.DateFormat;
@@ -72,9 +75,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-
-import javax.portlet.PortletURL;
-import javax.portlet.RenderRequest;
 
 /**
  * @author Andrea Di Giorgi
@@ -249,13 +249,12 @@ public class CommerceOrderEditDisplayContext {
 			_commerceOrderRequestHelper.getRequest(),
 			"commerceNotificationQueueEntryId");
 
-		if (commerceNotificationQueueEntryId > 0) {
-			return _commerceNotificationQueueEntryLocalService.
-				getCommerceNotificationQueueEntry(
-					commerceNotificationQueueEntryId);
+		if (commerceNotificationQueueEntryId <= 0) {
+			return null;
 		}
 
-		return null;
+		return _commerceNotificationQueueEntryLocalService.
+			getCommerceNotificationQueueEntry(commerceNotificationQueueEntryId);
 	}
 
 	public CommerceOrder getCommerceOrder() {
@@ -328,8 +327,17 @@ public class CommerceOrderEditDisplayContext {
 			return Collections.emptyList();
 		}
 
+		if (hasModelPermission(
+				_commerceOrder,
+				CommerceOrderActionKeys.
+					MANAGE_COMMERCE_ORDER_RESTRICTED_NOTES)) {
+
+			return _commerceOrderNoteService.getCommerceOrderNotes(
+				commerceOrderId, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+		}
+
 		return _commerceOrderNoteService.getCommerceOrderNotes(
-			commerceOrderId, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			commerceOrderId, false);
 	}
 
 	public String getCommerceOrderPaymentMethodDescription()

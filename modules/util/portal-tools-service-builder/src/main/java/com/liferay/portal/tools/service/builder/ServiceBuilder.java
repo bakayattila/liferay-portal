@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.plugin.Version;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.ClearThreadLocalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.IntegerWrapper;
@@ -361,13 +360,6 @@ public class ServiceBuilder {
 			}
 
 			ArgumentsUtil.processMainException(arguments, exception);
-		}
-
-		try {
-			ClearThreadLocalUtil.clearThreadLocal();
-		}
-		catch (Throwable throwable) {
-			throwable.printStackTrace();
 		}
 
 		Introspector.flushCaches();
@@ -6813,9 +6805,23 @@ public class ServiceBuilder {
 			String finderName = finderElement.attributeValue("name");
 			String finderPluralName = finderElement.attributeValue(
 				"plural-name");
+			boolean finderPretouch = GetterUtil.getBoolean(
+				finderElement.attributeValue("pretouch"));
 			String finderReturn = finderElement.attributeValue("return-type");
 			boolean finderUnique = GetterUtil.getBoolean(
 				finderElement.attributeValue("unique"));
+
+			if (isVersionGTE_7_4_0() &&
+				!Objects.equals(finderReturn, "Collection") && !finderUnique &&
+				ArrayUtil.contains(
+					_FORCE_UNIQUE_FINDER_PACKAGE_PATHS, _packagePath)) {
+
+				throw new IllegalArgumentException(
+					StringBundler.concat(
+						"Finder \"", finderName, "\" defined by entity \"",
+						entityName, "\" must set unique=\"true\" as its ",
+						"return type is the name of the entity"));
+			}
 
 			String finderWhere = finderElement.attributeValue("where");
 
@@ -6897,9 +6903,9 @@ public class ServiceBuilder {
 
 			entityFinders.add(
 				new EntityFinder(
-					this, finderName, finderPluralName, finderReturn,
-					finderUnique, finderWhere, finderDBWhere, finderDBIndex,
-					finderEntityColumns));
+					this, finderName, finderPluralName, finderPretouch,
+					finderReturn, finderUnique, finderWhere, finderDBWhere,
+					finderDBIndex, finderEntityColumns));
 		}
 
 		String uadOutputPath =
@@ -7112,9 +7118,9 @@ public class ServiceBuilder {
 				listIterator.set(
 					new EntityFinder(
 						this, entityFinder.getName(),
-						entityFinder.getPluralName(), "Collection", false,
-						entityFinder.getWhere(), entityFinder.getDBWhere(),
-						entityFinder.isDBIndex(),
+						entityFinder.getPluralName(), entityFinder.isPretouch(),
+						"Collection", false, entityFinder.getWhere(),
+						entityFinder.getDBWhere(), entityFinder.isDBIndex(),
 						new ArrayList<>(entityFinder.getEntityColumns())));
 
 				List<EntityColumn> finderEntityColumns =
@@ -7127,9 +7133,10 @@ public class ServiceBuilder {
 				listIterator.add(
 					new EntityFinder(
 						this, entityFinder.getName() + "_Head", null,
-						entityFinder.getReturnType(), entityFinder.isUnique(),
-						entityFinder.getWhere(), entityFinder.getDBWhere(),
-						entityFinder.isDBIndex(), finderEntityColumns));
+						entityFinder.isPretouch(), entityFinder.getReturnType(),
+						entityFinder.isUnique(), entityFinder.getWhere(),
+						entityFinder.getDBWhere(), entityFinder.isDBIndex(),
+						finderEntityColumns));
 			}
 		}
 
@@ -8139,6 +8146,10 @@ public class ServiceBuilder {
 	}
 
 	private static final int _DEFAULT_COLUMN_MAX_LENGTH = 75;
+
+	private static final String[] _FORCE_UNIQUE_FINDER_PACKAGE_PATHS = {
+		"com.liferay.counter", "com.liferay.portal"
+	};
 
 	private static final String _HIBERNATE_3_HBM_NAMESPACE =
 		"\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\"";

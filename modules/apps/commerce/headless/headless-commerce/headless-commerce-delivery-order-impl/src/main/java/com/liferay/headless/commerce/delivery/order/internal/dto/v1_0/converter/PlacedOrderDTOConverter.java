@@ -173,17 +173,19 @@ public class PlacedOrderDTOConverter
 						String paymentMethodKey =
 							commerceOrder.getCommercePaymentMethodKey();
 
-						if (Validator.isNotNull(paymentMethodKey)) {
-							CommercePaymentMethodGroupRel
-								commercePaymentMethodGroupRel =
-									_commercePaymentMethodGroupRelLocalService.
-										getCommercePaymentMethodGroupRel(
-											commerceOrder.getGroupId(),
-											paymentMethodKey);
+						if (Validator.isNull(paymentMethodKey)) {
+							return null;
+						}
 
-							if (commercePaymentMethodGroupRel != null) {
-								return commercePaymentMethodGroupRel.getName();
-							}
+						CommercePaymentMethodGroupRel
+							commercePaymentMethodGroupRel =
+								_commercePaymentMethodGroupRelLocalService.
+									getCommercePaymentMethodGroupRel(
+										commerceOrder.getGroupId(),
+										paymentMethodKey);
+
+						if (commercePaymentMethodGroupRel != null) {
+							return commercePaymentMethodGroupRel.getName();
 						}
 
 						return null;
@@ -214,6 +216,8 @@ public class PlacedOrderDTOConverter
 					commerceOrder::getShippingAddressId);
 				setPrintedNote(commerceOrder::getPrintedNote);
 				setPurchaseOrderNumber(commerceOrder::getPurchaseOrderNumber);
+				setRequestedDeliveryDate(
+					commerceOrder::getRequestedDeliveryDate);
 				setShippingMethod(
 					() -> {
 						CommerceShippingMethod commerceShippingMethod =

@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.channel.client.dto.v1_0.AccountAddressChannel;
 import com.liferay.headless.commerce.admin.channel.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.channel.client.pagination.Page;
@@ -32,7 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -45,9 +47,13 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,10 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -86,7 +88,7 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -100,14 +102,22 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 
 		_accountAddressChannelResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		AccountAddressChannelResource.Builder builder =
-			AccountAddressChannelResource.builder();
+		accountAddressChannelResource = AccountAddressChannelResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
 
-		accountAddressChannelResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -205,6 +215,48 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteAccountAddressChannelBatch() throws Exception {
+		AccountAddressChannel accountAddressChannel1 =
+			testDeleteAccountAddressChannelBatch_addAccountAddressChannel();
+
+		testDeleteAccountAddressChannelBatch_deleteAccountAddressChannel(
+			"COMPLETED", null,
+			accountAddressChannel1.getAccountAddressChannelId());
+	}
+
+	protected AccountAddressChannel
+			testDeleteAccountAddressChannelBatch_addAccountAddressChannel()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected void
+			testDeleteAccountAddressChannelBatch_deleteAccountAddressChannel(
+				String expectedExecuteStatus, String externalReferenceCode,
+				Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			accountAddressChannelResource.
+				deleteAccountAddressChannelBatchHttpResponse(
+					null,
+					JSONUtil.putAll(
+						JSONUtil.put(
+							"externalReferenceCode", () -> externalReferenceCode
+						).put(
+							"accountAddressChannelId", () -> id
+						)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
 	public void testGetAccountAddressByExternalReferenceCodeAccountAddressChannelsPage()
 		throws Exception {
 
@@ -287,13 +339,13 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		String externalReferenceCode =
 			testGetAccountAddressByExternalReferenceCodeAccountAddressChannelsPage_getExternalReferenceCode();
 
-		Page<AccountAddressChannel> accountAddressChannelPage =
+		Page<AccountAddressChannel> accountAddressChannelsPage =
 			accountAddressChannelResource.
 				getAccountAddressByExternalReferenceCodeAccountAddressChannelsPage(
 					externalReferenceCode, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountAddressChannelPage.getTotalCount());
+			accountAddressChannelsPage.getTotalCount());
 
 		AccountAddressChannel accountAddressChannel1 =
 			testGetAccountAddressByExternalReferenceCodeAccountAddressChannelsPage_addAccountAddressChannel(
@@ -420,30 +472,6 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		throws Exception {
 
 		return null;
-	}
-
-	@Test
-	public void testPostAccountAddressByExternalReferenceCodeAccountAddressChannel()
-		throws Exception {
-
-		AccountAddressChannel randomAccountAddressChannel =
-			randomAccountAddressChannel();
-
-		AccountAddressChannel postAccountAddressChannel =
-			testPostAccountAddressByExternalReferenceCodeAccountAddressChannel_addAccountAddressChannel(
-				randomAccountAddressChannel);
-
-		assertEquals(randomAccountAddressChannel, postAccountAddressChannel);
-		assertValid(postAccountAddressChannel);
-	}
-
-	protected AccountAddressChannel
-			testPostAccountAddressByExternalReferenceCodeAccountAddressChannel_addAccountAddressChannel(
-				AccountAddressChannel accountAddressChannel)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
 	}
 
 	@Test
@@ -634,13 +662,13 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		Long addressId =
 			testGetAccountAddressIdAccountAddressChannelsPage_getAddressId();
 
-		Page<AccountAddressChannel> accountAddressChannelPage =
+		Page<AccountAddressChannel> accountAddressChannelsPage =
 			accountAddressChannelResource.
 				getAccountAddressIdAccountAddressChannelsPage(
 					addressId, null, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			accountAddressChannelPage.getTotalCount());
+			accountAddressChannelsPage.getTotalCount());
 
 		AccountAddressChannel accountAddressChannel1 =
 			testGetAccountAddressIdAccountAddressChannelsPage_addAccountAddressChannel(
@@ -933,6 +961,30 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		throws Exception {
 
 		return null;
+	}
+
+	@Test
+	public void testPostAccountAddressByExternalReferenceCodeAccountAddressChannel()
+		throws Exception {
+
+		AccountAddressChannel randomAccountAddressChannel =
+			randomAccountAddressChannel();
+
+		AccountAddressChannel postAccountAddressChannel =
+			testPostAccountAddressByExternalReferenceCodeAccountAddressChannel_addAccountAddressChannel(
+				randomAccountAddressChannel);
+
+		assertEquals(randomAccountAddressChannel, postAccountAddressChannel);
+		assertValid(postAccountAddressChannel);
+	}
+
+	protected AccountAddressChannel
+			testPostAccountAddressByExternalReferenceCodeAccountAddressChannel_addAccountAddressChannel(
+				AccountAddressChannel accountAddressChannel)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -1634,7 +1686,30 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 		return randomAccountAddressChannel();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected AccountAddressChannelResource accountAddressChannelResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -1835,7 +1910,9 @@ public abstract class BaseAccountAddressChannelResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseAccountAddressChannelResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.channel.resource.v1_0.

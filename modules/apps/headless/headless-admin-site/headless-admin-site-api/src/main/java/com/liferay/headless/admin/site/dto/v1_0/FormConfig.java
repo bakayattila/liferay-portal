@@ -5,9 +5,12 @@
 
 package com.liferay.headless.admin.site.dto.v1_0;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
@@ -17,7 +20,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -27,19 +34,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
-
 /**
  * @author Rubén Pulido
  * @generated
  */
 @Generated("")
 @GraphQLName(
-	description = "The page form's configuration.", value = "FormConfig"
+	description = "The form page element definition form's configuration.",
+	value = "FormConfig"
 )
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FormConfig")
@@ -53,7 +55,9 @@ public class FormConfig implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(FormConfig.class, json);
 	}
 
-	@Schema(description = "The form reference.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The form reference."
+	)
 	@Valid
 	public Object getFormReference() {
 		if (_formReferenceSupplier != null) {
@@ -95,35 +99,134 @@ public class FormConfig implements Serializable {
 	@JsonIgnore
 	private Supplier<Object> _formReferenceSupplier;
 
-	@Schema(description = "The definition for the success message of the form.")
+	@io.swagger.v3.oas.annotations.media.Schema
+	@JsonGetter("formType")
 	@Valid
-	public Object getFormSuccessSubmissionResult() {
-		if (_formSuccessSubmissionResultSupplier != null) {
-			formSuccessSubmissionResult =
-				_formSuccessSubmissionResultSupplier.get();
+	public FormType getFormType() {
+		if (_formTypeSupplier != null) {
+			formType = _formTypeSupplier.get();
 
-			_formSuccessSubmissionResultSupplier = null;
+			_formTypeSupplier = null;
 		}
 
-		return formSuccessSubmissionResult;
-	}
-
-	public void setFormSuccessSubmissionResult(
-		Object formSuccessSubmissionResult) {
-
-		this.formSuccessSubmissionResult = formSuccessSubmissionResult;
-
-		_formSuccessSubmissionResultSupplier = null;
+		return formType;
 	}
 
 	@JsonIgnore
-	public void setFormSuccessSubmissionResult(
-		UnsafeSupplier<Object, Exception>
-			formSuccessSubmissionResultUnsafeSupplier) {
+	public String getFormTypeAsString() {
+		FormType formType = getFormType();
 
-		_formSuccessSubmissionResultSupplier = () -> {
+		if (formType == null) {
+			return null;
+		}
+
+		return formType.toString();
+	}
+
+	public void setFormType(FormType formType) {
+		this.formType = formType;
+
+		_formTypeSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setFormType(
+		UnsafeSupplier<FormType, Exception> formTypeUnsafeSupplier) {
+
+		_formTypeSupplier = () -> {
 			try {
-				return formSuccessSubmissionResultUnsafeSupplier.get();
+				return formTypeUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FormType formType;
+
+	@JsonIgnore
+	private Supplier<FormType> _formTypeSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The form page element's number of steps."
+	)
+	public Integer getNumberOfSteps() {
+		if (_numberOfStepsSupplier != null) {
+			numberOfSteps = _numberOfStepsSupplier.get();
+
+			_numberOfStepsSupplier = null;
+		}
+
+		return numberOfSteps;
+	}
+
+	public void setNumberOfSteps(Integer numberOfSteps) {
+		this.numberOfSteps = numberOfSteps;
+
+		_numberOfStepsSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setNumberOfSteps(
+		UnsafeSupplier<Integer, Exception> numberOfStepsUnsafeSupplier) {
+
+		_numberOfStepsSupplier = () -> {
+			try {
+				return numberOfStepsUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	@GraphQLField(description = "The form page element's number of steps.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Integer numberOfSteps;
+
+	@JsonIgnore
+	private Supplier<Integer> _numberOfStepsSupplier;
+
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The definition of the result when a form submission is successful."
+	)
+	@Valid
+	public Object getSuccessFormSubmissionResult() {
+		if (_successFormSubmissionResultSupplier != null) {
+			successFormSubmissionResult =
+				_successFormSubmissionResultSupplier.get();
+
+			_successFormSubmissionResultSupplier = null;
+		}
+
+		return successFormSubmissionResult;
+	}
+
+	public void setSuccessFormSubmissionResult(
+		Object successFormSubmissionResult) {
+
+		this.successFormSubmissionResult = successFormSubmissionResult;
+
+		_successFormSubmissionResultSupplier = null;
+	}
+
+	@JsonIgnore
+	public void setSuccessFormSubmissionResult(
+		UnsafeSupplier<Object, Exception>
+			successFormSubmissionResultUnsafeSupplier) {
+
+		_successFormSubmissionResultSupplier = () -> {
+			try {
+				return successFormSubmissionResultUnsafeSupplier.get();
 			}
 			catch (RuntimeException runtimeException) {
 				throw runtimeException;
@@ -135,13 +238,13 @@ public class FormConfig implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "The definition for the success message of the form."
+		description = "The definition of the result when a form submission is successful."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Object formSuccessSubmissionResult;
+	protected Object successFormSubmissionResult;
 
 	@JsonIgnore
-	private Supplier<Object> _formSuccessSubmissionResultSupplier;
+	private Supplier<Object> _successFormSubmissionResultSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -193,27 +296,55 @@ public class FormConfig implements Serializable {
 			}
 		}
 
-		Object formSuccessSubmissionResult = getFormSuccessSubmissionResult();
+		FormType formType = getFormType();
 
-		if (formSuccessSubmissionResult != null) {
+		if (formType != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"formSuccessSubmissionResult\": ");
+			sb.append("\"formType\": ");
 
-			if (formSuccessSubmissionResult instanceof Map) {
+			sb.append("\"");
+
+			sb.append(formType);
+
+			sb.append("\"");
+		}
+
+		Integer numberOfSteps = getNumberOfSteps();
+
+		if (numberOfSteps != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfSteps\": ");
+
+			sb.append(numberOfSteps);
+		}
+
+		Object successFormSubmissionResult = getSuccessFormSubmissionResult();
+
+		if (successFormSubmissionResult != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"successFormSubmissionResult\": ");
+
+			if (successFormSubmissionResult instanceof Map) {
 				sb.append(
 					JSONFactoryUtil.createJSONObject(
-						(Map<?, ?>)formSuccessSubmissionResult));
+						(Map<?, ?>)successFormSubmissionResult));
 			}
-			else if (formSuccessSubmissionResult instanceof String) {
+			else if (successFormSubmissionResult instanceof String) {
 				sb.append("\"");
-				sb.append(_escape((String)formSuccessSubmissionResult));
+				sb.append(_escape((String)successFormSubmissionResult));
 				sb.append("\"");
 			}
 			else {
-				sb.append(formSuccessSubmissionResult);
+				sb.append(successFormSubmissionResult);
 			}
 		}
 
@@ -222,12 +353,50 @@ public class FormConfig implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.FormConfig",
 		name = "x-class-name"
 	)
 	public String xClassName;
+
+	@GraphQLName("FormType")
+	public static enum FormType {
+
+		MULTISTEP("Multistep"), SIMPLE("Simple");
+
+		@JsonCreator
+		public static FormType create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
+			for (FormType formType : values()) {
+				if (Objects.equals(formType.getValue(), value)) {
+					return formType;
+				}
+			}
+
+			throw new IllegalArgumentException("Invalid enum value: " + value);
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private FormType(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
 
 	private static String _escape(Object object) {
 		return StringUtil.replace(

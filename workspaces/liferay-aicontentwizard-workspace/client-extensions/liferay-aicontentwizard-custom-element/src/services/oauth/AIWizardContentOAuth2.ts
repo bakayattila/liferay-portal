@@ -8,14 +8,16 @@ import OAuth2Client from './OAuth2Client';
 
 export default class AIWizardContentOAuth2 extends OAuth2Client {
 	constructor() {
-		super('liferay-aicontentwizard-etc-spring-boot-oauth-application-user-agent');
+		super(
+			'liferay-aicontentwizard-etc-spring-boot-oauth-application-user-agent'
+		);
 	}
 
 	async deleteSetting(id: number) {
 		return this.fetch(`/settings/${id}`, {method: 'DELETE'});
 	}
 
-	async fetch(url: string, options?: FetchRequestInit) {
+	async fetch(url: string, options?: RequestInit) {
 		return this.oAuth2Client.fetch(url, {
 			...options,
 			headers: {
@@ -35,21 +37,29 @@ export default class AIWizardContentOAuth2 extends OAuth2Client {
 	}
 
 	async getSettingsStatus(): Promise<any> {
-		return this.fetch('/settings/status');
+		const response = await this.fetch('/settings/status');
+
+		return response.json();
 	}
 
 	async getSetting(id: string): Promise<any> {
-		return this.fetch(`/settings/${id}`);
+		const response = await this.fetch(`/settings/${id}`);
+
+		return response.json();
 	}
 
 	async getSettings(): Promise<any> {
-		return this.fetch('/settings');
+		const response = await this.fetch('/settings');
+
+		return response.json();
 	}
 
 	async saveSettings(data: unknown) {
-		return this.fetch('/settings', {
+		const response = await this.fetch('/settings', {
 			body: JSON.stringify(data),
 			method: 'POST',
 		});
+
+		return response.json();
 	}
 }

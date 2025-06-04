@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.AssumeTestRule;
@@ -105,9 +104,6 @@ public abstract class BaseDBPartitionTestCase {
 				CurrentConnectionUtil.class, "_currentConnection",
 				defaultCurrentConnection);
 		}
-
-		DBPartitionUtil.forEachCompanyId(
-			companyId -> _resourceActionLocalService.checkResourceActions());
 	}
 
 	protected static void createControlTable(String tableName)
@@ -194,14 +190,22 @@ public abstract class BaseDBPartitionTestCase {
 		db.runSQL("drop table if exists " + tableName + " cascade");
 	}
 
-	protected static void extractDBPartitions() throws Exception {
-		extractDBPartitions(COMPANY_IDS);
+	protected static void exportCompany(long companyId) throws Exception {
+		_executeOnDBPartitions(
+			new long[] {companyId},
+			currentCompanyId -> ReflectionTestUtil.invoke(
+				DBPartitionUtil.class, "_exportCompany",
+				new Class<?>[] {long.class}, companyId));
 	}
 
-	protected static void extractDBPartitions(long[] companyIds)
+	protected static void exportDBPartitions() throws Exception {
+		exportDBPartitions(COMPANY_IDS);
+	}
+
+	protected static void exportDBPartitions(long[] companyIds)
 		throws Exception {
 
-		_executeOnDBPartitions(companyIds, DBPartitionUtil::extractDBPartition);
+		_executeOnDBPartitions(companyIds, DBPartitionUtil::exportDBPartition);
 	}
 
 	protected static String getCreateIndexSQL(String tableName) {
@@ -213,6 +217,12 @@ public abstract class BaseDBPartitionTestCase {
 	protected static String getCreateTableSQL(String tableName) {
 		return "create table " + tableName +
 			" (testColumn bigint primary key, companyId bigint)";
+	}
+
+	protected static String getExportedPartitionName(long companyId) {
+		return ReflectionTestUtil.invoke(
+			DBPartitionUtil.class, "_getExportedPartitionName",
+			new Class<?>[] {long.class}, companyId);
 	}
 
 	protected static String getPartitionName(long companyId) {
@@ -228,7 +238,7 @@ public abstract class BaseDBPartitionTestCase {
 		return databasePartitionSchemaNamePrefix + companyId;
 	}
 
-	protected static void insertDBPartitions() throws Exception {
+	protected static void importDBPartitions() throws Exception {
 		CurrentConnection defaultCurrentConnection =
 			CurrentConnectionUtil.getCurrentConnection();
 
@@ -240,7 +250,7 @@ public abstract class BaseDBPartitionTestCase {
 				currentConnection);
 
 			for (long companyId : COMPANY_IDS) {
-				DBPartitionUtil.insertDBPartition(companyId);
+				DBPartitionUtil.importDBPartition(companyId);
 			}
 		}
 		finally {
@@ -496,8 +506,5 @@ public abstract class BaseDBPartitionTestCase {
 	}
 
 	private static Set<String> _controlTableNames;
-
-	@Inject
-	private static ResourceActionLocalService _resourceActionLocalService;
 
 }

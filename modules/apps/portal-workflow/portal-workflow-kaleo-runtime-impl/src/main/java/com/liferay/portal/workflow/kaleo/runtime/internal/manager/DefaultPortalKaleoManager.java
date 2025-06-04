@@ -250,8 +250,7 @@ public class DefaultPortalKaleoManager
 
 		WorkflowDefinitionLink workflowDefinitionLink =
 			workflowDefinitionLinkLocalService.
-				fetchDefaultWorkflowDefinitionLink(
-					companyId, assetClassName, 0, 0);
+				fetchDefaultWorkflowDefinitionLink(companyId, assetClassName);
 
 		if (workflowDefinitionLink != null) {
 			return;
@@ -275,7 +274,7 @@ public class DefaultPortalKaleoManager
 		WorkflowDefinition workflowDefinition = workflowDefinitions.get(0);
 
 		workflowDefinitionLinkLocalService.addWorkflowDefinitionLink(
-			guestUser.getUserId(), companyId, companyGroup.getGroupId(),
+			null, guestUser.getUserId(), companyId, companyGroup.getGroupId(),
 			assetClassName, 0, 0, workflowDefinition.getName(),
 			workflowDefinition.getVersion());
 	}

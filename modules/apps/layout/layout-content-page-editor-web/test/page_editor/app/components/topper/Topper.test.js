@@ -21,6 +21,7 @@ import {
 	useSelectItem,
 } from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext';
 import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
+import {DragAndDropContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/drag_and_drop/useDragAndDrop';
 
 jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext',
@@ -79,13 +80,15 @@ const renderTopper = ({
 						selectedViewportSize: VIEWPORT_SIZES.desktop,
 					})}
 				>
-					<Topper
-						isActive={isActive}
-						item={item}
-						layoutData={layoutData}
-					>
-						<Component item={item} layoutData={layoutData} />
-					</Topper>
+					<DragAndDropContextProvider>
+						<Topper
+							isActive={isActive}
+							item={item}
+							layoutData={layoutData}
+						>
+							<Component item={item} layoutData={layoutData} />
+						</Topper>
+					</DragAndDropContextProvider>
 				</StoreAPIContextProvider>
 			</ControlsProvider>
 		</DndProvider>
@@ -136,13 +139,40 @@ describe('Topper', () => {
 	});
 
 	it('disables options when multiple items are selected', () => {
-		Liferay.FeatureFlags['LPD-18221'] = true;
+		const layoutData = {
+			items: {
+				'item-1': {
+					children: [],
+					config: {name: 'Item 1'},
+					itemId: 'item-1',
+					parentId: null,
+					type: LAYOUT_DATA_ITEM_TYPES.fragment,
+				},
+				'item-2': {
+					children: [],
+					config: {name: 'Item 2'},
+					itemId: 'item-2',
+					parentId: null,
+					type: LAYOUT_DATA_ITEM_TYPES.fragment,
+				},
+				'item-3': {
+					children: [],
+					config: {styles: {}},
+					itemId: 'item-3',
+					parentId: null,
+					type: LAYOUT_DATA_ITEM_TYPES.row,
+				},
+			},
+		};
 
-		renderTopper({activeItemIds: ['item-1', 'item-2'], isActive: true});
+		renderTopper({
+			activeItemIds: ['item-1', 'item-2'],
+			isActive: true,
+			itemId: 'item-3',
+			layoutData,
+		});
 
 		expect(screen.getByLabelText('options')).toBeDisabled();
-
-		Liferay.FeatureFlags['LPD-18221'] = false;
 	});
 
 	describe('Ensures that selectItem() is not called when the topper buttons are clicked', () => {
@@ -173,32 +203,32 @@ describe('Topper', () => {
 			layoutData,
 		};
 
-		it('clicks on options dropdown', () => {
+		it('clicks on options dropdown', async () => {
 			renderTopper(params);
 
 			const selectItem = useSelectItem();
 
-			userEvent.click(screen.getByLabelText('options'));
+			await userEvent.click(screen.getByLabelText('options'));
 
 			expect(selectItem).not.toBeCalled();
 		});
 
-		it('clicks in an options action', () => {
+		it('clicks in an options action', async () => {
 			renderTopper(params);
 
 			const selectItem = useSelectItem();
 
-			userEvent.click(screen.getByText('duplicate'));
+			await userEvent.click(screen.getByText('duplicate'));
 
 			expect(selectItem).not.toBeCalled();
 		});
 
-		it('clicks on comments button', () => {
+		it('clicks on comments button', async () => {
 			renderTopper(params);
 
 			const selectItem = useSelectItem();
 
-			userEvent.click(screen.getByLabelText('comments'));
+			await userEvent.click(screen.getByLabelText('comments'));
 
 			expect(selectItem).not.toBeCalled();
 		});

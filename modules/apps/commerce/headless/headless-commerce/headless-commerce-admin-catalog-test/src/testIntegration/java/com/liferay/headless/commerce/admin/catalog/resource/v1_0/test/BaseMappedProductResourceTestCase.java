@@ -13,6 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.batch.engine.client.dto.v1_0.ImportTask;
+import com.liferay.headless.batch.engine.client.resource.v1_0.ImportTaskResource;
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.MappedProduct;
 import com.liferay.headless.commerce.admin.catalog.client.http.HttpInvoker;
 import com.liferay.headless.commerce.admin.catalog.client.pagination.Page;
@@ -32,7 +34,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -44,9 +46,13 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +64,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -85,7 +87,7 @@ public abstract class BaseMappedProductResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -99,13 +101,22 @@ public abstract class BaseMappedProductResourceTestCase {
 
 		_mappedProductResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		MappedProductResource.Builder builder = MappedProductResource.builder();
+		mappedProductResource = MappedProductResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
 
-		mappedProductResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		importTaskResource = ImportTaskResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -258,8 +269,206 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	@Test
-	public void testPatchMappedProduct() throws Exception {
-		Assert.assertTrue(false);
+	public void testDeleteMappedProductBatch() throws Exception {
+		MappedProduct mappedProduct1 =
+			testDeleteMappedProductBatch_addMappedProduct();
+
+		testDeleteMappedProductBatch_deleteMappedProduct(
+			"COMPLETED", null, mappedProduct1.getId());
+	}
+
+	protected MappedProduct testDeleteMappedProductBatch_addMappedProduct()
+		throws Exception {
+
+		return testDeleteMappedProduct_addMappedProduct();
+	}
+
+	protected void testDeleteMappedProductBatch_deleteMappedProduct(
+			String expectedExecuteStatus, String externalReferenceCode, Long id)
+		throws Exception {
+
+		HttpInvoker.HttpResponse httpResponse =
+			mappedProductResource.deleteMappedProductBatchHttpResponse(
+				null,
+				JSONUtil.putAll(
+					JSONUtil.put(
+						"externalReferenceCode", () -> externalReferenceCode
+					).put(
+						"id", () -> id
+					)));
+
+		Assert.assertEquals(202, httpResponse.getStatusCode());
+
+		waitForFinish(
+			expectedExecuteStatus,
+			JSONFactoryUtil.createJSONObject(httpResponse.getContent()));
+	}
+
+	@Test
+	public void testGetProductByExternalReferenceCodeMappedProductBySequence()
+		throws Exception {
+
+		MappedProduct postMappedProduct =
+			testGetProductByExternalReferenceCodeMappedProductBySequence_addMappedProduct();
+
+		MappedProduct getMappedProduct =
+			mappedProductResource.
+				getProductByExternalReferenceCodeMappedProductBySequence(
+					testGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode(),
+					postMappedProduct.getSequence());
+
+		assertEquals(postMappedProduct, getMappedProduct);
+		assertValid(getMappedProduct);
+	}
+
+	protected String
+			testGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected MappedProduct
+			testGetProductByExternalReferenceCodeMappedProductBySequence_addMappedProduct()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence()
+		throws Exception {
+
+		MappedProduct mappedProduct =
+			testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_addMappedProduct();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				mappedProduct,
+				MappedProductSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"productByExternalReferenceCodeMappedProductBySequence",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode() +
+													"\"");
+
+										put(
+											"sequence",
+											"\"" + mappedProduct.getSequence() +
+												"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/productByExternalReferenceCodeMappedProductBySequence"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				mappedProduct,
+				MappedProductSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productByExternalReferenceCodeMappedProductBySequence",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode() +
+														"\"");
+
+											put(
+												"sequence",
+												"\"" +
+													mappedProduct.
+														getSequence() + "\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productByExternalReferenceCodeMappedProductBySequence"))));
+	}
+
+	protected String
+			testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetProductByExternalReferenceCodeMappedProductBySequenceNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+		String irrelevantSequence = "\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"productByExternalReferenceCodeMappedProductBySequence",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+								put("sequence", irrelevantSequence);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productByExternalReferenceCodeMappedProductBySequence",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+									put("sequence", irrelevantSequence);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected MappedProduct
+			testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_addMappedProduct()
+		throws Exception {
+
+		return testGraphQLMappedProduct_addMappedProduct();
 	}
 
 	@Test
@@ -344,13 +553,13 @@ public abstract class BaseMappedProductResourceTestCase {
 		String externalReferenceCode =
 			testGetProductByExternalReferenceCodeMappedProductsPage_getExternalReferenceCode();
 
-		Page<MappedProduct> mappedProductPage =
+		Page<MappedProduct> mappedProductsPage =
 			mappedProductResource.
 				getProductByExternalReferenceCodeMappedProductsPage(
 					externalReferenceCode, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			mappedProductPage.getTotalCount());
+			mappedProductsPage.getTotalCount());
 
 		MappedProduct mappedProduct1 =
 			testGetProductByExternalReferenceCodeMappedProductsPage_addMappedProduct(
@@ -634,55 +843,29 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	@Test
-	public void testPostProductByExternalReferenceCodeMappedProduct()
-		throws Exception {
-
-		MappedProduct randomMappedProduct = randomMappedProduct();
-
+	public void testGetProductIdMappedProductBySequence() throws Exception {
 		MappedProduct postMappedProduct =
-			testPostProductByExternalReferenceCodeMappedProduct_addMappedProduct(
-				randomMappedProduct);
-
-		assertEquals(randomMappedProduct, postMappedProduct);
-		assertValid(postMappedProduct);
-	}
-
-	protected MappedProduct
-			testPostProductByExternalReferenceCodeMappedProduct_addMappedProduct(
-				MappedProduct mappedProduct)
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetProductByExternalReferenceCodeMappedProductBySequence()
-		throws Exception {
-
-		MappedProduct postMappedProduct =
-			testGetProductByExternalReferenceCodeMappedProductBySequence_addMappedProduct();
+			testGetProductIdMappedProductBySequence_addMappedProduct();
 
 		MappedProduct getMappedProduct =
-			mappedProductResource.
-				getProductByExternalReferenceCodeMappedProductBySequence(
-					testGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode(),
-					postMappedProduct.getSequence());
+			mappedProductResource.getProductIdMappedProductBySequence(
+				testGetProductIdMappedProductBySequence_getId(
+					postMappedProduct),
+				postMappedProduct.getSequence());
 
 		assertEquals(postMappedProduct, getMappedProduct);
 		assertValid(getMappedProduct);
 	}
 
-	protected String
-			testGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode()
+	protected Long testGetProductIdMappedProductBySequence_getId(
+			MappedProduct mappedProduct)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return mappedProduct.getId();
 	}
 
 	protected MappedProduct
-			testGetProductByExternalReferenceCodeMappedProductBySequence_addMappedProduct()
+			testGetProductIdMappedProductBySequence_addMappedProduct()
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -690,11 +873,11 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	@Test
-	public void testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence()
+	public void testGraphQLGetProductIdMappedProductBySequence()
 		throws Exception {
 
 		MappedProduct mappedProduct =
-			testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_addMappedProduct();
+			testGraphQLGetProductIdMappedProductBySequence_addMappedProduct();
 
 		// No namespace
 
@@ -705,14 +888,13 @@ public abstract class BaseMappedProductResourceTestCase {
 					JSONUtil.getValueAsString(
 						invokeGraphQLQuery(
 							new GraphQLField(
-								"productByExternalReferenceCodeMappedProductBySequence",
+								"productIdMappedProductBySequence",
 								new HashMap<String, Object>() {
 									{
 										put(
-											"externalReferenceCode",
-											"\"" +
-												testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode() +
-													"\"");
+											"id",
+											testGraphQLGetProductIdMappedProductBySequence_getId(
+												mappedProduct));
 
 										put(
 											"sequence",
@@ -722,7 +904,7 @@ public abstract class BaseMappedProductResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data",
-						"Object/productByExternalReferenceCodeMappedProductBySequence"))));
+						"Object/productIdMappedProductBySequence"))));
 
 		// Using the namespace headlessCommerceAdminCatalog_v1_0
 
@@ -735,14 +917,13 @@ public abstract class BaseMappedProductResourceTestCase {
 							new GraphQLField(
 								"headlessCommerceAdminCatalog_v1_0",
 								new GraphQLField(
-									"productByExternalReferenceCodeMappedProductBySequence",
+									"productIdMappedProductBySequence",
 									new HashMap<String, Object>() {
 										{
 											put(
-												"externalReferenceCode",
-												"\"" +
-													testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode() +
-														"\"");
+												"id",
+												testGraphQLGetProductIdMappedProductBySequence_getId(
+													mappedProduct));
 
 											put(
 												"sequence",
@@ -754,23 +935,21 @@ public abstract class BaseMappedProductResourceTestCase {
 									getGraphQLFields()))),
 						"JSONObject/data",
 						"JSONObject/headlessCommerceAdminCatalog_v1_0",
-						"Object/productByExternalReferenceCodeMappedProductBySequence"))));
+						"Object/productIdMappedProductBySequence"))));
 	}
 
-	protected String
-			testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_getExternalReferenceCode()
+	protected Long testGraphQLGetProductIdMappedProductBySequence_getId(
+			MappedProduct mappedProduct)
 		throws Exception {
 
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
+		return mappedProduct.getId();
 	}
 
 	@Test
-	public void testGraphQLGetProductByExternalReferenceCodeMappedProductBySequenceNotFound()
+	public void testGraphQLGetProductIdMappedProductBySequenceNotFound()
 		throws Exception {
 
-		String irrelevantExternalReferenceCode =
-			"\"" + RandomTestUtil.randomString() + "\"";
+		Long irrelevantId = RandomTestUtil.randomLong();
 		String irrelevantSequence = "\"" + RandomTestUtil.randomString() + "\"";
 
 		// No namespace
@@ -780,12 +959,10 @@ public abstract class BaseMappedProductResourceTestCase {
 			JSONUtil.getValueAsString(
 				invokeGraphQLQuery(
 					new GraphQLField(
-						"productByExternalReferenceCodeMappedProductBySequence",
+						"productIdMappedProductBySequence",
 						new HashMap<String, Object>() {
 							{
-								put(
-									"externalReferenceCode",
-									irrelevantExternalReferenceCode);
+								put("id", irrelevantId);
 								put("sequence", irrelevantSequence);
 							}
 						},
@@ -802,12 +979,10 @@ public abstract class BaseMappedProductResourceTestCase {
 					new GraphQLField(
 						"headlessCommerceAdminCatalog_v1_0",
 						new GraphQLField(
-							"productByExternalReferenceCodeMappedProductBySequence",
+							"productIdMappedProductBySequence",
 							new HashMap<String, Object>() {
 								{
-									put(
-										"externalReferenceCode",
-										irrelevantExternalReferenceCode);
+									put("id", irrelevantId);
 									put("sequence", irrelevantSequence);
 								}
 							},
@@ -817,7 +992,7 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	protected MappedProduct
-			testGraphQLGetProductByExternalReferenceCodeMappedProductBySequence_addMappedProduct()
+			testGraphQLGetProductIdMappedProductBySequence_addMappedProduct()
 		throws Exception {
 
 		return testGraphQLMappedProduct_addMappedProduct();
@@ -892,12 +1067,12 @@ public abstract class BaseMappedProductResourceTestCase {
 
 		Long id = testGetProductIdMappedProductsPage_getId();
 
-		Page<MappedProduct> mappedProductPage =
+		Page<MappedProduct> mappedProductsPage =
 			mappedProductResource.getProductIdMappedProductsPage(
 				id, null, null, null);
 
 		int totalCount = GetterUtil.getInteger(
-			mappedProductPage.getTotalCount());
+			mappedProductsPage.getTotalCount());
 
 		MappedProduct mappedProduct1 =
 			testGetProductIdMappedProductsPage_addMappedProduct(
@@ -1158,6 +1333,34 @@ public abstract class BaseMappedProductResourceTestCase {
 	}
 
 	@Test
+	public void testPatchMappedProduct() throws Exception {
+		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPostProductByExternalReferenceCodeMappedProduct()
+		throws Exception {
+
+		MappedProduct randomMappedProduct = randomMappedProduct();
+
+		MappedProduct postMappedProduct =
+			testPostProductByExternalReferenceCodeMappedProduct_addMappedProduct(
+				randomMappedProduct);
+
+		assertEquals(randomMappedProduct, postMappedProduct);
+		assertValid(postMappedProduct);
+	}
+
+	protected MappedProduct
+			testPostProductByExternalReferenceCodeMappedProduct_addMappedProduct(
+				MappedProduct mappedProduct)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testPostProductIdMappedProduct() throws Exception {
 		MappedProduct randomMappedProduct = randomMappedProduct();
 
@@ -1175,162 +1378,6 @@ public abstract class BaseMappedProductResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGetProductIdMappedProductBySequence() throws Exception {
-		MappedProduct postMappedProduct =
-			testGetProductIdMappedProductBySequence_addMappedProduct();
-
-		MappedProduct getMappedProduct =
-			mappedProductResource.getProductIdMappedProductBySequence(
-				testGetProductIdMappedProductBySequence_getId(
-					postMappedProduct),
-				postMappedProduct.getSequence());
-
-		assertEquals(postMappedProduct, getMappedProduct);
-		assertValid(getMappedProduct);
-	}
-
-	protected Long testGetProductIdMappedProductBySequence_getId(
-			MappedProduct mappedProduct)
-		throws Exception {
-
-		return mappedProduct.getId();
-	}
-
-	protected MappedProduct
-			testGetProductIdMappedProductBySequence_addMappedProduct()
-		throws Exception {
-
-		throw new UnsupportedOperationException(
-			"This method needs to be implemented");
-	}
-
-	@Test
-	public void testGraphQLGetProductIdMappedProductBySequence()
-		throws Exception {
-
-		MappedProduct mappedProduct =
-			testGraphQLGetProductIdMappedProductBySequence_addMappedProduct();
-
-		// No namespace
-
-		Assert.assertTrue(
-			equals(
-				mappedProduct,
-				MappedProductSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"productIdMappedProductBySequence",
-								new HashMap<String, Object>() {
-									{
-										put(
-											"id",
-											testGraphQLGetProductIdMappedProductBySequence_getId(
-												mappedProduct));
-
-										put(
-											"sequence",
-											"\"" + mappedProduct.getSequence() +
-												"\"");
-									}
-								},
-								getGraphQLFields())),
-						"JSONObject/data",
-						"Object/productIdMappedProductBySequence"))));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertTrue(
-			equals(
-				mappedProduct,
-				MappedProductSerDes.toDTO(
-					JSONUtil.getValueAsString(
-						invokeGraphQLQuery(
-							new GraphQLField(
-								"headlessCommerceAdminCatalog_v1_0",
-								new GraphQLField(
-									"productIdMappedProductBySequence",
-									new HashMap<String, Object>() {
-										{
-											put(
-												"id",
-												testGraphQLGetProductIdMappedProductBySequence_getId(
-													mappedProduct));
-
-											put(
-												"sequence",
-												"\"" +
-													mappedProduct.
-														getSequence() + "\"");
-										}
-									},
-									getGraphQLFields()))),
-						"JSONObject/data",
-						"JSONObject/headlessCommerceAdminCatalog_v1_0",
-						"Object/productIdMappedProductBySequence"))));
-	}
-
-	protected Long testGraphQLGetProductIdMappedProductBySequence_getId(
-			MappedProduct mappedProduct)
-		throws Exception {
-
-		return mappedProduct.getId();
-	}
-
-	@Test
-	public void testGraphQLGetProductIdMappedProductBySequenceNotFound()
-		throws Exception {
-
-		Long irrelevantId = RandomTestUtil.randomLong();
-		String irrelevantSequence = "\"" + RandomTestUtil.randomString() + "\"";
-
-		// No namespace
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"productIdMappedProductBySequence",
-						new HashMap<String, Object>() {
-							{
-								put("id", irrelevantId);
-								put("sequence", irrelevantSequence);
-							}
-						},
-						getGraphQLFields())),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-
-		// Using the namespace headlessCommerceAdminCatalog_v1_0
-
-		Assert.assertEquals(
-			"Not Found",
-			JSONUtil.getValueAsString(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"headlessCommerceAdminCatalog_v1_0",
-						new GraphQLField(
-							"productIdMappedProductBySequence",
-							new HashMap<String, Object>() {
-								{
-									put("id", irrelevantId);
-									put("sequence", irrelevantSequence);
-								}
-							},
-							getGraphQLFields()))),
-				"JSONArray/errors", "Object/0", "JSONObject/extensions",
-				"Object/code"));
-	}
-
-	protected MappedProduct
-			testGraphQLGetProductIdMappedProductBySequence_addMappedProduct()
-		throws Exception {
-
-		return testGraphQLMappedProduct_addMappedProduct();
 	}
 
 	protected MappedProduct testGraphQLMappedProduct_addMappedProduct()
@@ -2167,7 +2214,30 @@ public abstract class BaseMappedProductResourceTestCase {
 		return randomMappedProduct();
 	}
 
+	protected final JSONObject waitForFinish(
+			String expectedExecuteStatus, JSONObject jsonObject)
+		throws Exception {
+
+		while (true) {
+			ImportTask importTask = importTaskResource.getImportTask(
+				jsonObject.getLong("id"));
+
+			ImportTask.ExecuteStatus executeStatus =
+				importTask.getExecuteStatus();
+
+			if (StringUtil.equals(executeStatus.getValue(), "COMPLETED") ||
+				StringUtil.equals(executeStatus.getValue(), "FAILED")) {
+
+				Assert.assertEquals(
+					expectedExecuteStatus, executeStatus.getValue());
+
+				return jsonObject;
+			}
+		}
+	}
+
 	protected MappedProductResource mappedProductResource;
+	protected ImportTaskResource importTaskResource;
 	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
 	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected com.liferay.portal.kernel.model.Group testGroup;
@@ -2368,7 +2438,9 @@ public abstract class BaseMappedProductResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseMappedProductResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.headless.commerce.admin.catalog.resource.v1_0.

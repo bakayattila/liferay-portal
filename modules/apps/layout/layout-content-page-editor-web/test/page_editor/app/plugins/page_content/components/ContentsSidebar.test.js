@@ -7,8 +7,9 @@ import {State} from '@liferay/frontend-js-state-web';
 import {render, screen} from '@testing-library/react';
 import React from 'react';
 
+import {checkAccessibility} from '../../../../../__lib__/checkAccessibility';
+
 import '@testing-library/jest-dom/extend-expect';
-import {checkAccessibility} from '@liferay/layout-js-components-web';
 
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/editableFragmentEntryProcessor';
 import {StoreContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';

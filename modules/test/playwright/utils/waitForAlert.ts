@@ -1,4 +1,4 @@
-import {FrameLocator, Page} from '@playwright/test';
+import {FrameLocator, Page, expect} from '@playwright/test';
 
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
@@ -7,6 +7,8 @@ import {FrameLocator, Page} from '@playwright/test';
 
 type Options = {
 	autoClose?: boolean;
+	exact?: boolean;
+	timeout?: number;
 	type?: 'success' | 'info' | 'warning' | 'danger';
 };
 
@@ -20,8 +22,9 @@ const CSS_CLASSES = {
 export async function waitForAlert(
 	parent: Page | FrameLocator,
 	text = 'Success:Your request completed successfully.',
-	{autoClose = true, type = 'success'}: Options = {
+	{autoClose = true, exact = false, timeout, type = 'success'}: Options = {
 		autoClose: true,
+		exact: false,
 		type: 'success',
 	}
 ) {
@@ -29,7 +32,16 @@ export async function waitForAlert(
 		hasText: text,
 	});
 
-	await alert.waitFor();
+	if (timeout) {
+		await alert.waitFor({timeout});
+	}
+	else {
+		await alert.waitFor();
+	}
+
+	if (exact) {
+		await expect(alert).toHaveText(text);
+	}
 
 	if (autoClose) {
 		await alert.getByLabel('Close').click();

@@ -10,8 +10,10 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -25,20 +27,20 @@ import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalService;
 import com.liferay.site.navigation.service.SiteNavigationMenuService;
 import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 
+import jakarta.portlet.PortletConfig;
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletPreferences;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.ReadOnlyException;
+import jakarta.portlet.RenderRequest;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import java.util.Objects;
-
-import javax.portlet.PortletConfig;
-import javax.portlet.PortletException;
-import javax.portlet.PortletPreferences;
-import javax.portlet.PortletRequest;
-import javax.portlet.ReadOnlyException;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -49,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Raymond Augé
  */
 @Component(
-	property = "javax.portlet.name=" + SiteNavigationMenuPortletKeys.SITE_NAVIGATION_MENU,
+	property = "jakarta.portlet.name=" + SiteNavigationMenuPortletKeys.SITE_NAVIGATION_MENU,
 	service = ConfigurationAction.class
 )
 public class SiteNavigationMenuConfigurationAction
@@ -97,7 +99,7 @@ public class SiteNavigationMenuConfigurationAction
 		try {
 			portletPreferences.reset("included-layouts");
 
-			_updateRootMenuItemPreferences(portletPreferences);
+			_updateRootMenuItemPreferences(portletPreferences, portletRequest);
 			_updateSiteNavigationMenuPreferences(
 				portletPreferences, portletRequest);
 		}
@@ -117,34 +119,64 @@ public class SiteNavigationMenuConfigurationAction
 	protected SiteNavigationMenuService siteNavigationMenuService;
 
 	private void _updateRootMenuItemPreferences(
-			PortletPreferences portletPreferences)
+			PortletPreferences portletPreferences,
+			PortletRequest portletRequest)
 		throws ReadOnlyException {
 
-		long rootMenuItemId = GetterUtil.getLong(
-			portletPreferences.getValue("rootMenuItemId", null));
-		String rootMenuItemType = portletPreferences.getValue(
-			"rootMenuItemType", StringPool.BLANK);
+		long siteNavigationMenuId = GetterUtil.getLong(
+			portletPreferences.getValue("siteNavigationMenuId", null));
 
-		if ((rootMenuItemId == 0) ||
-			!Objects.equals(rootMenuItemType, "select")) {
+		if (siteNavigationMenuId > 0) {
+			long rootMenuItemId = GetterUtil.getLong(
+				portletPreferences.getValue("rootMenuItemId", null));
+			String rootMenuItemType = portletPreferences.getValue(
+				"rootMenuItemType", StringPool.BLANK);
+
+			if ((rootMenuItemId == 0) ||
+				!Objects.equals(rootMenuItemType, "select")) {
+
+				portletPreferences.reset("rootMenuItemExternalReferenceCode");
+				portletPreferences.reset("rootMenuItemId");
+			}
+
+			SiteNavigationMenuItem siteNavigationMenuItem =
+				siteNavigationMenuItemLocalService.fetchSiteNavigationMenuItem(
+					rootMenuItemId);
+
+			if (siteNavigationMenuItem != null) {
+				portletPreferences.setValue(
+					"rootMenuItemExternalReferenceCode",
+					siteNavigationMenuItem.getExternalReferenceCode());
+
+				return;
+			}
 
 			portletPreferences.reset("rootMenuItemExternalReferenceCode");
-			portletPreferences.reset("rootMenuItemId");
 		}
+		else {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)portletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
 
-		SiteNavigationMenuItem siteNavigationMenuItem =
-			siteNavigationMenuItemLocalService.fetchSiteNavigationMenuItem(
-				rootMenuItemId);
+			String rootMenuItemId = portletPreferences.getValue(
+				"rootMenuItemId", null);
 
-		if (siteNavigationMenuItem != null) {
-			portletPreferences.setValue(
-				"rootMenuItemExternalReferenceCode",
-				siteNavigationMenuItem.getExternalReferenceCode());
+			Layout rootLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+				rootMenuItemId, themeDisplay.getScopeGroupId(), false);
 
-			return;
+			if (rootLayout == null) {
+				rootLayout = _layoutLocalService.fetchLayoutByUuidAndGroupId(
+					rootMenuItemId, themeDisplay.getScopeGroupId(), true);
+			}
+
+			if (rootLayout != null) {
+				portletPreferences.setValue(
+					"rootMenuItemExternalReferenceCode", rootLayout.getUuid());
+			}
+			else {
+				portletPreferences.reset("rootMenuItemExternalReferenceCode");
+			}
 		}
-
-		portletPreferences.reset("rootMenuItemExternalReferenceCode");
 	}
 
 	private void _updateSiteNavigationMenuPreferences(
@@ -201,6 +233,9 @@ public class SiteNavigationMenuConfigurationAction
 
 	@Reference
 	private ItemSelector _itemSelector;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private PortletDisplayTemplate _portletDisplayTemplate;

@@ -26,23 +26,41 @@ export class StyleBooksPage {
 		);
 	}
 
-	async create(styleBookName: string) {
+	async changePreviewPage(currentPage: string, nextPage: string) {
+		await this.page.getByRole('button', {name: currentPage}).click();
+
+		await this.page.getByRole('menuitem', {name: nextPage}).click();
+	}
+
+	async create(styleBookName: string, baseThemeName?: string) {
 		await this.page.getByRole('button', {exact: true, name: 'Add'}).click();
 
-		await this.page.getByPlaceholder('Name').fill(styleBookName);
+		await this.page
+			.getByRole('textbox', {name: 'Name'})
+			.fill(styleBookName);
+
+		if (baseThemeName) {
+			await this.page.getByLabel('Create Style Book For').click();
+
+			await this.page.getByRole('option', {name: baseThemeName}).click();
+		}
 
 		await this.page.getByRole('button', {name: 'Save'}).click();
 
+		await waitForAlert(this.page);
+	}
+
+	async previewFragmentCollection(collectionName: string) {
 		await this.page
-			.getByText('Success:Your request completed successfully.')
-			.waitFor();
+			.getByRole('button', {name: 'Fragments'})
+			.or(this.page.getByRole('button', {name: 'Pages'}))
+			.click();
 
-		const loadingAnimation = await this.page.locator(
-			'.style-book-editor__page-preview .loading-animation'
-		);
+		await this.page.getByRole('menuitem', {name: 'Fragments'}).click();
 
-		await loadingAnimation.waitFor();
-		await loadingAnimation.waitFor({state: 'hidden'});
+		await this.page.getByRole('button', {name: 'Account'}).click();
+
+		await this.page.getByRole('menuitem', {name: collectionName}).click();
 	}
 
 	async delete(styleBookName: string) {
@@ -61,6 +79,16 @@ export class StyleBooksPage {
 		await this.page.getByLabel('More actions').click();
 
 		await this.page.getByRole('menuitem', {name: 'Edit'}).click();
+	}
+
+	async markAsDefault(styleBookName: string) {
+		await this.search(styleBookName);
+
+		await this.page.getByLabel('More actions').click();
+
+		await this.page
+			.getByRole('menuitem', {exact: false, name: 'Mark as Default'})
+			.click();
 	}
 
 	async publish() {
@@ -84,10 +112,29 @@ export class StyleBooksPage {
 		).toBeVisible();
 	}
 
-	async selectFrontendTokenCategory(buttonText: string, category: string) {
-		await this.page.getByRole('button', {name: buttonText}).click();
+	async selectTokenCategory(category: string) {
+		await this.page
+			.locator('.style-book-editor__sidebar-content .form-control-select')
+			.click();
 
 		await this.page.getByText(category).click();
+	}
+
+	async updateTokenInput(label: string, value: string, section?: string) {
+		const parentElement = section
+			? this.page.locator('.panel').filter({hasText: section})
+			: this.page;
+
+		const input = parentElement
+			.locator('.form-group')
+			.filter({hasText: label})
+			.locator('input');
+
+		if (section && input.isHidden()) {
+			await this.page.getByRole('button', {name: section}).click();
+		}
+
+		await fillAndClickOutside(this.page, input, value);
 	}
 
 	async updateTokenInputColor(

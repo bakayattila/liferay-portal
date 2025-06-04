@@ -6,6 +6,7 @@
 package com.liferay.portal.search.internal.ml.embedding.text;
 
 import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -14,7 +15,7 @@ import com.liferay.portal.search.configuration.SemanticSearchConfiguration;
 import com.liferay.portal.search.configuration.SemanticSearchConfigurationProvider;
 import com.liferay.portal.search.ml.embedding.EmbeddingProviderStatus;
 import com.liferay.portal.search.rest.dto.v1_0.EmbeddingProviderConfiguration;
-import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
@@ -29,7 +30,7 @@ import org.mockito.Mockito;
 /**
  * @author Petteri Karttunen
  */
-@FeatureFlags("LPS-122920")
+@FeatureFlag("LPS-122920")
 public class TextEmbeddingRetrieverTest {
 
 	@ClassRule
@@ -167,6 +168,16 @@ public class TextEmbeddingRetrieverTest {
 		Assert.assertTrue(
 			textEmbeddingProviderConfigurationJSONs[0].contains(
 				_TEST_PROVIDER_NAME));
+	}
+
+	@Test
+	public void testGetTextEmbeddingWithBlankText() {
+		Double[] textEmbedding = _textEmbeddingRetrieverImpl.getTextEmbedding(
+			_TEST_PROVIDER_NAME, StringPool.BLANK);
+
+		Assert.assertNotNull(textEmbedding);
+		Assert.assertEquals(
+			Arrays.toString(textEmbedding), 0, textEmbedding.length);
 	}
 
 	@Test

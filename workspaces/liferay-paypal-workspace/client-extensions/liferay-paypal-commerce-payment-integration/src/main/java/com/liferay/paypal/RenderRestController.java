@@ -5,8 +5,8 @@
 
 package com.liferay.paypal;
 
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.util.Objects;
 
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * @author Brian I. Kim
@@ -48,20 +48,15 @@ public class RenderRestController extends BaseRestController {
 		long orderId = jsonObject.getLong("orderId");
 
 		sb.append(
-			WebClient.create(
-				StringBundler.concat(
-					getLXCDXPURL(),
+			get(
+				HashMapBuilder.put(
+					HttpHeaders.ACCEPT, MediaType.TEXT_PLAIN_VALUE
+				).put(
+					HttpHeaders.AUTHORIZATION, "Bearer " + jwt.getTokenValue()
+				).build(),
+				createURI(
 					"/o/headless-commerce-delivery-cart/v1.0/carts/", orderId,
-					"/payment-url")
-			).get(
-			).accept(
-				MediaType.TEXT_PLAIN
-			).header(
-				HttpHeaders.AUTHORIZATION, "Bearer " + jwt.getTokenValue()
-			).retrieve(
-			).bodyToMono(
-				String.class
-			).block());
+					"/payment-url")));
 
 		if (jsonObject.has("callbackURL")) {
 			sb.append("&callbackURL=");
@@ -73,8 +68,9 @@ public class RenderRestController extends BaseRestController {
 			sb.append(jsonObject.getBoolean("cancel"));
 			delete(
 				"Bearer " + jwt.getTokenValue(), StringPool.BLANK,
-				"/o/c/b9k3paypalwebhooks/by-external-reference-code/" +
-					jsonObject.getString("transactionCode"));
+				createURI(
+					"/o/c/b9k3paypalwebhooks/by-external-reference-code/",
+					jsonObject.getString("transactionCode")));
 		}
 
 		if (jsonObject.has("transactionCode")) {
@@ -108,9 +104,12 @@ public class RenderRestController extends BaseRestController {
 		JSONObject paymentsJSONObject = new JSONObject(
 			get(
 				"Bearer " + jwt.getTokenValue(),
-				StringBundler.concat(
-					"/o/headless-commerce-admin-payment/v1.0/payments/?filter=",
-					"relatedItemId eq ", orderId)));
+				UriComponentsBuilder.fromPath(
+					"/o/headless-commerce-admin-payment/v1.0/payments/"
+				).queryParam(
+					"filter", "relatedItemId eq " + orderId
+				).build(
+				).toUri()));
 
 		JSONArray itemsJSONArray = paymentsJSONObject.getJSONArray("items");
 

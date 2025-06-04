@@ -5,8 +5,12 @@
 
 package com.liferay.partner;
 
+import com.liferay.client.extension.util.spring.boot3.BaseRestController;
+import com.liferay.client.extension.util.spring.boot3.client.LiferayOAuth2AccessTokenManager;
+
 import org.json.JSONObject;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,11 +53,12 @@ public class ObjectActionMDFClaimStatusManagementRestController
 				_completeMDFRequestStatus(mdfRequestExternalReferenceCode);
 			}
 			else {
-				JSONObject responseJSONObject = get(
-					uriBuilder -> uriBuilder.path(
-						"/o/c/mdfrequests/by-external-reference-code/" +
-							mdfRequestExternalReferenceCode
-					).build());
+				JSONObject responseJSONObject = new JSONObject(
+					get(
+						_getAuthorization(),
+						createURI(
+							"/o/c/mdfrequests/by-external-reference-code/" +
+								mdfRequestExternalReferenceCode)));
 
 				if (responseJSONObject.getDouble("totalPaidAmount") >=
 						responseJSONObject.getDouble("totalMDFRequestAmount")) {
@@ -82,9 +87,19 @@ public class ObjectActionMDFClaimStatusManagementRestController
 		jsonObject.put("mdfRequestStatus", mdfRequestStatusJSONObject);
 
 		patch(
-			jsonObject.toString(),
-			"/o/c/mdfrequests/by-external-reference-code/" +
-				mdfRequestExternalReferenceCode);
+			_getAuthorization(), jsonObject.toString(),
+			createURI(
+				"/o/c/mdfrequests/by-external-reference-code/",
+				mdfRequestExternalReferenceCode));
 	}
+
+	private String _getAuthorization() {
+		return _liferayOAuth2AccessTokenManager.getAuthorization(
+			"liferay-partner-etc-spring-boot-oauth-application-headless-" +
+				"server");
+	}
+
+	@Autowired
+	private LiferayOAuth2AccessTokenManager _liferayOAuth2AccessTokenManager;
 
 }

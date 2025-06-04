@@ -19,7 +19,11 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.validation.Valid;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -32,12 +36,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.validation.Valid;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -59,7 +57,7 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(WidgetPageTemplate.class, json);
 	}
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the widget page template is active."
 	)
 	public Boolean getActive() {
@@ -104,7 +102,7 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _activeSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The localized descriptions of the widget page template."
 	)
 	@Valid
@@ -151,7 +149,7 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _description_i18nSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "The localized relative URLs to the page's rendered content."
 	)
 	@Valid
@@ -200,7 +198,7 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Map<String, String>> _friendlyUrlPath_i18nSupplier;
 
-	@Schema(
+	@io.swagger.v3.oas.annotations.media.Schema(
 		description = "A flag that indicates whether the page created based on this page template is hidden from navigation."
 	)
 	public Boolean getHiddenFromNavigation() {
@@ -245,7 +243,9 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 	@JsonIgnore
 	private Supplier<Boolean> _hiddenFromNavigationSupplier;
 
-	@Schema(description = "The localized names of the widget page template.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The localized names of the widget page template."
+	)
 	@Valid
 	public Map<String, String> getName_i18n() {
 		if (_name_i18nSupplier != null) {
@@ -680,8 +680,8 @@ public class WidgetPageTemplate extends PageTemplate implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.WidgetPageTemplate",
 		name = "x-class-name"
 	)

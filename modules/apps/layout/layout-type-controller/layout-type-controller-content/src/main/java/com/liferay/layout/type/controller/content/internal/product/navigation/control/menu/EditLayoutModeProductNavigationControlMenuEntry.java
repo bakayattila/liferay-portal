@@ -39,11 +39,11 @@ import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.staging.StagingGroupHelper;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -213,16 +213,24 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 			httpServletRequest, "segmentsExperienceId", -1);
 
 		if (segmentsExperienceId != -1) {
-			SegmentsExperience segmentsExperience =
+			SegmentsExperience publishedSegmentsExperience =
 				_segmentsExperienceLocalService.fetchSegmentsExperience(
 					segmentsExperienceId);
 
-			if ((segmentsExperience != null) &&
-				((layout.getPlid() == segmentsExperience.getPlid()) ||
-				 (layout.getClassPK() == segmentsExperience.getPlid()))) {
+			Layout draftLayout = layout.fetchDraftLayout();
+
+			SegmentsExperience draftSegmentsExperience =
+				_segmentsExperienceLocalService.fetchSegmentsExperience(
+					draftLayout.getGroupId(),
+					publishedSegmentsExperience.getSegmentsExperienceKey(),
+					draftLayout.getPlid());
+
+			if ((draftSegmentsExperience != null) &&
+				(draftLayout.getPlid() == draftSegmentsExperience.getPlid())) {
 
 				return HttpComponentsUtil.setParameter(
-					url, "segmentsExperienceId", segmentsExperienceId);
+					url, "segmentsExperienceId",
+					draftSegmentsExperience.getSegmentsExperienceId());
 			}
 		}
 

@@ -6,18 +6,22 @@
 package com.liferay.frontend.taglib.clay.servlet.taglib;
 
 import com.liferay.frontend.taglib.clay.internal.servlet.taglib.BaseContainerTag;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.IconItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.VerticalNavItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.VerticalNavItemList;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import jakarta.servlet.jsp.JspException;
+import jakarta.servlet.jsp.JspWriter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
 
 /**
  * @author Eduardo Allegrini
@@ -293,6 +297,36 @@ public class VerticalNavTag extends BaseContainerTag {
 
 			jspWriter.write(
 				HtmlUtil.escape((String)verticalNavItem.get("label")));
+
+			List<IconItem> iconItems = (List<IconItem>)verticalNavItem.get(
+				"icons");
+
+			if (ListUtil.isNotEmpty(iconItems)) {
+				for (IconItem iconItem : iconItems) {
+					String symbol = (String)iconItem.get("symbol");
+
+					if (Validator.isNull(symbol)) {
+						continue;
+					}
+
+					IconTag iconTag = new IconTag();
+
+					iconTag.setCssClass("c-ml-2 c-mr-2 text-muted");
+					iconTag.setSymbol(symbol);
+
+					iconTag.doTag(pageContext);
+				}
+			}
+
+			if (GetterUtil.getBoolean(verticalNavItem.get("deprecated"))) {
+				jspWriter.write("<span class=\"inline-item ");
+				jspWriter.write("inline-item-after\"><span class=\"badge ");
+				jspWriter.write("badge-translucent badge-warning ");
+				jspWriter.write("text-uppercase\"><span class=\"");
+				jspWriter.write("badge-item badge-item-expand\">");
+				jspWriter.write(LanguageUtil.get(getRequest(), "deprecated"));
+				jspWriter.write("</span></span></span>");
+			}
 
 			if (items != null) {
 				IconTag iconTag = new IconTag();

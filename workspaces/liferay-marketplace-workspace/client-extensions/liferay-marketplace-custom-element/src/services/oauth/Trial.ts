@@ -5,6 +5,13 @@
 
 import {MarketplaceSpringBootOAuth2} from './OAuth2Client';
 
+export type Availability = {
+	active: boolean;
+	available: number;
+	fallback: boolean;
+	max: number;
+};
+
 class TrialOAuth2 extends MarketplaceSpringBootOAuth2 {
 	async getAvailability(): Promise<Availability> {
 		try {
@@ -20,7 +27,7 @@ class TrialOAuth2 extends MarketplaceSpringBootOAuth2 {
 		}
 	}
 
-	async deleteTrial(orderId: string) {
+	async deleteTrial(orderId: number | string) {
 		await this.delete(`/${orderId}`);
 	}
 

@@ -5,7 +5,7 @@
 
 package com.liferay.asset.display.page.item.selector.web.internal.display.context;
 
-import com.liferay.asset.display.page.item.selector.criterion.AssetDisplayPageSelectorCriterion;
+import com.liferay.asset.display.page.item.selector.AssetDisplayPageSelectorCriterion;
 import com.liferay.item.selector.criteria.AssetEntryItemSelectorReturnType;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -31,13 +31,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBuilder;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletURL;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.List;
-
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Yurena Cabrera
@@ -70,6 +70,8 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 				_portletRequest, _portletURL, null,
 				"there-are-no-display-page-templates");
 
+		assetDisplayPageSearchContainer.setId(
+			"displayPages" + getLayoutPageTemplateCollectionId());
 		assetDisplayPageSearchContainer.setOrderByCol(_getOrderByCol());
 		assetDisplayPageSearchContainer.setOrderByComparator(
 			_getLayoutPageTemplateEntryOrderByComparator(

@@ -12,6 +12,8 @@ import com.liferay.change.tracking.rest.client.pagination.Page;
 import com.liferay.change.tracking.rest.client.pagination.Pagination;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
+import com.liferay.change.tracking.spi.history.CTCollectionHistoryProvider;
+import com.liferay.change.tracking.spi.history.CTCollectionHistoryProviderRegistry;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
@@ -478,13 +480,13 @@ public class CTEntryResourceTest extends BaseCTEntryResourceTestCase {
 
 			address = _addressLocalService.addAddress(
 				null, user.getUserId(), Contact.class.getName(),
-				user.getContactId(), name, RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), null, null,
-				RandomTestUtil.randomString(), null, 0, 0,
+				user.getContactId(), 0,
 				_listTypeLocalService.getListTypeId(
 					testCompany.getCompanyId(), "personal",
 					ListTypeConstants.CONTACT_ADDRESS),
-				false, false, null, ServiceContextTestUtil.getServiceContext());
+				0, RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				false, name, false, RandomTestUtil.randomString(), null, null,
+				null, null, null, ServiceContextTestUtil.getServiceContext());
 		}
 
 		com.liferay.change.tracking.model.CTEntry serviceBuilderCTEntry =
@@ -515,8 +517,12 @@ public class CTEntryResourceTest extends BaseCTEntryResourceTestCase {
 			JournalTestUtil.updateArticle(journalArticle, title);
 		}
 
+		CTCollectionHistoryProvider<?> ctCollectionHistoryProvider =
+			_ctCollectionHistoryProviderRegistry.getCTCollectionHistoryProvider(
+				_journalArticleClassNameId);
+
 		com.liferay.change.tracking.model.CTEntry serviceBuilderCTEntry =
-			_ctEntryLocalService.fetchTimelineCTEntry(
+			ctCollectionHistoryProvider.getCTEntry(
 				ctCollectionId, _journalArticleClassNameId,
 				journalArticle.getId());
 
@@ -538,6 +544,10 @@ public class CTEntryResourceTest extends BaseCTEntryResourceTestCase {
 
 	@Inject
 	private ClassNameLocalService _classNameLocalService;
+
+	@Inject
+	private CTCollectionHistoryProviderRegistry
+		_ctCollectionHistoryProviderRegistry;
 
 	@Inject
 	private CTCollectionLocalService _ctCollectionLocalService;

@@ -12,6 +12,7 @@ import com.liferay.object.admin.rest.internal.dto.v1_0.converter.constants.DTOCo
 import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.admin.rest.internal.odata.entity.v1_0.ObjectRelationshipEntityModel;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectRelationshipResource;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFolder;
 import com.liferay.object.service.ObjectDefinitionLocalService;
@@ -38,7 +39,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import javax.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -182,7 +183,8 @@ public class ObjectRelationshipResourceImpl
 				objectRelationship.getParameterObjectFieldId(),
 				objectRelationship.getDeletionTypeAsString(),
 				GetterUtil.getBoolean(objectRelationship.getEdge()),
-				LocalizedMapUtil.getLocalizedMap(objectRelationship.getLabel()),
+				LocalizedMapUtil.populateLocalizedMap(
+					objectRelationship.getLabel()),
 				objectRelationship.getName(),
 				GetterUtil.getBoolean(objectRelationship.getSystem()),
 				objectRelationship.getTypeAsString(), null));
@@ -213,12 +215,13 @@ public class ObjectRelationshipResourceImpl
 					objectRelationship.getParameterObjectFieldId()),
 				objectRelationship.getDeletionTypeAsString(),
 				GetterUtil.getBoolean(objectRelationship.getEdge()),
-				LocalizedMapUtil.getLocalizedMap(objectRelationship.getLabel()),
+				LocalizedMapUtil.populateLocalizedMap(
+					objectRelationship.getLabel()),
 				objectRelationship.getName(),
 				GetterUtil.getBoolean(objectRelationship.getSystem()),
 				objectRelationship.getTypeAsString(),
 				ObjectFieldUtil.toObjectField(
-					LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()), false,
+					LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
 					_listTypeDefinitionLocalService,
 					objectRelationship.getObjectField(),
 					_objectFieldLocalService, _objectFieldSettingLocalService,
@@ -232,7 +235,7 @@ public class ObjectRelationshipResourceImpl
 
 		if (Validator.isNotNull(objectRelationship.getEdge()) &&
 			!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPS-187142")) {
+				contextCompany.getCompanyId(), "LPD-34594")) {
 
 			throw new UnsupportedOperationException();
 		}
@@ -266,9 +269,10 @@ public class ObjectRelationshipResourceImpl
 					objectRelationship.getParameterObjectFieldId()),
 				objectRelationship.getDeletionTypeAsString(),
 				GetterUtil.getBoolean(objectRelationship.getEdge()),
-				LocalizedMapUtil.getLocalizedMap(objectRelationship.getLabel()),
+				LocalizedMapUtil.populateLocalizedMap(
+					objectRelationship.getLabel()),
 				ObjectFieldUtil.toObjectField(
-					LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()), false,
+					LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
 					_listTypeDefinitionLocalService,
 					objectRelationship.getObjectField(),
 					_objectFieldLocalService, _objectFieldSettingLocalService,
@@ -279,6 +283,33 @@ public class ObjectRelationshipResourceImpl
 	public ObjectRelationship putObjectRelationshipByExternalReferenceCode(
 			String externalReferenceCode, ObjectRelationship objectRelationship)
 		throws Exception {
+
+		com.liferay.object.model.ObjectDefinition
+			serviceBuilderObjectDefinition = null;
+
+		if (Validator.isNotNull(
+				objectRelationship.
+					getObjectDefinitionExternalReferenceCode1())) {
+
+			serviceBuilderObjectDefinition =
+				_objectDefinitionLocalService.
+					fetchObjectDefinitionByExternalReferenceCode(
+						objectRelationship.
+							getObjectDefinitionExternalReferenceCode1(),
+						contextCompany.getCompanyId());
+		}
+
+		if (serviceBuilderObjectDefinition == null) {
+			serviceBuilderObjectDefinition =
+				_objectDefinitionLocalService.getObjectDefinition(
+					GetterUtil.getLong(
+						objectRelationship.getObjectDefinitionId1()));
+		}
+
+		long objectDefinitionId =
+			serviceBuilderObjectDefinition.getObjectDefinitionId();
+
+		objectRelationship.setObjectDefinitionId1(() -> objectDefinitionId);
 
 		com.liferay.object.model.ObjectRelationship
 			serviceBuilderObjectRelationship =
@@ -325,6 +356,9 @@ public class ObjectRelationshipResourceImpl
 			contextUser.getUserId(), defaultObjectFolder.getObjectFolderId(),
 			GetterUtil.get(
 				objectRelationship.getObjectDefinitionModifiable2(), true),
+			GetterUtil.get(
+				objectRelationship.getObjectDefinitionScope2(),
+				ObjectDefinitionConstants.SCOPE_COMPANY),
 			GetterUtil.get(
 				objectRelationship.getObjectDefinitionSystem2(), false));
 	}

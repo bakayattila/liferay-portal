@@ -34,6 +34,7 @@ import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
@@ -149,6 +150,54 @@ public class DDMIndexerImplTest {
 	}
 
 	@Test
+	public void testExtractIndexableAttributesWithJournalArticleField() {
+		DDMForm ddmForm = DDMFormTestUtil.createDDMForm(
+			SetUtil.fromArray(LocaleUtil.BRAZIL, LocaleUtil.US),
+			LocaleUtil.BRAZIL);
+
+		DDMFormField ddmFormField = DDMFormTestUtil.createDDMFormField(
+			_FIELD_NAME, RandomTestUtil.randomString(),
+			DDMFormFieldTypeConstants.JOURNAL_ARTICLE,
+			DDMFormFieldTypeConstants.JOURNAL_ARTICLE, false, false, false);
+
+		ddmFormField.setIndexType("keyword");
+
+		ddmForm.addDDMFormField(ddmFormField);
+
+		Assert.assertEquals(
+			"Title",
+			_ddmIndexer.extractIndexableAttributes(
+				_createDDMStructure(ddmForm),
+				_createDDMFormValues(
+					ddmForm,
+					DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
+						_FIELD_NAME,
+						JSONUtil.put(
+							"title", "Title"
+						).toString())),
+				null));
+		Assert.assertEquals(
+			"Title Título",
+			_ddmIndexer.extractIndexableAttributes(
+				_createDDMStructure(ddmForm),
+				_createDDMFormValues(
+					ddmForm,
+					DDMFormValuesTestUtil.createUnlocalizedDDMFormFieldValue(
+						_FIELD_NAME,
+						JSONUtil.put(
+							"title", "Title"
+						).put(
+							"titleMap",
+							JSONUtil.put(
+								"en_US", "Title"
+							).put(
+								"pt_BR", "Título"
+							)
+						).toString())),
+				null));
+	}
+
+	@Test
 	public void testFormWithLegacyDDMIndexFieldsEnabled() {
 		DDMIndexer ddmIndexer = _createDDMIndexer(true);
 
@@ -231,8 +280,9 @@ public class DDMIndexerImplTest {
 
 		DDMFormFieldOptions ddmFormFieldOptions = new DDMFormFieldOptions();
 
+		ddmFormFieldOptions.addOptionLabel("apple", LocaleUtil.US, "Apple");
 		ddmFormFieldOptions.addOptionLabel(
-			"Option Value", LocaleUtil.US, "Option Label");
+			"pineapple", LocaleUtil.US, "Pineapple");
 
 		ddmFormField.setDDMFormFieldOptions(ddmFormFieldOptions);
 
@@ -247,17 +297,16 @@ public class DDMIndexerImplTest {
 				DDMFormValuesTestUtil.createDDMFormFieldValue(
 					_FIELD_NAME,
 					DDMFormValuesTestUtil.createLocalizedValue(
-						"[\"Option Value\"]", LocaleUtil.US))));
+						"[\"pineapple\"]", LocaleUtil.US))));
 
 		FieldValuesAssert.assertFieldValues(
 			HashMapBuilder.put(
-				"ddmFieldArray.ddmFieldValueKeyword_en_US", "Option Value"
+				"ddmFieldArray.ddmFieldValueKeyword_en_US", "pineapple"
 			).put(
-				"ddmFieldArray.ddmFieldValueKeyword_en_US_String",
-				"Option Label"
+				"ddmFieldArray.ddmFieldValueKeyword_en_US_String", "Pineapple"
 			).put(
 				"ddmFieldArray.ddmFieldValueKeyword_en_US_String_sortable",
-				"option label"
+				"pineapple"
 			).build(),
 			"ddmFieldArray.ddmFieldValueKeyword_en_US", document,
 			StringPool.BLANK);

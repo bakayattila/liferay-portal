@@ -16,7 +16,9 @@ import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.annotation.Generated;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serializable;
 
@@ -25,10 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.annotation.Generated;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * @author Rubén Pulido
@@ -51,7 +49,9 @@ public class WidgetPermission implements Serializable {
 		return ObjectMapperUtil.unsafeReadValue(WidgetPermission.class, json);
 	}
 
-	@Schema(description = "The IDs of the actions the role has permission for.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The IDs of the actions the role has permission for."
+	)
 	public String[] getActionIds() {
 		if (_actionIdsSupplier != null) {
 			actionIds = _actionIdsSupplier.get();
@@ -94,7 +94,9 @@ public class WidgetPermission implements Serializable {
 	@JsonIgnore
 	private Supplier<String[]> _actionIdsSupplier;
 
-	@Schema(description = "The role's name.")
+	@io.swagger.v3.oas.annotations.media.Schema(
+		description = "The role's name."
+	)
 	public String getRoleName() {
 		if (_roleNameSupplier != null) {
 			roleName = _roleNameSupplier.get();
@@ -209,8 +211,8 @@ public class WidgetPermission implements Serializable {
 		return sb.toString();
 	}
 
-	@Schema(
-		accessMode = Schema.AccessMode.READ_ONLY,
+	@io.swagger.v3.oas.annotations.media.Schema(
+		accessMode = io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.site.dto.v1_0.WidgetPermission",
 		name = "x-class-name"
 	)

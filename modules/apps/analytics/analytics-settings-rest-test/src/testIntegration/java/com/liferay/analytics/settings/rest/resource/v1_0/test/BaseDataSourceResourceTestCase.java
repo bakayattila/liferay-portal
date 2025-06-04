@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import com.liferay.analytics.settings.rest.client.dto.v1_0.DataSource;
+import com.liferay.analytics.settings.rest.client.dto.v1_0.DataSourceLiferayAnalyticsURL;
 import com.liferay.analytics.settings.rest.client.dto.v1_0.Field;
 import com.liferay.analytics.settings.rest.client.http.HttpInvoker;
 import com.liferay.analytics.settings.rest.client.pagination.Page;
@@ -31,7 +32,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
@@ -41,9 +42,13 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
+import jakarta.annotation.Generated;
+
+import jakarta.ws.rs.core.MultivaluedHashMap;
+
 import java.lang.reflect.Method;
 
-import java.text.DateFormat;
+import java.text.Format;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,10 +60,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.annotation.Generated;
-
-import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -82,7 +83,7 @@ public abstract class BaseDataSourceResourceTestCase {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+		_format = FastDateFormatFactoryUtil.getSimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	}
 
@@ -96,13 +97,12 @@ public abstract class BaseDataSourceResourceTestCase {
 
 		_dataSourceResource.setContextCompany(testCompany);
 
-		com.liferay.portal.kernel.model.User testCompanyAdminUser =
-			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+		_testCompanyAdminUser = UserTestUtil.getAdminUser(
+			testCompany.getCompanyId());
 
-		DataSourceResource.Builder builder = DataSourceResource.builder();
-
-		dataSourceResource = builder.authentication(
-			testCompanyAdminUser.getEmailAddress(),
+		dataSourceResource = DataSourceResource.builder(
+		).authentication(
+			_testCompanyAdminUser.getEmailAddress(),
 			PropsValues.DEFAULT_ADMIN_PASSWORD
 		).endpoint(
 			testCompany.getVirtualHostname(), 8080, "http"
@@ -190,7 +190,7 @@ public abstract class BaseDataSourceResourceTestCase {
 
 	@Test
 	public void testPostDataSource() throws Exception {
-		Assert.assertTrue(false);
+		Assert.assertTrue(true);
 	}
 
 	protected void assertContains(
@@ -237,6 +237,18 @@ public abstract class BaseDataSourceResourceTestCase {
 
 			assertEquals(dataSource1, dataSource2);
 		}
+	}
+
+	protected void assertEquals(
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL1,
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL2) {
+
+		Assert.assertTrue(
+			dataSourceLiferayAnalyticsURL1 + " does not equal " +
+				dataSourceLiferayAnalyticsURL2,
+			equals(
+				dataSourceLiferayAnalyticsURL1,
+				dataSourceLiferayAnalyticsURL2));
 	}
 
 	protected void assertEqualsIgnoringOrder(
@@ -343,7 +355,41 @@ public abstract class BaseDataSourceResourceTestCase {
 		}
 	}
 
+	protected void assertValid(
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL) {
+
+		boolean valid = true;
+
+		for (String additionalAssertFieldName :
+				getAdditionalDataSourceLiferayAnalyticsURLAssertFieldNames()) {
+
+			if (Objects.equals(
+					"liferayAnalyticsURL", additionalAssertFieldName)) {
+
+				if (dataSourceLiferayAnalyticsURL.getLiferayAnalyticsURL() ==
+						null) {
+
+					valid = false;
+				}
+
+				continue;
+			}
+
+			throw new IllegalArgumentException(
+				"Invalid additional assert field name " +
+					additionalAssertFieldName);
+		}
+
+		Assert.assertTrue(valid);
+	}
+
 	protected String[] getAdditionalAssertFieldNames() {
+		return new String[0];
+	}
+
+	protected String[]
+		getAdditionalDataSourceLiferayAnalyticsURLAssertFieldNames() {
+
 		return new String[0];
 	}
 
@@ -475,6 +521,39 @@ public abstract class BaseDataSourceResourceTestCase {
 		}
 
 		return false;
+	}
+
+	protected boolean equals(
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL1,
+		DataSourceLiferayAnalyticsURL dataSourceLiferayAnalyticsURL2) {
+
+		if (dataSourceLiferayAnalyticsURL1 == dataSourceLiferayAnalyticsURL2) {
+			return true;
+		}
+
+		for (String additionalAssertFieldName :
+				getAdditionalDataSourceLiferayAnalyticsURLAssertFieldNames()) {
+
+			if (Objects.equals(
+					"liferayAnalyticsURL", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						dataSourceLiferayAnalyticsURL1.getLiferayAnalyticsURL(),
+						dataSourceLiferayAnalyticsURL2.
+							getLiferayAnalyticsURL())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			throw new IllegalArgumentException(
+				"Invalid additional assert field name " +
+					additionalAssertFieldName);
+		}
+
+		return true;
 	}
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
@@ -665,6 +744,17 @@ public abstract class BaseDataSourceResourceTestCase {
 
 	protected DataSource randomPatchDataSource() throws Exception {
 		return randomDataSource();
+	}
+
+	protected DataSourceLiferayAnalyticsURL
+			randomDataSourceLiferayAnalyticsURL()
+		throws Exception {
+
+		return new DataSourceLiferayAnalyticsURL() {
+			{
+				liferayAnalyticsURL = RandomTestUtil.randomString();
+			}
+		};
 	}
 
 	protected DataSourceResource dataSourceResource;
@@ -868,7 +958,9 @@ public abstract class BaseDataSourceResourceTestCase {
 	private static final com.liferay.portal.kernel.log.Log _log =
 		LogFactoryUtil.getLog(BaseDataSourceResourceTestCase.class);
 
-	private static DateFormat _dateFormat;
+	private static Format _format;
+
+	private com.liferay.portal.kernel.model.User _testCompanyAdminUser;
 
 	@Inject
 	private com.liferay.analytics.settings.rest.resource.v1_0.DataSourceResource

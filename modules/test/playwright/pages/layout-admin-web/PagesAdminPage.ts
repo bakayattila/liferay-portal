@@ -41,7 +41,7 @@ export class PagesAdminPage {
 		});
 		this.newButton = page
 			.locator('.management-bar')
-			.getByRole('button', {name: 'New'});
+			.getByText('New', {exact: true});
 		this.pageEditorPage = new PageEditorPage(this.page);
 		this.pageTitleBox = addPageIFrame.locator(
 			'input[id="_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_name"]'
@@ -50,9 +50,9 @@ export class PagesAdminPage {
 		this.searchInput = this.page.getByPlaceholder('Search for');
 	}
 
-	async goto(siteUrl?: Site['friendlyUrlPath']) {
+	async goto(siteUrl?: Site['friendlyUrlPath'], doAsUserId?: string) {
 		await this.page.goto(
-			`/group${siteUrl || '/guest'}${PORTLET_URLS.pages}`
+			`/group${siteUrl || '/guest'}${PORTLET_URLS.pages}${doAsUserId ? '&doAsUserId=' + doAsUserId : ''}`
 		);
 	}
 
@@ -132,61 +132,6 @@ export class PagesAdminPage {
 		await this.configurationSaveButton.click();
 	}
 
-	async addCollectionPage({
-		collectionName,
-		draft = false,
-		name,
-		parent,
-	}: {
-		collectionName: string;
-		draft?: boolean;
-		name: string;
-		parent?: string;
-	}) {
-
-		// If no parent specified, just create from toolbar
-
-		if (!parent) {
-			await this.newButton.click();
-
-			await this.page
-				.getByRole('menuitem')
-				.getByText('Collection Page', {exact: true})
-				.click();
-		}
-
-		// If parent is specified, create child page
-
-		else {
-			await clickAndExpectToBeVisible({
-				autoClick: true,
-				target: this.page.getByRole('menuitem', {
-					name: 'Add Collection Page',
-				}),
-				trigger: this.page
-					.locator('li', {has: this.page.getByText(parent)})
-					.getByTitle('Add Child Page'),
-			});
-		}
-
-		await this.page
-			.getByRole('button')
-			.filter({hasText: collectionName})
-			.click();
-
-		// Select template and fill name
-
-		await this.addPage({
-			name,
-		});
-
-		// Publish is draft param is false
-
-		if (!draft) {
-			await this.pageEditorPage.publishPage();
-		}
-	}
-
 	async addPage({
 		name,
 		template = 'Blank',
@@ -238,15 +183,8 @@ export class PagesAdminPage {
 		await this.configurationSaveButton.click();
 	}
 
-	async addWidgetPage({
-		addButtonLabel = 'Page',
-		name,
-	}: {
-		addButtonLabel?: string;
-		name: string;
-	}) {
+	async addWidgetPage({name}: {name: string}) {
 		await this.createNewPage({
-			addButtonLabel,
 			draft: true,
 			name,
 			template: 'Widget Page',
@@ -291,6 +229,30 @@ export class PagesAdminPage {
 		await fileChooser.setFiles(filePath);
 
 		await iframe.getByRole('button', {exact: true, name: 'Add'}).click();
+
+		await this.saveConfiguration();
+	}
+
+	async changeTheme(themeName: string) {
+		await this.page
+			.getByRole('radio', {name: 'Define a custom theme for'})
+			.click();
+
+		await this.page
+			.getByRole('button', {name: 'Change Current Theme'})
+			.click();
+
+		const themeCard = this.page
+			.frameLocator(
+				'iframe[id="_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_selectTheme_iframe_"]'
+			)
+			.getByText(themeName);
+
+		await themeCard.waitFor();
+
+		await themeCard.click();
+
+		await this.configurationSaveButton.waitFor({state: 'visible'});
 
 		await this.saveConfiguration();
 	}
@@ -356,41 +318,38 @@ export class PagesAdminPage {
 	}
 
 	async createNewPage({
-		addButtonLabel = 'Page',
 		draft = false,
 		name,
 		parent,
 		template,
 	}: {
-		addButtonLabel?: string;
 		draft?: boolean;
 		name: string;
 		parent?: string;
 		template?: string;
 	}) {
+		let trigger: Locator;
 
 		// If no parent specified, just create from toolbar
 
 		if (!parent) {
-			await this.newButton.click();
-
-			await this.page
-				.getByRole('menuitem')
-				.getByText(addButtonLabel, {exact: true})
-				.click();
+			trigger = this.newButton;
 		}
 
 		// If parent is specified, create child page
 
 		else {
-			await clickAndExpectToBeVisible({
-				autoClick: true,
-				target: this.page.getByRole('menuitem', {name: 'Add Page'}),
-				trigger: this.page
-					.locator('li', {has: this.page.getByText(parent)})
-					.getByTitle('Add Child Page'),
-			});
+			trigger = this.page
+				.locator('li', {has: this.page.getByText(parent)})
+				.getByTitle('Add Child Page');
 		}
+
+		await clickAndExpectToBeVisible({
+			target: this.page.locator('.sheet-title', {
+				hasText: 'Basic Templates',
+			}),
+			trigger,
+		});
 
 		// Select template and fill name
 
@@ -404,6 +363,10 @@ export class PagesAdminPage {
 		if (!draft) {
 			await this.pageEditorPage.publishPage();
 		}
+	}
+
+	async clickOnTab(name: string) {
+		await this.page.getByRole('link', {name}).click();
 	}
 
 	async deletePage(name: string) {
@@ -430,6 +393,12 @@ export class PagesAdminPage {
 			.waitFor();
 	}
 
+	async goToDesignTabConfiguration(pageName: string) {
+		await this.clickOnAction('Configure', pageName);
+
+		await this.clickOnTab('Design');
+	}
+
 	async gotoPagesConfiguration(siteUrl?: Site['friendlyUrlPath']) {
 		await this.goto(siteUrl);
 
@@ -447,11 +416,6 @@ export class PagesAdminPage {
 
 	async gotoSelectTemplates(templateSetName: string) {
 		await this.newButton.click();
-
-		await this.page
-			.getByRole('menuitem')
-			.getByText('Page', {exact: true})
-			.click();
 
 		await this.page
 			.getByRole('menuitem')
@@ -524,8 +488,6 @@ export class PagesAdminPage {
 	}
 
 	async selectThemeCSSClientExtension(clientExtensionName: string) {
-		await this.gotoPagesConfiguration();
-
 		await this.page
 			.locator(
 				'#_com_liferay_layout_admin_web_portlet_GroupPagesPortlet_themeCSSReplacementExtension'

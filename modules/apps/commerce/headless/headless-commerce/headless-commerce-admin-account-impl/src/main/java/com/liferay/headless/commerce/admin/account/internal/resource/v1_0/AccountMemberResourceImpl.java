@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.account.internal.resource.v1_0;
 
-import com.liferay.account.exception.NoSuchEntryException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryUserRel;
 import com.liferay.account.service.AccountEntryLocalService;
@@ -28,11 +27,10 @@ import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
-import java.util.ArrayList;
+import jakarta.ws.rs.core.Response;
+
 import java.util.Arrays;
 import java.util.List;
-
-import javax.ws.rs.core.Response;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -58,14 +56,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		_accountEntryUserRelService.deleteAccountEntryUserRels(
 			accountEntry.getAccountEntryId(), new long[] {userId});
@@ -93,14 +85,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		AccountEntryUserRel accountEntryUserRel =
 			_accountEntryUserRelService.getAccountEntryUserRel(
@@ -119,14 +105,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		List<AccountEntryUserRel> accountEntryUserRels =
 			_accountEntryUserRelService.getAccountEntryUserRelsByAccountEntryId(
@@ -180,14 +160,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		_updateAccountEntryUserRel(
 			accountEntry, _userLocalService.getUser(userId), accountMember);
@@ -217,14 +191,8 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 		throws Exception {
 
 		AccountEntry accountEntry =
-			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
-				contextCompany.getCompanyId(), externalReferenceCode);
-
-		if (accountEntry == null) {
-			throw new NoSuchEntryException(
-				"Unable to find account with external reference code " +
-					externalReferenceCode);
-		}
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
 
 		AccountEntryUserRel accountEntryUserRel =
 			AccountMemberUtil.addAccountEntryUserRel(
@@ -268,17 +236,12 @@ public class AccountMemberResourceImpl extends BaseAccountMemberResourceImpl {
 			List<AccountEntryUserRel> accountEntryUserRels)
 		throws Exception {
 
-		List<AccountMember> accountMembers = new ArrayList<>();
-
-		for (AccountEntryUserRel accountEntryUserRel : accountEntryUserRels) {
-			accountMembers.add(
-				_accountMemberDTOConverter.toDTO(
-					new DefaultDTOConverterContext(
-						accountEntryUserRel.getPrimaryKey(),
-						contextAcceptLanguage.getPreferredLocale())));
-		}
-
-		return accountMembers;
+		return transform(
+			accountEntryUserRels,
+			accountEntryUserRel -> _accountMemberDTOConverter.toDTO(
+				new DefaultDTOConverterContext(
+					accountEntryUserRel.getPrimaryKey(),
+					contextAcceptLanguage.getPreferredLocale())));
 	}
 
 	private void _updateAccountEntryUserRel(

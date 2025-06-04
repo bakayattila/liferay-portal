@@ -18,6 +18,8 @@ AUI.add(
 		const isObject = Lang.isObject;
 		const isValue = Lang.isValue;
 
+		const timeZone = Liferay.ThemeDisplay.getTimeZone();
+
 		const CONTROLS_NODE = 'controlsNode';
 
 		const DAYS_OF_WEEK = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
@@ -29,7 +31,7 @@ AUI.add(
 		const TPL_ICON_ADD_EVENT_NODE =
 			'<div class="btn-group">' +
 			'<button class="btn btn-primary calendar-add-event-btn" type="button">' +
-			Liferay.Language.get('add-calendar-booking') +
+			Liferay.Language.get('add-event') +
 			'</button>' +
 			'</div>';
 
@@ -408,18 +410,14 @@ AUI.add(
 						titleCurrentValue: '',
 					};
 
-					Liferay.Util.openWindow({
-						dialog: {
-							after: {
-								destroy() {
-									instance.load();
-								},
-							},
-							destroyOnHide: true,
-							modal: true,
+					Liferay.Util.openModal({
+						containerProps: {},
+						iframeBodyCssClass: '',
+						onClose: function destroy() {
+							instance.load();
 						},
 						title: Liferay.Language.get('new-calendar-booking'),
-						uri: CalendarUtil.fillURLParameters(
+						url: CalendarUtil.fillURLParameters(
 							editCalendarBookingURL,
 							data
 						),
@@ -788,6 +786,9 @@ AUI.add(
 
 		const SchedulerDayView = A.Component.create({
 			ATTRS: {
+				initialScroll: {
+					value: CalendarUtil.getInitialScroll(new Date(), timeZone),
+				},
 				navigationDateFormatter: {
 					validator: isFunction,
 					value(date) {
@@ -835,7 +836,9 @@ AUI.add(
 						});
 					},
 				},
-
+				initialScroll: {
+					value: CalendarUtil.getInitialScroll(new Date(), timeZone),
+				},
 				navigationDateFormatter: {
 					validator: isFunction,
 					value(date) {

@@ -21,12 +21,13 @@ import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.model.ExpandoTableConstants;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
-import com.liferay.headless.delivery.client.dto.v1_0.CustomField;
-import com.liferay.headless.delivery.client.dto.v1_0.CustomValue;
+import com.liferay.headless.delivery.client.custom.field.CustomField;
+import com.liferay.headless.delivery.client.custom.field.CustomValue;
 import com.liferay.headless.delivery.client.dto.v1_0.NavigationMenu;
 import com.liferay.headless.delivery.client.dto.v1_0.NavigationMenuItem;
 import com.liferay.headless.delivery.client.pagination.Page;
 import com.liferay.headless.delivery.client.pagination.Pagination;
+import com.liferay.headless.delivery.client.permission.Permission;
 import com.liferay.headless.delivery.client.resource.v1_0.NavigationMenuResource;
 import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
@@ -35,26 +36,37 @@ import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LanguageIds;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.vulcan.permission.PermissionUtil;
+import com.liferay.site.navigation.model.SiteNavigationMenu;
 import com.liferay.site.navigation.model.SiteNavigationMenuItem;
 import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalService;
 
@@ -80,6 +92,9 @@ import org.junit.runner.RunWith;
 /**
  * @author Javier Gamarra
  */
+@LanguageIds(
+	availableLanguageIds = {"en_US", "es_ES"}, defaultLanguageId = "en_US"
+)
 @RunWith(Arquillian.class)
 public class NavigationMenuResourceTest
 	extends BaseNavigationMenuResourceTestCase {
@@ -171,8 +186,8 @@ public class NavigationMenuResourceTest
 		_testGetNavigationMenu(
 			blogsEntry.getPrimaryKey(), 0, BlogsEntry.class,
 			"blog-postings/" + blogsEntry.getPrimaryKey(),
-			BlogsEntry.class.getName(), blogsEntry.getTitle(), "blogPosting",
-			true);
+			BlogsEntry.class.getName(), blogsEntry.getTitle(),
+			BlogsEntry.class.getName(), true);
 
 		FileEntry fileEntry = DLAppTestUtil.addFileEntryWithWorkflow(
 			TestPropsValues.getUserId(), _depotEntry.getGroupId(),
@@ -186,7 +201,8 @@ public class NavigationMenuResourceTest
 			fileEntry.getPrimaryKey(),
 			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
 			DLFileEntry.class, "documents/" + fileEntry.getFileEntryId(),
-			FileEntry.class.getName(), fileEntry.getTitle(), "document", true);
+			FileEntry.class.getName(), fileEntry.getTitle(),
+			FileEntry.class.getName(), true);
 
 		fileEntry = DLAppTestUtil.addFileEntryWithWorkflow(
 			TestPropsValues.getUserId(), testGroup.getGroupId(),
@@ -200,7 +216,8 @@ public class NavigationMenuResourceTest
 			fileEntry.getPrimaryKey(),
 			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
 			DLFileEntry.class, "documents/" + fileEntry.getFileEntryId(),
-			FileEntry.class.getName(), fileEntry.getTitle(), "document", true);
+			FileEntry.class.getName(), fileEntry.getTitle(),
+			FileEntry.class.getName(), true);
 
 		JournalArticle journalArticle = JournalTestUtil.addArticle(
 			_depotEntry.getGroupId(),
@@ -211,7 +228,7 @@ public class NavigationMenuResourceTest
 			journalArticle.getDDMStructureId(), JournalArticle.class,
 			"structured-contents/" + journalArticle.getResourcePrimKey(),
 			JournalArticle.class.getName(), journalArticle.getTitle(),
-			"structuredContent", false);
+			JournalArticle.class.getName(), false);
 
 		journalArticle = JournalTestUtil.addArticle(
 			testGroup.getGroupId(),
@@ -222,9 +239,11 @@ public class NavigationMenuResourceTest
 			journalArticle.getDDMStructureId(), JournalArticle.class,
 			"structured-contents/" + journalArticle.getResourcePrimKey(),
 			JournalArticle.class.getName(), journalArticle.getTitle(),
-			"structuredContent", false);
+			JournalArticle.class.getName(), false);
 
 		_testGetNavigationMenuWithChildNavigationMenusAndNavigationMenuItems();
+		_testGetNavigationMenuWithNestedFields();
+		_testGetNavigationMenuWithoutNestedFields();
 	}
 
 	@Override
@@ -241,8 +260,8 @@ public class NavigationMenuResourceTest
 		_testGetSiteNavigationMenusPage(
 			blogsEntry.getPrimaryKey(), 0, BlogsEntry.class,
 			"blog-postings/" + blogsEntry.getPrimaryKey(),
-			BlogsEntry.class.getName(), blogsEntry.getTitle(), "blogPosting",
-			false);
+			BlogsEntry.class.getName(), blogsEntry.getTitle(),
+			BlogsEntry.class.getName(), false);
 
 		FileEntry fileEntry = DLAppTestUtil.addFileEntryWithWorkflow(
 			TestPropsValues.getUserId(), _depotEntry.getGroupId(),
@@ -256,7 +275,8 @@ public class NavigationMenuResourceTest
 			fileEntry.getPrimaryKey(),
 			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
 			DLFileEntry.class, "documents/" + fileEntry.getFileEntryId(),
-			FileEntry.class.getName(), fileEntry.getTitle(), "document", false);
+			FileEntry.class.getName(), fileEntry.getTitle(),
+			FileEntry.class.getName(), false);
 
 		fileEntry = DLAppTestUtil.addFileEntryWithWorkflow(
 			TestPropsValues.getUserId(), testGroup.getGroupId(),
@@ -270,7 +290,8 @@ public class NavigationMenuResourceTest
 			fileEntry.getPrimaryKey(),
 			DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT,
 			DLFileEntry.class, "documents/" + fileEntry.getFileEntryId(),
-			FileEntry.class.getName(), fileEntry.getTitle(), "document", false);
+			FileEntry.class.getName(), fileEntry.getTitle(),
+			FileEntry.class.getName(), false);
 
 		JournalArticle journalArticle = JournalTestUtil.addArticle(
 			_depotEntry.getGroupId(),
@@ -281,7 +302,7 @@ public class NavigationMenuResourceTest
 			journalArticle.getDDMStructureId(), JournalArticle.class,
 			"structured-contents/" + journalArticle.getResourcePrimKey(),
 			JournalArticle.class.getName(), journalArticle.getTitle(),
-			"structuredContent", true);
+			JournalArticle.class.getName(), true);
 
 		journalArticle = JournalTestUtil.addArticle(
 			testGroup.getGroupId(),
@@ -292,7 +313,26 @@ public class NavigationMenuResourceTest
 			journalArticle.getDDMStructureId(), JournalArticle.class,
 			"structured-contents/" + journalArticle.getResourcePrimKey(),
 			JournalArticle.class.getName(), journalArticle.getTitle(),
-			"structuredContent", true);
+			JournalArticle.class.getName(), true);
+
+		_testGetSiteNavigationMenusPageWithSearch();
+	}
+
+	@Override
+	@Test
+	public void testPostSiteNavigationMenu() throws Exception {
+		super.testPostSiteNavigationMenu();
+
+		_testPostSiteNavigationMenuWithNavigationType();
+		_testPostSiteNavigationMenuWithPermissions();
+	}
+
+	@Override
+	@Test
+	public void testPutNavigationMenu() throws Exception {
+		super.testPutNavigationMenu();
+
+		_testPutSiteNavigationMenuWithPermissions();
 	}
 
 	@Override
@@ -521,6 +561,40 @@ public class NavigationMenuResourceTest
 		return serviceContext;
 	}
 
+	private Map<String, String> _getTypeSettings(
+		Layout layout, Map<String, String> nameI18nMap, String type,
+		String useCustomName) {
+
+		HashMapBuilder.HashMapWrapper<String, String> hashMapBuilder =
+			HashMapBuilder.put(
+				"defaultLanguageId",
+				LocaleUtil.toLanguageId(LocaleUtil.getDefault()));
+
+		for (Map.Entry<String, String> entry : nameI18nMap.entrySet()) {
+			hashMapBuilder.put(
+				"name_" + LocaleUtil.fromLanguageId(entry.getKey()),
+				nameI18nMap.get(entry.getKey()));
+		}
+
+		if (type.equals("layout")) {
+			return hashMapBuilder.put(
+				"groupId", GetterUtil.getString(layout.getGroupId())
+			).put(
+				"layoutUuid", layout.getUuid()
+			).put(
+				"privateLayout", GetterUtil.getString(layout.isPrivateLayout())
+			).put(
+				"title", layout.getTitle()
+			).put(
+				"useCustomName", useCustomName
+			).build();
+		}
+
+		return hashMapBuilder.put(
+			"useCustomName", useCustomName
+		).build();
+	}
+
 	private NavigationMenu _randomNavigationMenu(
 			boolean includeNavigationMenuItem)
 		throws Exception {
@@ -616,11 +690,23 @@ public class NavigationMenuResourceTest
 								name = RandomTestUtil.randomString();
 								navigationMenuItems = new NavigationMenuItem[0];
 								type = "url";
-								url = RandomTestUtil.randomString();
+								typeSettings = HashMapBuilder.put(
+									"name_en_US", name
+								).put(
+									"url", "https://www.google.com"
+								).put(
+									"useNewTab", "false"
+								).build();
+								url = "https://www.google.com";
 							}
 						}
 					};
-					type = "navigationMenu";
+					type = "node";
+					typeSettings = HashMapBuilder.put(
+						"defaultLanguageId", "en_US"
+					).put(
+						"name_en_US", name
+					).build();
 				}
 			}
 		};
@@ -634,7 +720,9 @@ public class NavigationMenuResourceTest
 			new NavigationMenuItem() {
 				{
 					name_i18n = nameI18nMap1;
-					type = "navigationMenu";
+					type = "node";
+					typeSettings = _getTypeSettings(
+						layout1, nameI18nMap1, "node", "false");
 					useCustomName = false;
 				}
 			},
@@ -647,7 +735,9 @@ public class NavigationMenuResourceTest
 						"es-ES", layout1.getFriendlyURL(LocaleUtil.SPAIN)
 					).build();
 					name_i18n = nameI18nMap1;
-					type = "page";
+					type = "layout";
+					typeSettings = _getTypeSettings(
+						layout1, nameI18nMap1, "layout", "true");
 					useCustomName = true;
 				}
 			},
@@ -658,7 +748,9 @@ public class NavigationMenuResourceTest
 						"en-US", layout1.getFriendlyURL(LocaleUtil.US)
 					).build();
 					name_i18n = nameI18nMap2;
-					type = "page";
+					type = "layout";
+					typeSettings = _getTypeSettings(
+						layout1, nameI18nMap2, "layout", "true");
 					useCustomName = true;
 				}
 			},
@@ -669,7 +761,9 @@ public class NavigationMenuResourceTest
 						"en-US", layout1.getFriendlyURL(LocaleUtil.US)
 					).build();
 					name_i18n = nameI18nMap1;
-					type = "page";
+					type = "layout";
+					typeSettings = _getTypeSettings(
+						layout1, nameI18nMap1, "layout", "false");
 					useCustomName = false;
 				}
 			},
@@ -680,7 +774,9 @@ public class NavigationMenuResourceTest
 						"en-US", layout2.getFriendlyURL(LocaleUtil.US)
 					).build();
 					name_i18n = nameI18nMap1;
-					type = "page";
+					type = "layout";
+					typeSettings = _getTypeSettings(
+						layout2, nameI18nMap1, "layout", "false");
 					useCustomName = false;
 				}
 			}
@@ -810,14 +906,13 @@ public class NavigationMenuResourceTest
 
 		_assertNavigationMenuItem(
 			nameI18nMap1.get(LocaleUtil.SPAIN.toLanguageTag()), nameI18nMap1,
-			getNavigationMenu.getNavigationMenuItems()[0], "navigationMenu",
-			false);
+			getNavigationMenu.getNavigationMenuItems()[0], "node", false);
 		_assertNavigationMenuItem(
 			nameI18nMap1.get(LocaleUtil.SPAIN.toLanguageTag()), nameI18nMap1,
-			getNavigationMenu.getNavigationMenuItems()[1], "page", true);
+			getNavigationMenu.getNavigationMenuItems()[1], "layout", true);
 		_assertNavigationMenuItem(
 			nameI18nMap2.get(LocaleUtil.US.toLanguageTag()), nameI18nMap2,
-			getNavigationMenu.getNavigationMenuItems()[2], "page", true);
+			getNavigationMenu.getNavigationMenuItems()[2], "layout", true);
 		_assertNavigationMenuItem(
 			layoutNameMap1.get(LocaleUtil.SPAIN),
 			HashMapBuilder.put(
@@ -826,13 +921,75 @@ public class NavigationMenuResourceTest
 				LocaleUtil.SPAIN.toLanguageTag(),
 				layoutNameMap1.get(LocaleUtil.SPAIN)
 			).build(),
-			getNavigationMenu.getNavigationMenuItems()[3], "page", false);
+			getNavigationMenu.getNavigationMenuItems()[3], "layout", false);
 		_assertNavigationMenuItem(
 			layoutNameMap2.get(LocaleUtil.US),
 			HashMapBuilder.put(
 				LocaleUtil.US.toLanguageTag(), layoutNameMap2.get(LocaleUtil.US)
 			).build(),
-			getNavigationMenu.getNavigationMenuItems()[4], "page", false);
+			getNavigationMenu.getNavigationMenuItems()[4], "layout", false);
+	}
+
+	private void _testGetNavigationMenuWithNestedFields() throws Exception {
+		NavigationMenu postNavigationMenu =
+			testGetNavigationMenu_addNavigationMenu();
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), SiteNavigationMenu.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(postNavigationMenu.getId()), role.getRoleId(),
+			new String[] {ActionKeys.DELETE});
+
+		NavigationMenuResource navigationMenuResource =
+			NavigationMenuResource.builder(
+			).authentication(
+				"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+			).locale(
+				LocaleUtil.getDefault()
+			).parameters(
+				"nestedFields", "permissions"
+			).build();
+
+		NavigationMenu getNavigationMenu =
+			navigationMenuResource.getNavigationMenu(
+				postNavigationMenu.getId());
+
+		Assert.assertTrue(
+			ArrayUtil.exists(
+				getNavigationMenu.getPermissions(),
+				permission ->
+					Objects.equals(permission.getRoleName(), role.getName()) &&
+					(permission.getActionIds().length == 1) &&
+					Objects.equals(permission.getActionIds()[0], "DELETE")));
+	}
+
+	private void _testGetNavigationMenuWithoutNestedFields() throws Exception {
+		NavigationMenu postNavigationMenu =
+			testGetNavigationMenu_addNavigationMenu();
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), SiteNavigationMenu.class.getName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(postNavigationMenu.getId()), role.getRoleId(),
+			new String[] {ActionKeys.DELETE});
+
+		NavigationMenuResource navigationMenuResource =
+			NavigationMenuResource.builder(
+			).authentication(
+				"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
+			).locale(
+				LocaleUtil.getDefault()
+			).build();
+
+		NavigationMenu getNavigationMenu =
+			navigationMenuResource.getNavigationMenu(
+				postNavigationMenu.getId());
+
+		Assert.assertNull(getNavigationMenu.getPermissions());
 	}
 
 	private void _testGetSiteNavigationMenusPage(
@@ -892,7 +1049,7 @@ public class NavigationMenuResourceTest
 
 		Page<NavigationMenu> page =
 			navigationMenuResource.getSiteNavigationMenusPage(
-				testGroup.getGroupId(), Pagination.of(1, 10));
+				testGroup.getGroupId(), null, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(1, page.getTotalCount());
 		assertValid(page);
@@ -940,6 +1097,135 @@ public class NavigationMenuResourceTest
 		navigationMenuResource.deleteNavigationMenu(postNavigationMenu.getId());
 	}
 
+	private void _testGetSiteNavigationMenusPageWithSearch() throws Exception {
+		NavigationMenu randomNavigationMenu = randomNavigationMenu();
+
+		NavigationMenu postNavigationMenu =
+			testPostSiteNavigationMenu_addNavigationMenu(randomNavigationMenu);
+
+		Page<NavigationMenu> page =
+			navigationMenuResource.getSiteNavigationMenusPage(
+				postNavigationMenu.getSiteId(), postNavigationMenu.getName(),
+				null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		page = navigationMenuResource.getSiteNavigationMenusPage(
+			postNavigationMenu.getSiteId(), RandomTestUtil.randomString(), null,
+			Pagination.of(1, 10), null);
+
+		Assert.assertEquals(0, page.getTotalCount());
+	}
+
+	private void _testPostSiteNavigationMenuWithNavigationType()
+		throws Exception {
+
+		NavigationMenu navigationMenu = _randomNavigationMenu(false);
+
+		navigationMenu.setNavigationType(NavigationMenu.NavigationType.PRIMARY);
+
+		navigationMenu = navigationMenuResource.postSiteNavigationMenu(
+			testGroup.getGroupId(), navigationMenu);
+
+		Assert.assertEquals(
+			NavigationMenu.NavigationType.PRIMARY,
+			navigationMenu.getNavigationType());
+	}
+
+	private void _testPostSiteNavigationMenuWithPermissions() throws Exception {
+		NavigationMenu randomNavigationMenu = randomNavigationMenu();
+
+		Role serviceBuilderRole = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		Permission permission1 = new Permission() {
+			{
+				actionIds = new String[] {ActionKeys.VIEW};
+				roleExternalReferenceCode =
+					serviceBuilderRole.getExternalReferenceCode();
+				roleName = serviceBuilderRole.getName();
+				roleType = RoleConstants.getTypeLabel(
+					serviceBuilderRole.getType());
+			}
+		};
+
+		randomNavigationMenu.setPermissions(new Permission[] {permission1});
+
+		NavigationMenu postNavigationMenu =
+			testPostSiteNavigationMenu_addNavigationMenu(randomNavigationMenu);
+
+		List<com.liferay.portal.vulcan.permission.Permission> permissions =
+			ListUtil.fromCollection(
+				PermissionUtil.getPermissions(
+					TestPropsValues.getCompanyId(),
+					_resourceActionLocalService.getResourceActions(
+						SiteNavigationMenu.class.getName()),
+					postNavigationMenu.getId(),
+					SiteNavigationMenu.class.getName(), null));
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				permissions,
+				permission -> {
+					String[] actionIds = permission.getActionIds();
+
+					return (actionIds.length == 1) &&
+						   Objects.equals(ActionKeys.VIEW, actionIds[0]) &&
+						   Objects.equals(
+							   serviceBuilderRole.getExternalReferenceCode(),
+							   permission.getRoleExternalReferenceCode());
+				}));
+	}
+
+	private void _testPutSiteNavigationMenuWithPermissions() throws Exception {
+		NavigationMenu postNavigationMenu =
+			testPutNavigationMenu_addNavigationMenu();
+
+		NavigationMenu randomNavigationMenu = randomNavigationMenu();
+
+		Role serviceBuilderRole = RoleTestUtil.addRole(
+			RoleConstants.TYPE_REGULAR);
+
+		Permission permission1 = new Permission() {
+			{
+				actionIds = new String[] {ActionKeys.VIEW};
+				roleExternalReferenceCode =
+					serviceBuilderRole.getExternalReferenceCode();
+				roleName = serviceBuilderRole.getName();
+				roleType = RoleConstants.getTypeLabel(
+					serviceBuilderRole.getType());
+			}
+		};
+
+		randomNavigationMenu.setPermissions(new Permission[] {permission1});
+
+		NavigationMenu putNavigationMenu =
+			navigationMenuResource.putNavigationMenu(
+				postNavigationMenu.getId(), randomNavigationMenu);
+
+		List<com.liferay.portal.vulcan.permission.Permission> permissions =
+			ListUtil.fromCollection(
+				PermissionUtil.getPermissions(
+					TestPropsValues.getCompanyId(),
+					_resourceActionLocalService.getResourceActions(
+						SiteNavigationMenu.class.getName()),
+					putNavigationMenu.getId(),
+					SiteNavigationMenu.class.getName(), null));
+
+		Assert.assertTrue(
+			ListUtil.exists(
+				permissions,
+				permission -> {
+					String[] actionIds = permission.getActionIds();
+
+					return (actionIds.length == 1) &&
+						   Objects.equals(ActionKeys.VIEW, actionIds[0]) &&
+						   Objects.equals(
+							   serviceBuilderRole.getExternalReferenceCode(),
+							   permission.getRoleExternalReferenceCode());
+				}));
+	}
+
 	@Inject
 	private static ExpandoColumnLocalService _expandoColumnLocalService;
 
@@ -968,7 +1254,13 @@ public class NavigationMenuResourceTest
 	private Portal _portal;
 
 	@Inject
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Inject
 	private ResourceActions _resourceActions;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
 	@Inject
 	private SiteNavigationMenuItemLocalService

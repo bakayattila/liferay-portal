@@ -75,19 +75,19 @@ import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBui
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 import com.liferay.staging.StagingGroupHelper;
 
+import jakarta.portlet.PortletException;
+import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
+import jakarta.portlet.PortletURL;
+import jakarta.portlet.RenderResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.portlet.PortletException;
-import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
-import javax.portlet.RenderResponse;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Eudaldo Alonso
@@ -338,7 +338,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 
 		if (_infoItemItemSelectorCriterion.isMultiSelection()) {
 			JournalRowChecker journalRowChecker = new JournalRowChecker(
-				JournalArticleLocalServiceUtil.fetchJournalArticle(
+				JournalArticleLocalServiceUtil.fetchLatestArticle(
 					_infoItemItemSelectorCriterion.getRefererClassPK()),
 				_portletResponse);
 
@@ -363,7 +363,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			}
 
 			SearchResponse searchResponse =
-				JournalSearcherUtil.searchJournalArticleAndFolders(
+				JournalSearcherUtil.searchJournalArticlesAndJournalFolders(
 					searchContext -> {
 						try {
 							_populateSearchContext(
@@ -416,12 +416,14 @@ public class JournalArticleItemSelectorViewDisplayContext {
 					_getGroupId(), 0, _getFolderId(), _getDDMStructureId(),
 					_infoItemItemSelectorCriterion.getStatus(),
 					_themeDisplay.getLocale(),
+					new int[] {WorkflowConstants.STATUS_EXPIRED},
 					articleAndFolderSearchContainer.getStart(),
 					articleAndFolderSearchContainer.getEnd(),
 					folderOrderByComparator);
 			},
 			JournalFolderServiceUtil.getFoldersAndArticlesCount(
 				_getGroupId(), 0, _getFolderId(), _getDDMStructureId(),
+				new int[] {WorkflowConstants.STATUS_EXPIRED},
 				_infoItemItemSelectorCriterion.getStatus()));
 
 		_articleSearchContainer = articleAndFolderSearchContainer;
@@ -491,11 +493,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	public boolean isShowBreadcrumb() {
 		Group group = _themeDisplay.getScopeGroup();
 
-		if (group.isLayout()) {
-			return false;
-		}
-
-		return true;
+		return !group.isLayout();
 	}
 
 	public boolean showArticleId() {
@@ -681,14 +679,8 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	}
 
 	private boolean _isEverywhereScopeFilter() {
-		if (Objects.equals(
-				ParamUtil.getString(_httpServletRequest, "scope"),
-				"everywhere")) {
-
-			return true;
-		}
-
-		return false;
+		return Objects.equals(
+			ParamUtil.getString(_httpServletRequest, "scope"), "everywhere");
 	}
 
 	private void _populateSearchContext(

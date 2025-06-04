@@ -63,11 +63,11 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.hamcrest.CoreMatchers;
 
@@ -141,7 +141,7 @@ public class FreeMarkerFragmentEntryProcessorTest {
 					"fragment-entry", "Fragment Entry", null,
 					_readFileToString(
 						"fragment_entry_with_invalid_freemarker_variable.html"),
-					null, false, null, null, 0, false,
+					null, false, null, null, 0, false, false,
 					FragmentConstants.TYPE_COMPONENT, null,
 					WorkflowConstants.STATUS_DRAFT, serviceContext);
 
@@ -166,8 +166,9 @@ public class FreeMarkerFragmentEntryProcessorTest {
 			null, _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), "fragment-entry",
 			"Fragment Entry", null, "${fragmentElementId}", null, false,
-			StringPool.BLANK, null, 0, false, FragmentConstants.TYPE_COMPONENT,
-			null, WorkflowConstants.STATUS_APPROVED, serviceContext);
+			StringPool.BLANK, null, 0, false, false,
+			FragmentConstants.TYPE_COMPONENT, null,
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
@@ -204,8 +205,9 @@ public class FreeMarkerFragmentEntryProcessorTest {
 			null, _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), "fragment-entry",
 			"Fragment Entry", null, "${layoutMode}", null, false,
-			StringPool.BLANK, null, 0, false, FragmentConstants.TYPE_COMPONENT,
-			null, WorkflowConstants.STATUS_APPROVED, serviceContext);
+			StringPool.BLANK, null, 0, false, false,
+			FragmentConstants.TYPE_COMPONENT, null,
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.createFragmentEntryLink(0);
@@ -651,8 +653,9 @@ public class FreeMarkerFragmentEntryProcessorTest {
 			null, _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), "fragment-entry",
 			"Fragment Entry", null, _readFileToString(htmlFile), null, false,
-			configuration, null, 0, false, FragmentConstants.TYPE_COMPONENT,
-			null, WorkflowConstants.STATUS_APPROVED, serviceContext);
+			configuration, null, 0, false, false,
+			FragmentConstants.TYPE_COMPONENT, null,
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
 	private MockHttpServletRequest _getMockHttpServletRequest()

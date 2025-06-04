@@ -8,13 +8,13 @@ package com.liferay.object.admin.rest.client.dto.v1_0;
 import com.liferay.object.admin.rest.client.function.UnsafeSupplier;
 import com.liferay.object.admin.rest.client.serdes.v1_0.ObjectDefinitionSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Javier Gamarra
@@ -139,6 +139,27 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected String className;
 
+	public Creator getCreator() {
+		return creator;
+	}
+
+	public void setCreator(Creator creator) {
+		this.creator = creator;
+	}
+
+	public void setCreator(
+		UnsafeSupplier<Creator, Exception> creatorUnsafeSupplier) {
+
+		try {
+			creator = creatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Creator creator;
+
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -244,6 +265,31 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean enableComments;
 
+	public Boolean getEnableFriendlyURLCustomization() {
+		return enableFriendlyURLCustomization;
+	}
+
+	public void setEnableFriendlyURLCustomization(
+		Boolean enableFriendlyURLCustomization) {
+
+		this.enableFriendlyURLCustomization = enableFriendlyURLCustomization;
+	}
+
+	public void setEnableFriendlyURLCustomization(
+		UnsafeSupplier<Boolean, Exception>
+			enableFriendlyURLCustomizationUnsafeSupplier) {
+
+		try {
+			enableFriendlyURLCustomization =
+				enableFriendlyURLCustomizationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableFriendlyURLCustomization;
+
 	public Boolean getEnableIndexSearch() {
 		return enableIndexSearch;
 	}
@@ -331,6 +377,31 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean enableObjectEntryHistory;
 
+	public Boolean getEnableObjectEntryVersioning() {
+		return enableObjectEntryVersioning;
+	}
+
+	public void setEnableObjectEntryVersioning(
+		Boolean enableObjectEntryVersioning) {
+
+		this.enableObjectEntryVersioning = enableObjectEntryVersioning;
+	}
+
+	public void setEnableObjectEntryVersioning(
+		UnsafeSupplier<Boolean, Exception>
+			enableObjectEntryVersioningUnsafeSupplier) {
+
+		try {
+			enableObjectEntryVersioning =
+				enableObjectEntryVersioningUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableObjectEntryVersioning;
+
 	public String getExternalReferenceCode() {
 		return externalReferenceCode;
 	}
@@ -351,6 +422,27 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected String externalReferenceCode;
+
+	public String getFriendlyURLSeparator() {
+		return friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(String friendlyURLSeparator) {
+		this.friendlyURLSeparator = friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(
+		UnsafeSupplier<String, Exception> friendlyURLSeparatorUnsafeSupplier) {
+
+		try {
+			friendlyURLSeparator = friendlyURLSeparatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String friendlyURLSeparator;
 
 	public Long getId() {
 		return id;
@@ -452,6 +544,31 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected ObjectAction[] objectActions;
+
+	public ObjectDefinitionSetting[] getObjectDefinitionSettings() {
+		return objectDefinitionSettings;
+	}
+
+	public void setObjectDefinitionSettings(
+		ObjectDefinitionSetting[] objectDefinitionSettings) {
+
+		this.objectDefinitionSettings = objectDefinitionSettings;
+	}
+
+	public void setObjectDefinitionSettings(
+		UnsafeSupplier<ObjectDefinitionSetting[], Exception>
+			objectDefinitionSettingsUnsafeSupplier) {
+
+		try {
+			objectDefinitionSettings =
+				objectDefinitionSettingsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ObjectDefinitionSetting[] objectDefinitionSettings;
 
 	public ObjectField[] getObjectFields() {
 		return objectFields;

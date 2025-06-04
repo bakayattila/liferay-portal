@@ -28,6 +28,7 @@ export default function UndoRedo({
 	portletNamespace,
 }) {
 	const [active, setActive] = useState(false);
+	const [lock, setLock] = useState(false);
 
 	const [
 
@@ -90,7 +91,8 @@ export default function UndoRedo({
 		}
 	);
 
-	const handleUndo = (newStep) => {
+	const handleUndo = (newStep = step - 1) => {
+		setLock(true);
 		const nextStep = history[newStep];
 
 		const selectedLanguageIdInput = document.getElementById(
@@ -158,9 +160,11 @@ export default function UndoRedo({
 
 		updateMetadataFields(nextStep, newStep);
 		Liferay.fire('inputLocalized:updateTranslationStatus');
+		setLock(false);
 	};
 
-	const handleRedo = (newStep) => {
+	const handleRedo = (newStep = step + 1) => {
+		setLock(true);
 		const nextStep = history[newStep];
 
 		const selectedLanguageIdInput = document.getElementById(
@@ -219,10 +223,12 @@ export default function UndoRedo({
 
 		updateMetadataFields(nextStep, newStep);
 		Liferay.fire('inputLocalized:updateTranslationStatus');
+		setLock(false);
 	};
 
 	const handleStoreState = useCallback(
 		({fieldName}) => {
+			setLock(true);
 			const defaultLanguageIdInput = document.getElementById(
 				`${portletNamespace}defaultLanguageId`
 			);
@@ -261,6 +267,7 @@ export default function UndoRedo({
 				selectedLanguageId: selectedLanguageIdInput.value,
 				step: step + 1,
 			});
+			setLock(false);
 		},
 		[
 			descriptionInputComponent,
@@ -288,7 +295,13 @@ export default function UndoRedo({
 			step.selectedLanguageId
 		);
 
-		descriptionInputComponent.updateInput(step.descriptionInputValue);
+		setTimeout(
+			() =>
+				descriptionInputComponent.updateInput(
+					step.descriptionInputValue
+				),
+			200
+		);
 
 		friendlyURLInputComponent.updateInput(step.friendlyURLInputValue);
 
@@ -441,16 +454,30 @@ export default function UndoRedo({
 		};
 	}, [handleUpdateFriendlyURL]);
 
+	useEffect(() => {
+		const handleLock = () => setLock(true);
+		const handleUnlock = () => setLock(false);
+
+		Liferay.on('journal:lock', handleLock);
+		Liferay.on('journal:unlock', handleUnlock);
+
+		return () => {
+			Liferay.detach('journal:lock', handleLock);
+			Liferay.detach('journal:unlock', handleUnlock);
+		};
+	}, []);
+
 	return (
 		<div className="d-flex">
 			<ClayButtonWithIcon
 				aria-label={Liferay.Language.get('undo')}
 				className="btn-monospaced"
-				disabled={step <= 0}
+				disabled={step <= 0 || lock}
 				displayType="secondary"
+				name="journal_undo_redo"
 				onClick={() => {
 					Liferay.fire('journal:undo');
-					handleUndo(step - 1);
+					handleUndo();
 				}}
 				size="sm"
 				symbol="undo"
@@ -460,11 +487,14 @@ export default function UndoRedo({
 			<ClayButtonWithIcon
 				aria-label={Liferay.Language.get('redo')}
 				className="btn-monospaced"
-				disabled={!history.length || step === history.length - 1}
+				disabled={
+					!history.length || step === history.length - 1 || lock
+				}
 				displayType="secondary"
+				name="journal_undo_redo"
 				onClick={() => {
 					Liferay.fire('journal:redo');
-					handleRedo(step + 1);
+					handleRedo();
 				}}
 				size="sm"
 				symbol="redo"

@@ -7,9 +7,11 @@ package com.liferay.object.dynamic.data.mapping.form.field.type.internal.object.
 
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTemplateContextContributor;
+import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
+import com.liferay.dynamic.data.mapping.util.DDMFormFieldTemplateContextContributorUtil;
 import com.liferay.object.dynamic.data.mapping.form.field.type.constants.ObjectDDMFormFieldTypeConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
@@ -55,6 +57,7 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 		DDMFormField ddmFormField,
 		DDMFormFieldRenderingContext ddmFormFieldRenderingContext) {
 
+		DDMForm ddmForm = ddmFormField.getDDMForm();
 		ObjectDefinition objectDefinition = _getObjectDefinition(ddmFormField);
 
 		return HashMapBuilder.<String, Object>put(
@@ -113,6 +116,10 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 			}
 		).put(
 			"valueKey", _getValueKey(objectDefinition)
+		).putAll(
+			DDMFormFieldTemplateContextContributorUtil.
+				getLocalizationParameters(
+					ddmFormField, ddmForm.getDefaultLocale())
 		).build();
 	}
 
@@ -207,10 +214,6 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 			return "id";
 		}
 
-		if (objectField.isLocalized()) {
-			return objectField.getI18nObjectFieldName();
-		}
-
 		String objectFieldName = objectField.getName();
 
 		objectFieldName = StringUtil.replace(
@@ -230,14 +233,14 @@ public class ObjectRelationshipDDMFormFieldTemplateContextContributor
 	}
 
 	private ObjectField _getObjectField(ObjectDefinition objectDefinition) {
-		if ((objectDefinition != null) &&
-			(objectDefinition.getTitleObjectFieldId() > 0)) {
+		if ((objectDefinition == null) ||
+			(objectDefinition.getTitleObjectFieldId() <= 0)) {
 
-			return _objectFieldLocalService.fetchObjectField(
-				objectDefinition.getTitleObjectFieldId());
+			return null;
 		}
 
-		return null;
+		return _objectFieldLocalService.fetchObjectField(
+			objectDefinition.getTitleObjectFieldId());
 	}
 
 	private String _getObjectFieldBusinessType(

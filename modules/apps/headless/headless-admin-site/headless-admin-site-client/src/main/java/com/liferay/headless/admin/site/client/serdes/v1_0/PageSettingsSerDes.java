@@ -5,20 +5,19 @@
 
 package com.liferay.headless.admin.site.client.serdes.v1_0;
 
-import com.liferay.headless.admin.site.client.dto.v1_0.CollectionPageSettings;
 import com.liferay.headless.admin.site.client.dto.v1_0.ContentPageSettings;
 import com.liferay.headless.admin.site.client.dto.v1_0.CustomMetaTag;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageSettings;
 import com.liferay.headless.admin.site.client.dto.v1_0.WidgetPageSettings;
 import com.liferay.headless.admin.site.client.json.BaseJSONParser;
 
+import jakarta.annotation.Generated;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
@@ -50,11 +49,6 @@ public class PageSettingsSerDes {
 
 		if (type != null) {
 			String typeString = type.toString();
-
-			if (typeString.equals("CollectionPageSettings")) {
-				return CollectionPageSettingsSerDes.toJSON(
-					(CollectionPageSettings)pageSettings);
-			}
 
 			if (typeString.equals("ContentPageSettings")) {
 				return ContentPageSettingsSerDes.toJSON(
@@ -191,10 +185,6 @@ public class PageSettingsSerDes {
 			if (type != null) {
 				String typeString = type.toString();
 
-				if (typeString.equals("CollectionPageSettings")) {
-					return CollectionPageSettings.toDTO(json);
-				}
-
 				if (typeString.equals("ContentPageSettings")) {
 					return ContentPageSettings.toDTO(json);
 				}
@@ -313,6 +303,10 @@ public class PageSettingsSerDes {
 	}
 
 	private static String _toJSON(Object value) {
+		if (value == null) {
+			return "null";
+		}
+
 		if (value instanceof Map) {
 			return _toJSON((Map)value);
 		}

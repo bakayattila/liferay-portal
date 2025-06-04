@@ -13,7 +13,7 @@ import {defaultFDSDataSetProps, formatActionURL} from '../../utils/fds';
 import {getObjectFieldBusinessTypeLabel} from '../../utils/getObjectFieldBusinessTypeLabel';
 import FDSSourceDataRenderer from '../FDSPropsTransformer/FDSSourceDataRenderer';
 import LabelRenderer from '../LabelRenderer';
-import ModalObjectFieldDeletionNotAllowed from '../ModalObjectFieldDeletionNotAllowed';
+import ModalDeletionNotAllowed from '../ModalDeletionNotAllowed';
 import {ModalAddObjectField} from './ModalAddObjectField';
 import {ModalDeleteObjectField} from './ModalDeleteObjectField';
 import {handleTriggerDeleteObjectField} from './deleteObjectFieldUtil';
@@ -123,11 +123,11 @@ export default function Fields({
 					handleTriggerDeleteObjectField({
 						baseResourceURL,
 						objectFieldId: itemData?.id,
-						objectFieldLabel: stringUtils.getLocalizableLabel(
-							creationLanguageId!,
-							itemData.label,
-							itemData.name
-						),
+						objectFieldLabel: stringUtils.getLocalizableLabel({
+							fallbackLabel: itemData.name,
+							fallbackLanguageId: creationLanguageId!,
+							labels: itemData.label,
+						}),
 						onAfterDelete: () => {
 							setTimeout(() => window.location.reload(), 1500);
 						},
@@ -215,7 +215,7 @@ export default function Fields({
 						setShowAddFieldModal(false);
 						window.location.reload();
 					}}
-					setVisibility={setShowAddFieldModal}
+					setVisible={setShowAddFieldModal}
 				/>
 			)}
 
@@ -239,7 +239,7 @@ export default function Fields({
 
 			{!!deletedObjectField &&
 				objectFieldDeleteInfo.showObjectFieldDeletionNotAllowedModal && (
-					<ModalObjectFieldDeletionNotAllowed
+					<ModalDeletionNotAllowed
 						content={
 							objectFieldDeleteInfo.deleteObjectFieldObjectValidationRuleSetting ? (
 								<Text>
@@ -247,11 +247,13 @@ export default function Fields({
 										Liferay.Language.get(
 											'the-object-field-x-cannot-be-deleted-because-it-is-the-only-custom-object-field-of-the-published-object-definition'
 										),
-										`${stringUtils.getLocalizableLabel(
-											creationLanguageId as Liferay.Language.Locale,
-											deletedObjectField.label,
-											deletedObjectField.name
-										)}`
+										`${stringUtils.getLocalizableLabel({
+											fallbackLabel:
+												deletedObjectField.name,
+											fallbackLanguageId:
+												creationLanguageId as Liferay.Language.Locale,
+											labels: deletedObjectField.label,
+										})}`
 									)}
 								</Text>
 							) : (
@@ -260,16 +262,18 @@ export default function Fields({
 										Liferay.Language.get(
 											'the-object-field-x-cannot-be-deleted-because-it-is-used-in-a-unique-composite-key-validation'
 										),
-										`${stringUtils.getLocalizableLabel(
-											creationLanguageId as Liferay.Language.Locale,
-											deletedObjectField.label,
-											deletedObjectField.name
-										)}`
+										`${stringUtils.getLocalizableLabel({
+											fallbackLabel:
+												deletedObjectField.name,
+											fallbackLanguageId:
+												creationLanguageId as Liferay.Language.Locale,
+											labels: deletedObjectField.label,
+										})}`
 									)}
 								</Text>
 							)
 						}
-						onVisibilityChange={() =>
+						onModalClose={() =>
 							setObjectFieldDeleteInfo({
 								...objectFieldDeleteInfo,
 								showObjectFieldDeletionNotAllowedModal: false,

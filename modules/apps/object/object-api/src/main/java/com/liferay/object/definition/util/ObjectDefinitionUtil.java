@@ -6,7 +6,11 @@
 package com.liferay.object.definition.util;
 
 import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.StartupHelperUtil;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -38,6 +42,26 @@ public class ObjectDefinitionUtil {
 		}
 
 		return _allowedModifiableSystemObjectDefinitionNames.containsKey(name);
+	}
+
+	public static boolean isDefaultFriendlyURLSeparator(
+		String friendlyURLSeparator) {
+
+		FriendlyURLResolver friendlyURLResolver =
+			FriendlyURLResolverRegistryUtil.
+				getFriendlyURLResolverByDefaultURLSeparator(
+					FriendlyURLResolverConstants.URL_SEPARATOR_OBJECT_ENTRY);
+
+		if ((friendlyURLResolver != null) &&
+			StringUtil.equals(
+				StringUtil.removeSubstring(
+					friendlyURLResolver.getURLSeparator(), StringPool.SLASH),
+				friendlyURLSeparator)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	public static boolean isInvokerBundleAllowed() {
@@ -77,7 +101,8 @@ public class ObjectDefinitionUtil {
 		"com.liferay.frontend.data.set.admin.web",
 		"com.liferay.frontend.data.set.impl",
 		"com.liferay.headless.builder.impl", "com.liferay.list.type.service",
-		"com.liferay.notification.service", "com.liferay.object.service"
+		"com.liferay.notification.service", "com.liferay.object.service",
+		"com.liferay.site.initializer.cms"
 	};
 
 	private static final Map<String, String>
@@ -94,11 +119,17 @@ public class ObjectDefinitionUtil {
 		).put(
 			"APISort", "/headless-builder/sorts"
 		).put(
+			"BasicDocument", "/cms/basic-documents"
+		).put(
+			"BasicWebContent", "/cms/basic-web-contents"
+		).put(
+			"Blog", "/cms/blogs"
+		).put(
 			"Bookmark", "/bookmarks"
 		).put(
-			"CommerceReturn", "/commerce-returns"
+			"CommerceReturn", "/commerce/returns"
 		).put(
-			"CommerceReturnItem", "/commerce-return-items"
+			"CommerceReturnItem", "/commerce/return-items"
 		).put(
 			"DataSet", "/data-set-admin/data-sets"
 		).put(
@@ -119,6 +150,8 @@ public class ObjectDefinitionUtil {
 			"DataSetSort", "/data-set-admin/data-sets/sorts"
 		).put(
 			"DataSetTableSection", "/data-set-admin/data-sets/table-sections"
+		).put(
+			"ExternalVideo", "/cms/external-videos"
 		).put(
 			"FDSAction", "/data-set-manager/actions"
 		).put(
@@ -142,6 +175,8 @@ public class ObjectDefinitionUtil {
 			"FDSView", "/data-set-manager/data-sets"
 		).put(
 			"FunctionalCookieEntry", "/functional-cookies-entries"
+		).put(
+			"KnowledgeBase", "/cms/knowledge-bases"
 		).put(
 			"NecessaryCookieEntry", "/necessary-cookies-entries"
 		).put(

@@ -76,7 +76,7 @@ public class LayoutStructureTest {
 			StringUtil.randomString(), StringUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), false, "{fieldSets: []}", null, 0,
-			false, FragmentConstants.TYPE_COMPONENT, null,
+			false, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		long defaultSegmentsExperienceId =
@@ -281,12 +281,9 @@ public class LayoutStructureTest {
 			layoutStructure.addCollectionStyledLayoutStructureItem(
 				rootLayoutStructureItem.getItemId(), 0);
 
-		List<String> childrenItemIds =
-			collectionStyledLayoutStructureItem.getChildrenItemIds();
-
 		layoutStructure.copyLayoutStructureItems(
 			Collections.singletonList(rootLayoutStructureItem.getItemId()),
-			childrenItemIds.get(0));
+			collectionStyledLayoutStructureItem.getChildrenItemId(0));
 	}
 
 	@Test(expected = UnsupportedOperationException.class)
@@ -348,12 +345,10 @@ public class LayoutStructureTest {
 					fragmentStyledLayoutStructureItem.getItemId()),
 				collectionStyledLayoutStructureItem.getItemId());
 
-		List<String> childrenItemIds =
-			collectionStyledLayoutStructureItem.getChildrenItemIds();
-
 		_assertParentLayoutStructureItem(
 			1, 1, 0, copiedLayoutStructureItems,
-			layoutStructure.getLayoutStructureItem(childrenItemIds.get(0)));
+			layoutStructure.getLayoutStructureItem(
+				collectionStyledLayoutStructureItem.getChildrenItemId(0)));
 	}
 
 	@Test
@@ -871,6 +866,25 @@ public class LayoutStructureTest {
 				4),
 			(FragmentStyledLayoutStructureItem)
 				fragmentStyledLayoutStructureItem2);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void testDuplicateDropZoneLayoutStructureItem() {
+		LayoutStructure layoutStructure = new LayoutStructure();
+
+		LayoutStructureItem rootLayoutStructureItem =
+			layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				rootLayoutStructureItem.getItemId(), 0);
+
+		layoutStructure.addDropZoneLayoutStructureItem(
+			containerStyledLayoutStructureItem.getItemId(), 0);
+
+		layoutStructure.duplicateLayoutStructureItem(
+			Collections.singletonList(
+				containerStyledLayoutStructureItem.getItemId()));
 	}
 
 	@Test

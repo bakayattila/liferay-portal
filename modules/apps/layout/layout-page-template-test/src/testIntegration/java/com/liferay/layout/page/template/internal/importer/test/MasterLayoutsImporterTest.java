@@ -141,7 +141,7 @@ public class MasterLayoutsImporterTest {
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				LayoutPageTemplateConstants.
 					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-				RandomTestUtil.randomString(),
+				null, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -208,7 +208,7 @@ public class MasterLayoutsImporterTest {
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				LayoutPageTemplateConstants.
 					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-				RandomTestUtil.randomString(),
+				null, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -219,6 +219,8 @@ public class MasterLayoutsImporterTest {
 		FragmentEntry fragmentEntry =
 			_fragmentCollectionContributorRegistry.getFragmentEntry(
 				"BASIC_COMPONENT-heading");
+
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
 			JSONUtil.put(
@@ -232,9 +234,9 @@ public class MasterLayoutsImporterTest {
 			fragmentEntry.getFragmentEntryKey(), fragmentEntry.getType(), null,
 			0,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
-				layout.getPlid()));
+				draftLayout.getPlid()));
 
-		ContentLayoutTestUtil.publishLayout(layout.fetchDraftLayout(), layout);
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
 
 		File file = _layoutsExporter.exportLayoutPageTemplateEntries(
 			new long[] {layoutPageTemplateEntry.getLayoutPageTemplateEntryId()},
@@ -300,7 +302,7 @@ public class MasterLayoutsImporterTest {
 				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				LayoutPageTemplateConstants.
 					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-				RandomTestUtil.randomString(),
+				null, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED,
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -502,23 +504,17 @@ public class MasterLayoutsImporterTest {
 			rowStyledLayoutStructureItem instanceof
 				RowStyledLayoutStructureItem);
 
-		List<String> rowStyledLayoutStructureItemChildrenItemIds =
-			rowStyledLayoutStructureItem.getChildrenItemIds();
-
 		LayoutStructureItem columnLayoutStructureItem =
 			layoutStructure.getLayoutStructureItem(
-				rowStyledLayoutStructureItemChildrenItemIds.get(0));
+				rowStyledLayoutStructureItem.getChildrenItemId(0));
 
 		Assert.assertTrue(
 			columnLayoutStructureItem instanceof ColumnLayoutStructureItem);
 
-		List<String> columnLayoutStructureItemChildrenItemIds =
-			columnLayoutStructureItem.getChildrenItemIds();
-
 		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
 			(FragmentStyledLayoutStructureItem)
 				layoutStructure.getLayoutStructureItem(
-					columnLayoutStructureItemChildrenItemIds.get(0));
+					columnLayoutStructureItem.getChildrenItemId(0));
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
@@ -534,13 +530,10 @@ public class MasterLayoutsImporterTest {
 			containerStyledLayoutStructureItem instanceof
 				ContainerStyledLayoutStructureItem);
 
-		List<String> containerStyledLayoutStructureItemChildrenItemIds =
-			containerStyledLayoutStructureItem.getChildrenItemIds();
-
 		fragmentStyledLayoutStructureItem =
 			(FragmentStyledLayoutStructureItem)
 				layoutStructure.getLayoutStructureItem(
-					containerStyledLayoutStructureItemChildrenItemIds.get(0));
+					containerStyledLayoutStructureItem.getChildrenItemId(0));
 
 		fragmentEntryLink =
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
@@ -567,12 +560,10 @@ public class MasterLayoutsImporterTest {
 		LayoutStructureItem mainLayoutStructureItem =
 			layoutStructure.getMainLayoutStructureItem();
 
-		List<String> childrenItemIds =
-			mainLayoutStructureItem.getChildrenItemIds();
-
 		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
 			(FragmentStyledLayoutStructureItem)
-				layoutStructure.getLayoutStructureItem(childrenItemIds.get(0));
+				layoutStructure.getLayoutStructureItem(
+					mainLayoutStructureItem.getChildrenItemId(0));
 
 		_assertFragmentEntryLinkEditableValue(
 			"Modified text",
@@ -582,7 +573,8 @@ public class MasterLayoutsImporterTest {
 
 		fragmentStyledLayoutStructureItem =
 			(FragmentStyledLayoutStructureItem)
-				layoutStructure.getLayoutStructureItem(childrenItemIds.get(1));
+				layoutStructure.getLayoutStructureItem(
+					mainLayoutStructureItem.getChildrenItemId(1));
 
 		_assertFragmentEntryLinkEditableValue(
 			"<div class=\"fragment-static-text\">\n\t" +

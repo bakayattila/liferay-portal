@@ -9,6 +9,7 @@ export {default as CommerceServiceProvider} from './ServiceProvider/index';
 
 export * as MiniCartUtils from './components/mini_cart/util';
 export {default as PriceRenderer} from './components/data_renderers/PriceRenderer';
+export {default as ProductOptionsDataRenderer} from './components/data_renderers/ProductOptionsDataRenderer';
 export {
 	accountSelector,
 	AddToCart,
@@ -17,6 +18,7 @@ export {
 	AddToWishList,
 	Autocomplete,
 	AutocompleteComponent,
+	CurrencySelector,
 	compareCheckbox,
 	DropdownMenu,
 	DropdownMenuComponent,
@@ -27,6 +29,7 @@ export {
 	MiniCart,
 	MiniCartContext,
 	Modal,
+	Multishipping,
 	Price,
 	ProductOptionCheckbox,
 	ProductOptionCheckboxMultiple,
@@ -35,6 +38,7 @@ export {
 	ProductOptionRadio,
 	ProductOptionSelect,
 	ProductOptionText,
+	ProductOptionUpload,
 	QuantitySelector,
 	QuantitySelectorComponent,
 	RequestQuote,
@@ -55,6 +59,7 @@ export {commerceEvents};
 
 export {default as MiniCompare} from './components/mini_compare/entry';
 export {default as PriceComponent} from './components/price/Price';
+export {default as createCommerceCart} from './utilities/createCommerceCart';
 export {default as FormUtils} from './utilities/forms/index';
 export {
 	useLiferayModule,
@@ -76,6 +81,8 @@ export {
 	isProductPurchasable,
 } from './utilities/index';
 export {default as CommerceFrontendUtils} from './utilities/interface/index';
+export * as CommerceConstants from './utilities/constants';
+export * as CurrencyUtils from './components/currency_selector/util';
 export * as modalUtils from './utilities/modals/index';
 
 export {

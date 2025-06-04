@@ -240,6 +240,14 @@ public class AccountGroupRelLocalServiceImpl
 		return accountGroupRelPersistence.countByAccountGroupId(accountGroupId);
 	}
 
+	@Override
+	public int getAccountGroupRelsCountByClassName(
+		long accountGroupId, String className) {
+
+		return accountGroupRelPersistence.countByA_C(
+			accountGroupId, _classNameLocalService.getClassNameId(className));
+	}
+
 	private Predicate _getPredicate(
 		long[] accountGroupIds, String className, long classPK,
 		String keywords) {
@@ -249,8 +257,14 @@ public class AccountGroupRelLocalServiceImpl
 		).and(
 			AccountGroupRelTable.INSTANCE.classPK.eq(classPK)
 		).and(
-			AccountGroupRelTable.INSTANCE.accountGroupId.in(
-				ArrayUtil.toArray(accountGroupIds))
+			() -> {
+				if (ArrayUtil.isEmpty(accountGroupIds)) {
+					return null;
+				}
+
+				return AccountGroupRelTable.INSTANCE.accountGroupId.in(
+					ArrayUtil.toArray(accountGroupIds));
+			}
 		);
 
 		if (Validator.isNotNull(keywords)) {

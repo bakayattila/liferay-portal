@@ -8,19 +8,18 @@ package com.liferay.headless.admin.site.client.dto.v1_0;
 import com.liferay.headless.admin.site.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.site.client.serdes.v1_0.ItemExternalReferenceSerDes;
 
+import jakarta.annotation.Generated;
+
 import java.io.Serializable;
 
 import java.util.Objects;
-
-import javax.annotation.Generated;
 
 /**
  * @author Rubén Pulido
  * @generated
  */
 @Generated("")
-public class ItemExternalReference
-	extends CollectionReference implements Cloneable, Serializable {
+public class ItemExternalReference implements Cloneable, Serializable {
 
 	public static ItemExternalReference toDTO(String json) {
 		return ItemExternalReferenceSerDes.toDTO(json);
